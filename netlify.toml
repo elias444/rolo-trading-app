@@ -1,6 +1,7 @@
 [build]
   functions = "netlify/functions"
   publish = "public"
+  command = "echo 'Build complete'"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -12,4 +13,4 @@
 
 [functions]
   node_bundler = "esbuild"
-  # Force redeploy for functions
+  external_node_modules = ["react", "react-dom"]
