@@ -370,13 +370,27 @@
             
             const sendToClaudeAPI = async (message) => {
                 try {
+                    // Enhanced message to help Claude understand context better
+                    const enhancedMessage = `As Rolo, an AI trading assistant, please analyze this user request: "${message}". 
+
+If they mention a stock ticker (like HOOD, AAPL, TSLA, etc.), provide specific analysis for that stock including:
+- Current market sentiment for that ticker
+- Key technical levels to watch
+- Trading considerations
+- Risk factors
+- Options strategies if relevant
+
+If it's a general trading question, provide helpful trading advice.
+
+Be conversational, helpful, and focus on actionable trading insights.`;
+
                     const response = await fetch('/.netlify/functions/claude-chat', {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ message })
+                        body: JSON.stringify({ message: enhancedMessage })
                     });
 
                     if (!response.ok) {
@@ -388,6 +402,16 @@
                     
                 } catch (error) {
                     console.error('Claude API error:', error);
+                    
+                    // Enhanced fallback with ticker-specific responses
+                    const query = message.toLowerCase();
+                    const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+                    
+                    if (tickerMatches.length > 0) {
+                        const ticker = tickerMatches[0];
+                        return `📈 ${ticker} Analysis (Fallback Mode):\n\n🔍 **Key Things to Watch for ${ticker}:**\n• Check recent volume patterns\n• Monitor support/resistance levels\n• Watch for earnings or news catalysts\n• Consider overall market correlation\n• Review options flow activity\n\n📊 **Trading Approach:**\n• Wait for clear trend confirmation\n• Use proper position sizing\n• Set stop losses before entry\n• Consider time horizon for trades\n\n💡 **Rolo's Note:** I'm having a brief connection issue, but these are solid principles for analyzing ${ticker}. Try analyzing the ticker in the Ticker tab for live data!\n\nWhat specific aspect of ${ticker} interests you most?`;
+                    }
+                    
                     return `🤖 Rolo here! I'm ready to help with trading analysis, but I'm having a brief connection issue. Try asking me about:\n\n• Any stock ticker analysis\n• Options strategies\n• Risk management tips\n• Market trends\n\nWhat's on your trading radar?`;
                 }
             };
