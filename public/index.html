@@ -6,43 +6,73 @@
     <title>Rolo AI Trading - Complete</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, sans-serif; background: #f8fafc; }
-        .app { height: 100vh; display: flex; flex-direction: column; }
+        html, body { height: 100%; overflow: hidden; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; 
+            background: #f8fafc; 
+            -webkit-text-size-adjust: 100%;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .app { 
+            height: 100vh; 
+            height: 100dvh; /* Dynamic viewport height for mobile */
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
         .header { 
             background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); 
             color: white; 
             padding: 1rem; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
-        .header h1 { font-size: 1.25rem; margin-bottom: 0.25rem; }
-        .header p { opacity: 0.9; font-size: 0.875rem; }
+        .header h1 { font-size: 1.125rem; margin-bottom: 0.25rem; font-weight: 700; }
+        .header p { opacity: 0.9; font-size: 0.8rem; }
         .status-bar { 
             background: #dcfce7; 
             color: #166534; 
             padding: 0.5rem 1rem; 
-            font-size: 0.875rem; 
+            font-size: 0.8rem; 
             display: flex; 
             align-items: center; 
-            gap: 0.5rem; 
+            gap: 0.5rem;
+            flex-shrink: 0;
         }
-        .status-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
-        .content { flex: 1; padding: 1rem; overflow-y: auto; }
+        .status-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; flex-shrink: 0; }
+        .content { 
+            flex: 1; 
+            padding: 0.75rem; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
         .card { 
             background: white; 
             padding: 1rem; 
-            margin-bottom: 1rem; 
-            border-radius: 0.5rem; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            margin-bottom: 0.75rem; 
+            border-radius: 0.75rem; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #f1f5f9;
         }
         .tabs { 
             display: flex; 
             background: white; 
             border-top: 1px solid #e5e7eb; 
-            box-shadow: 0 -2px 4px rgba(0,0,0,0.1); 
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+            padding: 0.25rem 0;
         }
         .tab { 
             flex: 1; 
-            padding: 0.75rem; 
+            padding: 0.5rem 0.25rem; 
             text-align: center; 
             cursor: pointer; 
             border: none; 
@@ -50,84 +80,100 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            gap: 0.25rem;
-            font-size: 0.75rem;
+            gap: 0.125rem;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #6b7280;
+            -webkit-tap-highlight-color: transparent;
         }
-        .tab.active { background: #faf5ff; color: #7c3aed; font-weight: bold; }
-        .tab-icon { font-size: 1.25rem; }
+        .tab.active { background: #faf5ff; color: #7c3aed; font-weight: 600; border-radius: 0.5rem; }
+        .tab-icon { font-size: 1.1rem; }
         .input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
         .input { 
             flex: 1; 
-            padding: 0.75rem; 
-            border: 1px solid #d1d5db; 
-            border-radius: 0.5rem; 
+            padding: 0.875rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 0.75rem; 
             outline: none; 
+            font-size: 16px; /* Prevents zoom on iOS */
+            background: #fafafa;
+            -webkit-appearance: none;
         }
+        .input:focus { border-color: #7c3aed; background: white; }
         .btn { 
-            padding: 0.75rem 1rem; 
+            padding: 0.875rem 1rem; 
             background: #7c3aed; 
             color: white; 
             border: none; 
-            border-radius: 0.5rem; 
+            border-radius: 0.75rem; 
             cursor: pointer; 
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.875rem;
+            -webkit-tap-highlight-color: transparent;
+            flex-shrink: 0;
         }
-        .btn:hover { background: #6d28d9; }
+        .btn:hover, .btn:active { background: #6d28d9; }
         .btn:disabled { background: #9ca3af; cursor: not-allowed; }
-        .btn-small { padding: 0.5rem 0.75rem; font-size: 0.875rem; }
+        .btn-small { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
         .btn-success { background: #22c55e; }
-        .btn-success:hover { background: #16a34a; }
+        .btn-success:hover, .btn-success:active { background: #16a34a; }
         .btn-danger { background: #ef4444; }
-        .btn-danger:hover { background: #dc2626; }
+        .btn-danger:hover, .btn-danger:active { background: #dc2626; }
         
         .messages { 
-            height: 300px; 
+            height: 45vh; /* Fixed height for stability */
+            min-height: 300px;
+            max-height: 400px;
             overflow-y: auto; 
-            border: 1px solid #e5e7eb; 
+            border: 2px solid #e2e8f0; 
             padding: 0.75rem; 
             margin-bottom: 1rem; 
-            border-radius: 0.5rem; 
-            background: #fafafa; 
+            border-radius: 0.75rem; 
+            background: #fafafa;
+            -webkit-overflow-scrolling: touch;
         }
         .message { margin-bottom: 1rem; }
         .message.user { text-align: right; }
         .message-content { 
             display: inline-block; 
-            max-width: 80%; 
-            padding: 0.75rem; 
-            border-radius: 0.5rem; 
+            max-width: 85%; 
+            padding: 0.75rem 1rem; 
+            border-radius: 1rem; 
             line-height: 1.4; 
             white-space: pre-line;
+            font-size: 0.9rem;
         }
-        .message.user .message-content { background: #7c3aed; color: white; }
-        .message.assistant .message-content { background: #f3f4f6; color: #1f2937; }
-        .message-meta { font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; }
+        .message.user .message-content { background: #7c3aed; color: white; border-bottom-right-radius: 0.25rem; }
+        .message.assistant .message-content { background: white; color: #1f2937; border: 1px solid #e2e8f0; border-bottom-left-radius: 0.25rem; }
+        .message-meta { font-size: 0.7rem; color: #6b7280; margin-top: 0.25rem; }
         
-        .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-        .stat { text-align: center; padding: 0.75rem; background: #f8f9fa; border-radius: 0.5rem; }
-        .stat-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem; }
-        .stat-value { font-size: 1.25rem; font-weight: bold; }
+        .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+        .stat { text-align: center; padding: 0.75rem; background: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
+        .stat-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem; font-weight: 500; }
+        .stat-value { font-size: 1.1rem; font-weight: 700; }
         .price-positive { color: #22c55e; }
         .price-negative { color: #ef4444; }
         
         .analysis-section { 
             background: #faf5ff; 
             padding: 1rem; 
-            border-radius: 0.5rem; 
+            border-radius: 0.75rem; 
             margin-top: 1rem; 
-            border-left: 4px solid #7c3aed; 
+            border-left: 4px solid #7c3aed;
+            border: 1px solid #e9d5ff;
         }
         .analysis-header { 
             display: flex; 
             align-items: center; 
             gap: 0.5rem; 
             margin-bottom: 0.5rem; 
-            font-weight: bold; 
+            font-weight: 700; 
             color: #7c3aed; 
+            font-size: 0.9rem;
         }
         .confidence-score { 
-            font-size: 1.5rem; 
-            font-weight: bold; 
+            font-size: 1.25rem; 
+            font-weight: 700; 
             color: #22c55e; 
         }
         
@@ -140,41 +186,45 @@
         }
         .watchlist-tab { 
             padding: 0.5rem 0.75rem; 
-            border: 1px solid #d1d5db; 
-            border-radius: 0.25rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 0.5rem; 
             background: #f9fafb; 
             cursor: pointer; 
-            font-size: 0.875rem; 
+            font-size: 0.8rem; 
             position: relative;
+            -webkit-tap-highlight-color: transparent;
         }
-        .watchlist-tab.active { border-color: #7c3aed; background: #faf5ff; color: #7c3aed; font-weight: bold; }
+        .watchlist-tab.active { border-color: #7c3aed; background: #faf5ff; color: #7c3aed; font-weight: 600; }
         .watchlist-item { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 0.75rem; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 0.5rem; 
+            padding: 1rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 0.75rem; 
             margin-bottom: 0.5rem; 
-            background: #f9fafb; 
+            background: white; 
             cursor: pointer; 
             transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
-        .watchlist-item:hover { background: #f3f4f6; border-color: #d1d5db; }
+        .watchlist-item:active { background: #f1f5f9; border-color: #cbd5e1; }
         .watchlist-actions { display: flex; gap: 0.5rem; align-items: center; }
         .menu-btn { 
             background: none; 
             border: none; 
             color: #6b7280; 
             cursor: pointer; 
-            padding: 0.25rem; 
-            border-radius: 0.25rem; 
+            padding: 0.5rem; 
+            border-radius: 0.5rem; 
+            -webkit-tap-highlight-color: transparent;
+            font-size: 1rem;
         }
-        .menu-btn:hover { background: #f3f4f6; }
+        .menu-btn:active { background: #f3f4f6; }
         
         .play-card { 
-            border: 1px solid #e5e7eb; 
-            border-radius: 0.5rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 0.75rem; 
             padding: 1rem; 
             margin-bottom: 1rem; 
             background: white; 
@@ -185,58 +235,90 @@
             align-items: flex-start; 
             margin-bottom: 0.75rem; 
         }
-        .play-symbol { font-size: 1.125rem; font-weight: bold; }
+        .play-symbol { font-size: 1rem; font-weight: 700; }
         .play-type { 
             padding: 0.25rem 0.5rem; 
-            border-radius: 0.25rem; 
-            font-size: 0.75rem; 
-            font-weight: bold; 
+            border-radius: 0.5rem; 
+            font-size: 0.7rem; 
+            font-weight: 700; 
             margin-left: 0.5rem; 
         }
         .play-type.call { background: #dcfce7; color: #166534; }
         .play-type.put { background: #fee2e2; color: #dc2626; }
         .play-confidence { 
             text-align: right; 
-            font-size: 1.5rem; 
-            font-weight: bold; 
+            font-size: 1.25rem; 
+            font-weight: 700; 
             color: #22c55e; 
         }
-        .play-details { font-size: 0.875rem; color: #6b7280; }
+        .play-details { font-size: 0.8rem; color: #6b7280; }
         
         .alert-item { 
             padding: 0.75rem; 
-            border-radius: 0.5rem; 
+            border-radius: 0.75rem; 
             margin-bottom: 0.75rem; 
             border-left: 4px solid; 
         }
         .alert-success { background: #dcfce7; border-color: #22c55e; }
         .alert-info { background: #faf5ff; border-color: #7c3aed; }
         .alert-warning { background: #fef3c7; border-color: #eab308; }
-        .alert-title { font-weight: bold; margin-bottom: 0.25rem; }
-        .alert-message { font-size: 0.875rem; margin-bottom: 0.25rem; }
-        .alert-time { font-size: 0.75rem; color: #6b7280; }
+        .alert-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 0.9rem; }
+        .alert-message { font-size: 0.8rem; margin-bottom: 0.25rem; }
+        .alert-time { font-size: 0.7rem; color: #6b7280; }
         
         .empty-state { 
             text-align: center; 
-            padding: 2rem; 
+            padding: 2rem 1rem; 
             color: #6b7280; 
         }
-        .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .empty-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
         
         .error-state {
             background: #fee2e2;
-            border: 1px solid #fecaca;
-            border-radius: 0.5rem;
-            padding: 1rem;
+            border: 2px solid #fecaca;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
             margin-bottom: 1rem;
             color: #dc2626;
+            font-size: 0.85rem;
         }
         
+        .options-focused {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+            color: #92400e;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 2px solid #f59e0b;
+        }
+        
+        /* Mobile-specific improvements */
         @media (max-width: 768px) {
-            .stock-grid { grid-template-columns: 1fr; }
-            .input-group { flex-direction: column; }
+            .content { padding: 0.5rem; }
+            .stock-grid { grid-template-columns: 1fr; gap: 0.5rem; }
+            .input-group { flex-direction: row; }
             .watchlist-tabs { flex-direction: column; }
-            .play-header { flex-direction: column; gap: 0.5rem; }
+            .play-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+            .messages { height: 40vh; min-height: 250px; }
+            .header { padding: 0.75rem; }
+            .header h1 { font-size: 1rem; }
+            .status-bar { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+            .card { padding: 0.75rem; margin-bottom: 0.5rem; }
+            .message-content { font-size: 0.85rem; padding: 0.6rem 0.8rem; }
+        }
+        
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .app { height: 100vh; height: -webkit-fill-available; }
+            .messages { -webkit-overflow-scrolling: touch; }
+            .content { -webkit-overflow-scrolling: touch; }
+        }
+        
+        /* Prevent zoom on inputs */
+        @media screen and (max-width: 768px) {
+            input[type="text"], input[type="email"], input[type="number"], textarea, select {
+                font-size: 16px !important;
+            }
         }
     </style>
 </head>
@@ -264,6 +346,28 @@
             const [apiConnected, setApiConnected] = useState(false);
             const [apiError, setApiError] = useState(null);
             
+            // Learning & Memory System - Enhanced for Options Trading
+            const [userProfile, setUserProfile] = useState({
+                favoriteTickers: [],
+                riskTolerance: 'medium', // low, medium, high
+                tradingStyle: 'options', // day, swing, long-term, options
+                preferredStrategies: [],
+                successfulTrades: [],
+                interests: [],
+                optionsExperience: 'intermediate', // beginner, intermediate, advanced
+                preferredExpiry: 'weekly', // daily, weekly, monthly
+                maxRisk: 'medium', // low (<2%), medium (2-5%), high (>5%)
+                favoritePlays: [] // calls, puts, spreads, straddles, etc.
+            });
+            const [conversationContext, setConversationContext] = useState({
+                recentTickers: [],
+                topicsDiscussed: [],
+                questionsAsked: [],
+                tradingGoals: [],
+                optionsTermsUsed: [],
+                riskDiscussions: []
+            });
+            
             // Watchlist management
             const [watchlists, setWatchlists] = useState({
                 'Main Portfolio': ['SPY', 'QQQ', 'AAPL'],
@@ -275,11 +379,223 @@
             const [showNewWatchlistInput, setShowNewWatchlistInput] = useState(false);
             const [newTicker, setNewTicker] = useState('');
             
-            // Initialize and test API connection
+            // Initialize and load user profile
             useEffect(() => {
                 testApiConnection();
                 loadWatchlistData();
+                loadUserProfile();
             }, []);
+            
+            // Save user profile and context to localStorage
+            useEffect(() => {
+                if (typeof Storage !== 'undefined') {
+                    localStorage.setItem('roloUserProfile', JSON.stringify(userProfile));
+                    localStorage.setItem('roloConversationContext', JSON.stringify(conversationContext));
+                    localStorage.setItem('roloMessages', JSON.stringify(messages));
+                }
+            }, [userProfile, conversationContext, messages]);
+            
+            const loadUserProfile = () => {
+                if (typeof Storage !== 'undefined') {
+                    const savedProfile = localStorage.getItem('roloUserProfile');
+                    const savedContext = localStorage.getItem('roloConversationContext');
+                    const savedMessages = localStorage.getItem('roloMessages');
+                    
+                    if (savedProfile) {
+                        setUserProfile(JSON.parse(savedProfile));
+                    }
+                    if (savedContext) {
+                        setConversationContext(JSON.parse(savedContext));
+                    }
+                    if (savedMessages) {
+                        const parsedMessages = JSON.parse(savedMessages);
+                        // Only load if we have more than the default welcome message
+                        if (parsedMessages.length > 1) {
+                            setMessages(parsedMessages);
+                        }
+                    }
+                }
+            };
+            
+            const updateUserProfile = (updates) => {
+                setUserProfile(prev => ({ ...prev, ...updates }));
+            };
+            
+            const updateConversationContext = (updates) => {
+                setConversationContext(prev => ({ ...prev, ...updates }));
+            };
+            
+            const analyzeUserMessage = (message) => {
+                const query = message.toLowerCase();
+                const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+                
+                // Learn from user's message - Enhanced for Options Trading
+                const learnings = {};
+                
+                // Track tickers mentioned
+                if (tickerMatches.length > 0) {
+                    const newTickers = tickerMatches.filter(t => !conversationContext.recentTickers.includes(t));
+                    if (newTickers.length > 0) {
+                        learnings.recentTickers = [...conversationContext.recentTickers, ...newTickers].slice(-10);
+                        
+                        // Add to favorites if mentioned multiple times
+                        newTickers.forEach(ticker => {
+                            const mentionCount = messages.filter(m => m.text.includes(ticker)).length;
+                            if (mentionCount >= 2 && !userProfile.favoriteTickers.includes(ticker)) {
+                                updateUserProfile({
+                                    favoriteTickers: [...userProfile.favoriteTickers, ticker].slice(-8)
+                                });
+                            }
+                        });
+                    }
+                }
+                
+                // Enhanced Options Trading Detection
+                const optionsTerms = [];
+                if (query.includes('call') || query.includes('calls')) optionsTerms.push('calls');
+                if (query.includes('put') || query.includes('puts')) optionsTerms.push('puts');
+                if (query.includes('0dte') || query.includes('0 dte')) optionsTerms.push('0dte');
+                if (query.includes('weekly') || query.includes('weeklies')) optionsTerms.push('weekly');
+                if (query.includes('monthly') || query.includes('monthlies')) optionsTerms.push('monthly');
+                if (query.includes('spread') || query.includes('spreads')) optionsTerms.push('spreads');
+                if (query.includes('straddle') || query.includes('strangle')) optionsTerms.push('straddles');
+                if (query.includes('iron condor') || query.includes('condor')) optionsTerms.push('condors');
+                if (query.includes('covered call')) optionsTerms.push('covered-calls');
+                if (query.includes('naked') || query.includes('cash secured')) optionsTerms.push('naked-options');
+                if (query.includes('butterfly')) optionsTerms.push('butterfly');
+                if (query.includes('collar')) optionsTerms.push('collar');
+                if (query.includes('dte') || query.includes('expiry') || query.includes('expiration')) optionsTerms.push('expiration');
+                if (query.includes('delta') || query.includes('gamma') || query.includes('theta') || query.includes('vega')) optionsTerms.push('greeks');
+                if (query.includes('iv') || query.includes('implied volatility')) optionsTerms.push('iv');
+                if (query.includes('earnings') && (query.includes('play') || query.includes('option'))) optionsTerms.push('earnings-plays');
+                
+                if (optionsTerms.length > 0) {
+                    learnings.optionsTermsUsed = [...new Set([...conversationContext.optionsTermsUsed, ...optionsTerms])].slice(-15);
+                    // Set trading style to options if not already
+                    if (userProfile.tradingStyle !== 'options') {
+                        updateUserProfile({ tradingStyle: 'options' });
+                    }
+                }
+                
+                // Detect options experience level
+                if (query.includes('beginner') || query.includes('new to options') || query.includes('just started')) {
+                    learnings.optionsExperience = 'beginner';
+                } else if (query.includes('advanced') || query.includes('complex strategies') || query.includes('sophisticated')) {
+                    learnings.optionsExperience = 'advanced';
+                } else if (optionsTerms.includes('greeks') || optionsTerms.includes('spreads') || optionsTerms.includes('condors')) {
+                    learnings.optionsExperience = 'advanced';
+                } else if (optionsTerms.length >= 3) {
+                    learnings.optionsExperience = 'intermediate';
+                }
+                
+                // Detect preferred expiry
+                if (query.includes('0dte') || query.includes('same day')) {
+                    learnings.preferredExpiry = 'daily';
+                } else if (query.includes('weekly') || query.includes('week')) {
+                    learnings.preferredExpiry = 'weekly';
+                } else if (query.includes('monthly') || query.includes('month') || query.includes('45 days')) {
+                    learnings.preferredExpiry = 'monthly';
+                }
+                
+                // Enhanced risk tolerance detection
+                if (query.includes('conservative') || query.includes('safe') || query.includes('low risk') || query.includes('covered calls only')) {
+                    learnings.riskTolerance = 'low';
+                    learnings.maxRisk = 'low';
+                } else if (query.includes('aggressive') || query.includes('high risk') || query.includes('yolo') || query.includes('0dte')) {
+                    learnings.riskTolerance = 'high';
+                    learnings.maxRisk = 'high';
+                } else if (query.includes('moderate') || query.includes('balanced')) {
+                    learnings.riskTolerance = 'medium';
+                    learnings.maxRisk = 'medium';
+                }
+                
+                // Detect trading style
+                if (query.includes('day trad') || query.includes('scalp') || query.includes('0dte') || query.includes('intraday')) {
+                    learnings.tradingStyle = 'day';
+                } else if (query.includes('swing') || query.includes('few days') || query.includes('weekly options')) {
+                    learnings.tradingStyle = 'swing';
+                } else if (query.includes('long term') || query.includes('invest') || query.includes('hold') || query.includes('leaps')) {
+                    learnings.tradingStyle = 'long-term';
+                }
+                
+                // Track topics discussed
+                const topics = [];
+                if (optionsTerms.length > 0) topics.push('options-trading');
+                if (query.includes('risk') || query.includes('stop') || query.includes('position size')) topics.push('risk-management');
+                if (query.includes('market') || query.includes('trend') || query.includes('spy') || query.includes('qqq')) topics.push('market-analysis');
+                if (query.includes('technical') || query.includes('chart') || query.includes('support') || query.includes('resistance')) topics.push('technical-analysis');
+                if (query.includes('earnings') || query.includes('catalyst') || query.includes('news')) topics.push('catalyst-trading');
+                if (query.includes('volatility') || query.includes('vix') || query.includes('iv')) topics.push('volatility-trading');
+                
+                if (topics.length > 0) {
+                    learnings.topicsDiscussed = [...new Set([...conversationContext.topicsDiscussed, ...topics])].slice(-10);
+                }
+                
+                // Track preferred strategies
+                const strategies = [];
+                if (query.includes('covered call')) strategies.push('covered-calls');
+                if (query.includes('cash secured put') || query.includes('csp')) strategies.push('cash-secured-puts');
+                if (query.includes('iron condor')) strategies.push('iron-condor');
+                if (query.includes('straddle')) strategies.push('straddle');
+                if (query.includes('strangle')) strategies.push('strangle');
+                if (query.includes('butterfly')) strategies.push('butterfly');
+                if (query.includes('calendar spread')) strategies.push('calendar-spread');
+                if (query.includes('vertical spread')) strategies.push('vertical-spread');
+                if (query.includes('wheel strategy') || query.includes('wheel')) strategies.push('wheel');
+                
+                if (strategies.length > 0) {
+                    learnings.preferredStrategies = [...new Set([...userProfile.preferredStrategies, ...strategies])].slice(-8);
+                }
+                
+                // Update profiles
+                if (Object.keys(learnings).length > 0) {
+                    const profileUpdates = {};
+                    const contextUpdates = {};
+                    
+                    Object.entries(learnings).forEach(([key, value]) => {
+                        if (['riskTolerance', 'tradingStyle', 'preferredStrategies', 'optionsExperience', 'preferredExpiry', 'maxRisk'].includes(key)) {
+                            profileUpdates[key] = value;
+                        } else {
+                            contextUpdates[key] = value;
+                        }
+                    });
+                    
+                    if (Object.keys(profileUpdates).length > 0) updateUserProfile(profileUpdates);
+                    if (Object.keys(contextUpdates).length > 0) updateConversationContext(contextUpdates);
+                }
+            };
+            
+            const buildPersonalizedContext = (message) => {
+                const recentMessages = messages.slice(-5).map(m => `${m.type}: ${m.text}`).join('\n');
+                
+                return `ROLO'S MEMORY - OPTIONS TRADER PROFILE:
+Trading Focus: ${userProfile.tradingStyle} (Options Specialist)
+Options Experience: ${userProfile.optionsExperience}
+Risk Tolerance: ${userProfile.riskTolerance} (Max Risk: ${userProfile.maxRisk})
+Preferred Expiry: ${userProfile.preferredExpiry}
+Favorite Tickers: ${userProfile.favoriteTickers.join(', ') || 'Building list...'}
+Recent Tickers: ${conversationContext.recentTickers.join(', ') || 'None'}
+Options Strategies Used: ${userProfile.preferredStrategies.join(', ') || 'Learning preferences'}
+Options Terms Discussed: ${conversationContext.optionsTermsUsed.join(', ') || 'Building knowledge'}
+Main Topics: ${conversationContext.topicsDiscussed.join(', ') || 'Getting started'}
+
+RECENT CONVERSATION CONTEXT:
+${recentMessages}
+
+USER'S CURRENT QUESTION: ${message}
+
+INSTRUCTIONS FOR ROLO:
+You are Rolo, an advanced AI assistant specializing in OPTIONS TRADING. This user is an options trader. 
+- Always prioritize options-related analysis and strategies
+- Reference their experience level (${userProfile.optionsExperience}) when explaining concepts
+- Consider their preferred expiry (${userProfile.preferredExpiry}) when suggesting plays
+- Match their risk tolerance (${userProfile.riskTolerance}) in recommendations
+- Remember their favorite tickers and previously discussed strategies
+- If they mention a ticker, think about options plays first
+- Use options terminology appropriately for their experience level
+- Be personal and reference previous conversations when relevant
+
+Respond as their dedicated options trading advisor with memory of their preferences and style.`;
             
             const testApiConnection = async () => {
                 try {
@@ -370,19 +686,11 @@
             
             const sendToClaudeAPI = async (message) => {
                 try {
-                    // Enhanced message to help Claude understand context better
-                    const enhancedMessage = `As Rolo, an AI trading assistant, please analyze this user request: "${message}". 
-
-If they mention a stock ticker (like HOOD, AAPL, TSLA, etc.), provide specific analysis for that stock including:
-- Current market sentiment for that ticker
-- Key technical levels to watch
-- Trading considerations
-- Risk factors
-- Options strategies if relevant
-
-If it's a general trading question, provide helpful trading advice.
-
-Be conversational, helpful, and focus on actionable trading insights.`;
+                    // Analyze user message for learning
+                    analyzeUserMessage(message);
+                    
+                    // Build personalized context
+                    const personalizedMessage = buildPersonalizedContext(message);
 
                     const response = await fetch('/.netlify/functions/claude-chat', {
                         method: 'POST',
@@ -390,7 +698,7 @@ Be conversational, helpful, and focus on actionable trading insights.`;
                             'Content-Type': 'application/json',
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ message: enhancedMessage })
+                        body: JSON.stringify({ message: personalizedMessage })
                     });
 
                     if (!response.ok) {
@@ -403,16 +711,19 @@ Be conversational, helpful, and focus on actionable trading insights.`;
                 } catch (error) {
                     console.error('Claude API error:', error);
                     
-                    // Enhanced fallback with ticker-specific responses
+                    // Enhanced fallback with user context
                     const query = message.toLowerCase();
                     const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
                     
                     if (tickerMatches.length > 0) {
                         const ticker = tickerMatches[0];
-                        return `📈 ${ticker} Analysis (Fallback Mode):\n\n🔍 **Key Things to Watch for ${ticker}:**\n• Check recent volume patterns\n• Monitor support/resistance levels\n• Watch for earnings or news catalysts\n• Consider overall market correlation\n• Review options flow activity\n\n📊 **Trading Approach:**\n• Wait for clear trend confirmation\n• Use proper position sizing\n• Set stop losses before entry\n• Consider time horizon for trades\n\n💡 **Rolo's Note:** I'm having a brief connection issue, but these are solid principles for analyzing ${ticker}. Try analyzing the ticker in the Ticker tab for live data!\n\nWhat specific aspect of ${ticker} interests you most?`;
+                        const isFavorite = userProfile.favoriteTickers.includes(ticker);
+                        const hasDiscussedBefore = conversationContext.recentTickers.includes(ticker);
+                        
+                        return `📈 ${ticker} Analysis (Fallback Mode):\n\n${isFavorite ? `I see ${ticker} is one of your favorites! ` : ''}${hasDiscussedBefore ? `We've talked about ${ticker} before. ` : ''}Here's my analysis:\n\n🔍 **Key Things to Watch for ${ticker}:**\n• Check recent volume patterns\n• Monitor support/resistance levels\n• Watch for earnings or news catalysts\n• Consider overall market correlation\n\n📊 **For Your ${userProfile.tradingStyle} Trading Style:**\n• ${userProfile.tradingStyle === 'day' ? 'Look for intraday momentum and quick scalp opportunities' : userProfile.tradingStyle === 'swing' ? 'Focus on 3-7 day moves and key technical levels' : 'Consider long-term fundamentals and major trend changes'}\n• Risk level: Appropriate for ${userProfile.riskTolerance} risk tolerance\n\nWhat specific aspect of ${ticker} interests you most?`;
                     }
                     
-                    return `🤖 Rolo here! I'm ready to help with trading analysis, but I'm having a brief connection issue. Try asking me about:\n\n• Any stock ticker analysis\n• Options strategies\n• Risk management tips\n• Market trends\n\nWhat's on your trading radar?`;
+                    return `🤖 Rolo here! I remember you prefer ${userProfile.tradingStyle} trading with ${userProfile.riskTolerance} risk tolerance. ${userProfile.favoriteTickers.length > 0 ? `Your favorites: ${userProfile.favoriteTickers.join(', ')}. ` : ''}I'm having a brief connection issue, but I'm ready to help!\n\nWhat's on your trading radar?`;
                 }
             };
             
@@ -471,6 +782,12 @@ Be conversational, helpful, and focus on actionable trading insights.`;
                 if (!ticker.trim()) return;
                 
                 const symbol = ticker.toUpperCase().trim();
+                
+                // Track ticker in user's interests
+                updateConversationContext({
+                    recentTickers: [...new Set([...conversationContext.recentTickers, symbol])].slice(-10)
+                });
+                
                 await fetchRealStockData(symbol, true);
             };
             
@@ -506,6 +823,14 @@ Be conversational, helpful, and focus on actionable trading insights.`;
                             ...prev,
                             [activeWatchlist]: [...prev[activeWatchlist], symbol]
                         }));
+                        
+                        // Learn user's interests
+                        if (!userProfile.favoriteTickers.includes(symbol)) {
+                            updateUserProfile({
+                                favoriteTickers: [...userProfile.favoriteTickers, symbol].slice(-8)
+                            });
+                        }
+                        
                         await fetchRealStockData(symbol, false);
                     }
                     setNewTicker('');
@@ -578,7 +903,79 @@ Be conversational, helpful, and focus on actionable trading insights.`;
             // Render functions
             const renderChat = () => (
                 <div className="card">
-                    <h3>💬 Chat with Rolo AI</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3>💬 Chat with Rolo AI</h3>
+                        <button 
+                            className="btn btn-small"
+                            onClick={() => {
+                                if (window.confirm('Clear conversation history and reset Rolo\'s memory?')) {
+                                    setMessages([{ id: 1, type: 'assistant', text: "Hello! I'm Rolo, your AI-powered trading assistant. I'm starting fresh and ready to learn your trading style again!" }]);
+                                    setUserProfile({
+                                        favoriteTickers: [],
+                                        riskTolerance: 'medium',
+                                        tradingStyle: 'swing',
+                                        preferredStrategies: [],
+                                        successfulTrades: [],
+                                        interests: []
+                                    });
+                                    setConversationContext({
+                                        recentTickers: [],
+                                        topicsDiscussed: [],
+                                        questionsAsked: [],
+                                        tradingGoals: []
+                                    });
+                                    if (typeof Storage !== 'undefined') {
+                                        localStorage.removeItem('roloUserProfile');
+                                        localStorage.removeItem('roloConversationContext');
+                                        localStorage.removeItem('roloMessages');
+                                    }
+                                }
+                            }}
+                            style={{ fontSize: '0.75rem' }}
+                        >
+                            🔄 Reset Memory
+                        </button>
+                    </div>
+                    
+                    {/* Options Trader Focus Banner */}
+                    <div className="options-focused">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '1.25rem' }}>⚡</span>
+                            <strong>Options Trading Mode Active</strong>
+                        </div>
+                        <div style={{ fontSize: '0.8rem' }}>
+                            Rolo is optimized for options analysis, Greeks, strategies, and risk management
+                        </div>
+                    </div>
+                    
+                    {/* User Profile Display */}
+                    {(userProfile.favoriteTickers.length > 0 || conversationContext.recentTickers.length > 0 || conversationContext.optionsTermsUsed.length > 0) && (
+                        <div style={{ 
+                            background: '#f0f9ff', 
+                            border: '2px solid #0ea5e9', 
+                            borderRadius: '0.75rem', 
+                            padding: '0.75rem', 
+                            marginBottom: '1rem',
+                            fontSize: '0.8rem'
+                        }}>
+                            <div style={{ fontWeight: '700', color: '#0ea5e9', marginBottom: '0.5rem' }}>
+                                🧠 Rolo's Memory - Options Trader Profile:
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.25rem' }}>
+                                <div><strong>Experience:</strong> {userProfile.optionsExperience} • <strong>Style:</strong> {userProfile.tradingStyle}</div>
+                                <div><strong>Risk:</strong> {userProfile.riskTolerance} • <strong>Preferred Expiry:</strong> {userProfile.preferredExpiry}</div>
+                                {userProfile.favoriteTickers.length > 0 && (
+                                    <div><strong>Favorites:</strong> {userProfile.favoriteTickers.slice(-4).join(', ')}</div>
+                                )}
+                                {conversationContext.optionsTermsUsed.length > 0 && (
+                                    <div><strong>Options Strategies:</strong> {conversationContext.optionsTermsUsed.slice(-4).join(', ')}</div>
+                                )}
+                                {userProfile.preferredStrategies.length > 0 && (
+                                    <div><strong>Preferred Plays:</strong> {userProfile.preferredStrategies.slice(-3).join(', ')}</div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     
                     {/* API Status */}
                     {apiError && (
@@ -593,14 +990,14 @@ Be conversational, helpful, and focus on actionable trading insights.`;
                                 <div className="message-content">{msg.text}</div>
                                 {msg.type === 'assistant' && (
                                     <div className="message-meta">
-                                        🧠 Rolo AI • {apiConnected ? 'Live Analysis' : 'Demo Mode'}
+                                        🧠 Rolo AI • {apiConnected ? 'Live Analysis' : 'Demo Mode'} • Learning Mode
                                     </div>
                                 )}
                             </div>
                         ))}
                         {isTyping && (
                             <div className="message assistant">
-                                <div className="message-content">🤔 Rolo is analyzing...</div>
+                                <div className="message-content">🤔 Rolo is analyzing and learning...</div>
                             </div>
                         )}
                     </div>
@@ -1049,8 +1446,8 @@ Be conversational, helpful, and focus on actionable trading insights.`;
                         <div className="status-dot" style={{ backgroundColor: apiConnected ? '#22c55e' : '#eab308' }}></div>
                         <span>
                             {apiConnected 
-                                ? '✅ Rolo Online: Live Alpha Vantage Data • Claude AI Chat • Real Analysis' 
-                                : '⚠️ Demo Mode: APIs temporarily unavailable'
+                                ? '✅ Rolo Online: Live APIs • Learning Your Style • Memory Active' 
+                                : '⚠️ Demo Mode: APIs temporarily unavailable • Memory Active'
                             }
                         </span>
                     </div>
