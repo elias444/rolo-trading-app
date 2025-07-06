@@ -3,35 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rolo AI Trading - Complete</title>
+    <title>Rolo AI Trading</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
             background: #f8fafc; 
             -webkit-text-size-adjust: 100%;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
         .app { 
             height: 100vh; 
-            height: 100dvh; /* Dynamic viewport height for mobile */
             display: flex; 
             flex-direction: column; 
             overflow: hidden;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
         }
         .header { 
             background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); 
             color: white; 
             padding: 1rem; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             flex-shrink: 0;
         }
         .header h1 { font-size: 1.125rem; margin-bottom: 0.25rem; font-weight: 700; }
@@ -46,13 +36,12 @@
             gap: 0.5rem;
             flex-shrink: 0;
         }
-        .status-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; flex-shrink: 0; }
+        .status-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; }
         .content { 
             flex: 1; 
             padding: 0.75rem; 
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
-            position: relative;
         }
         .card { 
             background: white; 
@@ -60,13 +49,11 @@
             margin-bottom: 0.75rem; 
             border-radius: 0.75rem; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #f1f5f9;
         }
         .tabs { 
             display: flex; 
             background: white; 
             border-top: 1px solid #e5e7eb; 
-            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
             flex-shrink: 0;
             padding: 0.25rem 0;
         }
@@ -82,9 +69,7 @@
             align-items: center; 
             gap: 0.125rem;
             font-size: 0.65rem;
-            font-weight: 500;
             color: #6b7280;
-            -webkit-tap-highlight-color: transparent;
         }
         .tab.active { background: #faf5ff; color: #7c3aed; font-weight: 600; border-radius: 0.5rem; }
         .tab-icon { font-size: 1.1rem; }
@@ -95,9 +80,8 @@
             border: 2px solid #e2e8f0; 
             border-radius: 0.75rem; 
             outline: none; 
-            font-size: 16px; /* Prevents zoom on iOS */
+            font-size: 16px;
             background: #fafafa;
-            -webkit-appearance: none;
         }
         .input:focus { border-color: #7c3aed; background: white; }
         .btn { 
@@ -109,19 +93,13 @@
             cursor: pointer; 
             font-weight: 600;
             font-size: 0.875rem;
-            -webkit-tap-highlight-color: transparent;
             flex-shrink: 0;
         }
-        .btn:hover, .btn:active { background: #6d28d9; }
         .btn:disabled { background: #9ca3af; cursor: not-allowed; }
         .btn-small { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
-        .btn-success { background: #22c55e; }
-        .btn-success:hover, .btn-success:active { background: #16a34a; }
-        .btn-danger { background: #ef4444; }
-        .btn-danger:hover, .btn-danger:active { background: #dc2626; }
         
         .messages { 
-            height: 45vh; /* Fixed height for stability */
+            height: 45vh;
             min-height: 300px;
             max-height: 400px;
             overflow-y: auto; 
@@ -143,8 +121,8 @@
             white-space: pre-line;
             font-size: 0.9rem;
         }
-        .message.user .message-content { background: #7c3aed; color: white; border-bottom-right-radius: 0.25rem; }
-        .message.assistant .message-content { background: white; color: #1f2937; border: 1px solid #e2e8f0; border-bottom-left-radius: 0.25rem; }
+        .message.user .message-content { background: #7c3aed; color: white; }
+        .message.assistant .message-content { background: white; color: #1f2937; border: 1px solid #e2e8f0; }
         .message-meta { font-size: 0.7rem; color: #6b7280; margin-top: 0.25rem; }
         
         .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
@@ -154,47 +132,6 @@
         .price-positive { color: #22c55e; }
         .price-negative { color: #ef4444; }
         
-        .analysis-section { 
-            background: #faf5ff; 
-            padding: 1rem; 
-            border-radius: 0.75rem; 
-            margin-top: 1rem; 
-            border-left: 4px solid #7c3aed;
-            border: 1px solid #e9d5ff;
-        }
-        .analysis-header { 
-            display: flex; 
-            align-items: center; 
-            gap: 0.5rem; 
-            margin-bottom: 0.5rem; 
-            font-weight: 700; 
-            color: #7c3aed; 
-            font-size: 0.9rem;
-        }
-        .confidence-score { 
-            font-size: 1.25rem; 
-            font-weight: 700; 
-            color: #22c55e; 
-        }
-        
-        .watchlist-section { margin-bottom: 1rem; }
-        .watchlist-tabs { 
-            display: flex; 
-            gap: 0.5rem; 
-            margin-bottom: 1rem; 
-            flex-wrap: wrap; 
-        }
-        .watchlist-tab { 
-            padding: 0.5rem 0.75rem; 
-            border: 2px solid #e2e8f0; 
-            border-radius: 0.5rem; 
-            background: #f9fafb; 
-            cursor: pointer; 
-            font-size: 0.8rem; 
-            position: relative;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .watchlist-tab.active { border-color: #7c3aed; background: #faf5ff; color: #7c3aed; font-weight: 600; }
         .watchlist-item { 
             display: flex; 
             justify-content: space-between; 
@@ -204,1275 +141,416 @@
             border-radius: 0.75rem; 
             margin-bottom: 0.5rem; 
             background: white; 
-            cursor: pointer; 
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .watchlist-item:active { background: #f1f5f9; border-color: #cbd5e1; }
-        .watchlist-actions { display: flex; gap: 0.5rem; align-items: center; }
-        .menu-btn { 
-            background: none; 
-            border: none; 
-            color: #6b7280; 
-            cursor: pointer; 
-            padding: 0.5rem; 
-            border-radius: 0.5rem; 
-            -webkit-tap-highlight-color: transparent;
-            font-size: 1rem;
-        }
-        .menu-btn:active { background: #f3f4f6; }
-        
-        .play-card { 
-            border: 2px solid #e2e8f0; 
-            border-radius: 0.75rem; 
-            padding: 1rem; 
-            margin-bottom: 1rem; 
-            background: white; 
-        }
-        .play-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-start; 
-            margin-bottom: 0.75rem; 
-        }
-        .play-symbol { font-size: 1rem; font-weight: 700; }
-        .play-type { 
-            padding: 0.25rem 0.5rem; 
-            border-radius: 0.5rem; 
-            font-size: 0.7rem; 
-            font-weight: 700; 
-            margin-left: 0.5rem; 
-        }
-        .play-type.call { background: #dcfce7; color: #166534; }
-        .play-type.put { background: #fee2e2; color: #dc2626; }
-        .play-confidence { 
-            text-align: right; 
-            font-size: 1.25rem; 
-            font-weight: 700; 
-            color: #22c55e; 
-        }
-        .play-details { font-size: 0.8rem; color: #6b7280; }
-        
-        .alert-item { 
-            padding: 0.75rem; 
-            border-radius: 0.75rem; 
-            margin-bottom: 0.75rem; 
-            border-left: 4px solid; 
-        }
-        .alert-success { background: #dcfce7; border-color: #22c55e; }
-        .alert-info { background: #faf5ff; border-color: #7c3aed; }
-        .alert-warning { background: #fef3c7; border-color: #eab308; }
-        .alert-title { font-weight: 700; margin-bottom: 0.25rem; font-size: 0.9rem; }
-        .alert-message { font-size: 0.8rem; margin-bottom: 0.25rem; }
-        .alert-time { font-size: 0.7rem; color: #6b7280; }
-        
-        .empty-state { 
-            text-align: center; 
-            padding: 2rem 1rem; 
-            color: #6b7280; 
-        }
-        .empty-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        
-        .error-state {
-            background: #fee2e2;
-            border: 2px solid #fecaca;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            color: #dc2626;
-            font-size: 0.85rem;
+            cursor: pointer;
         }
         
-        .options-focused {
+        .options-banner {
             background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
             color: #92400e;
             border-radius: 0.75rem;
             padding: 0.75rem;
             margin-bottom: 1rem;
             border: 2px solid #f59e0b;
+            text-align: center;
         }
         
-        /* Mobile-specific improvements */
         @media (max-width: 768px) {
-            .content { padding: 0.5rem; }
             .stock-grid { grid-template-columns: 1fr; gap: 0.5rem; }
-            .input-group { flex-direction: row; }
-            .watchlist-tabs { flex-direction: column; }
-            .play-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
             .messages { height: 40vh; min-height: 250px; }
             .header { padding: 0.75rem; }
-            .header h1 { font-size: 1rem; }
-            .status-bar { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
-            .card { padding: 0.75rem; margin-bottom: 0.5rem; }
-            .message-content { font-size: 0.85rem; padding: 0.6rem 0.8rem; }
-        }
-        
-        /* iOS specific fixes */
-        @supports (-webkit-touch-callout: none) {
-            .app { height: 100vh; height: -webkit-fill-available; }
-            .messages { -webkit-overflow-scrolling: touch; }
-            .content { -webkit-overflow-scrolling: touch; }
-        }
-        
-        /* Prevent zoom on inputs */
-        @media screen and (max-width: 768px) {
-            input[type="text"], input[type="email"], input[type="number"], textarea, select {
-                font-size: 16px !important;
-            }
+            .content { padding: 0.5rem; }
         }
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div id="app">
+        <div class="app">
+            <div class="header">
+                <h1>🤖 Rolo AI Trading</h1>
+                <p>Your Options Trading Assistant</p>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-dot"></div>
+                <span>✅ Rolo Online: Options Trading Mode Active</span>
+            </div>
+            
+            <div class="content" id="content">
+                <!-- Content will be inserted here -->
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('chat')">
+                    <div class="tab-icon">💬</div>
+                    <div>Chat</div>
+                </button>
+                <button class="tab" onclick="switchTab('ticker')">
+                    <div class="tab-icon">🔍</div>
+                    <div>Ticker</div>
+                </button>
+                <button class="tab" onclick="switchTab('plays')">
+                    <div class="tab-icon">📈</div>
+                    <div>Plays</div>
+                </button>
+                <button class="tab" onclick="switchTab('alerts')">
+                    <div class="tab-icon">🔔</div>
+                    <div>Alerts</div>
+                </button>
+            </div>
+        </div>
+    </div>
     
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        function App() {
-            const [activeTab, setActiveTab] = useState('chat');
-            const [message, setMessage] = useState('');
-            const [messages, setMessages] = useState([
-                { id: 1, type: 'assistant', text: "Hello! I'm Rolo, your AI-powered trading assistant. I'm connected to live market data and ready to help you analyze stocks, find options plays, and learn your trading style. What would you like to explore today?" }
-            ]);
-            const [ticker, setTicker] = useState('');
-            const [stockData, setStockData] = useState({});
-            const [analysisResults, setAnalysisResults] = useState({});
-            const [isLoading, setIsLoading] = useState(false);
-            const [isTyping, setIsTyping] = useState(false);
-            const [apiConnected, setApiConnected] = useState(false);
-            const [apiError, setApiError] = useState(null);
+    <script>
+        // Global state
+        let currentTab = 'chat';
+        let messages = [
+            {
+                id: 1,
+                type: 'assistant',
+                text: "Hello! I'm Rolo, your AI-powered options trading assistant. I specialize in options strategies, Greeks analysis, and risk management. What would you like to explore today?"
+            }
+        ];
+        let isTyping = false;
+        let apiConnected = true;
+        let stockData = {};
+        let ticker = '';
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCurrentTab();
+        });
+        
+        // Tab switching
+        function switchTab(tab) {
+            currentTab = tab;
             
-            // Learning & Memory System - Enhanced for Options Trading
-            const [userProfile, setUserProfile] = useState({
-                favoriteTickers: [],
-                riskTolerance: 'medium', // low, medium, high
-                tradingStyle: 'options', // day, swing, long-term, options
-                preferredStrategies: [],
-                successfulTrades: [],
-                interests: [],
-                optionsExperience: 'intermediate', // beginner, intermediate, advanced
-                preferredExpiry: 'weekly', // daily, weekly, monthly
-                maxRisk: 'medium', // low (<2%), medium (2-5%), high (>5%)
-                favoritePlays: [] // calls, puts, spreads, straddles, etc.
-            });
-            const [conversationContext, setConversationContext] = useState({
-                recentTickers: [],
-                topicsDiscussed: [],
-                questionsAsked: [],
-                tradingGoals: [],
-                optionsTermsUsed: [],
-                riskDiscussions: []
-            });
+            // Update tab styling
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.tab').classList.add('active');
             
-            // Watchlist management
-            const [watchlists, setWatchlists] = useState({
-                'Main Portfolio': ['SPY', 'QQQ', 'AAPL'],
-                'Growth Stocks': ['TSLA', 'NVDA', 'AMZN'],
-                'Tech': ['MSFT', 'GOOGL', 'META']
-            });
-            const [activeWatchlist, setActiveWatchlist] = useState('Main Portfolio');
-            const [newWatchlistName, setNewWatchlistName] = useState('');
-            const [showNewWatchlistInput, setShowNewWatchlistInput] = useState(false);
-            const [newTicker, setNewTicker] = useState('');
+            renderCurrentTab();
+        }
+        
+        // Render current tab content
+        function renderCurrentTab() {
+            const content = document.getElementById('content');
             
-            // Initialize and load user profile
-            useEffect(() => {
-                testApiConnection();
-                loadWatchlistData();
-                loadUserProfile();
-            }, []);
+            switch(currentTab) {
+                case 'chat':
+                    content.innerHTML = renderChat();
+                    break;
+                case 'ticker':
+                    content.innerHTML = renderTicker();
+                    break;
+                case 'plays':
+                    content.innerHTML = renderPlays();
+                    break;
+                case 'alerts':
+                    content.innerHTML = renderAlerts();
+                    break;
+            }
             
-            // Save user profile and context to localStorage
-            useEffect(() => {
-                if (typeof Storage !== 'undefined') {
-                    localStorage.setItem('roloUserProfile', JSON.stringify(userProfile));
-                    localStorage.setItem('roloConversationContext', JSON.stringify(conversationContext));
-                    localStorage.setItem('roloMessages', JSON.stringify(messages));
+            // Scroll to bottom of messages if chat tab
+            if (currentTab === 'chat') {
+                const messagesDiv = document.querySelector('.messages');
+                if (messagesDiv) {
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
                 }
-            }, [userProfile, conversationContext, messages]);
-            
-            const loadUserProfile = () => {
-                if (typeof Storage !== 'undefined') {
-                    const savedProfile = localStorage.getItem('roloUserProfile');
-                    const savedContext = localStorage.getItem('roloConversationContext');
-                    const savedMessages = localStorage.getItem('roloMessages');
+            }
+        }
+        
+        // Render chat tab
+        function renderChat() {
+            return `
+                <div class="card">
+                    <div class="options-banner">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 1.25rem;">⚡</span>
+                            <strong>Options Trading Mode Active</strong>
+                        </div>
+                        <div style="font-size: 0.8rem;">
+                            Rolo specializes in options strategies, Greeks, and risk management
+                        </div>
+                    </div>
                     
-                    if (savedProfile) {
-                        setUserProfile(JSON.parse(savedProfile));
-                    }
-                    if (savedContext) {
-                        setConversationContext(JSON.parse(savedContext));
-                    }
-                    if (savedMessages) {
-                        const parsedMessages = JSON.parse(savedMessages);
-                        // Only load if we have more than the default welcome message
-                        if (parsedMessages.length > 1) {
-                            setMessages(parsedMessages);
-                        }
-                    }
-                }
-            };
-            
-            const updateUserProfile = (updates) => {
-                setUserProfile(prev => ({ ...prev, ...updates }));
-            };
-            
-            const updateConversationContext = (updates) => {
-                setConversationContext(prev => ({ ...prev, ...updates }));
-            };
-            
-            const analyzeUserMessage = (message) => {
-                const query = message.toLowerCase();
-                const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+                    <div class="messages">
+                        ${messages.map(msg => `
+                            <div class="message ${msg.type}">
+                                <div class="message-content">${msg.text}</div>
+                                ${msg.type === 'assistant' ? '<div class="message-meta">🧠 Rolo AI • Options Specialist</div>' : ''}
+                            </div>
+                        `).join('')}
+                        ${isTyping ? '<div class="message assistant"><div class="message-content">🤔 Rolo is analyzing...</div></div>' : ''}
+                    </div>
+                    
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            class="input" 
+                            id="messageInput"
+                            placeholder="Ask about options strategies, Greeks, or any ticker..."
+                            onkeypress="if(event.key==='Enter') sendMessage()"
+                            ${isTyping ? 'disabled' : ''}
+                        />
+                        <button class="btn" onclick="sendMessage()" ${isTyping ? 'disabled' : ''}>
+                            ${isTyping ? '⏳' : '➤'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render ticker tab
+        function renderTicker() {
+            return `
+                <div class="card">
+                    <h3>🔍 Options Stock Analysis</h3>
+                    <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
+                        Analyze ANY stock with focus on options opportunities
+                    </p>
+                    
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            class="input" 
+                            id="tickerInput"
+                            placeholder="Enter ticker (AAPL, TSLA, SPY...)"
+                            onkeypress="if(event.key==='Enter') analyzeTicker()"
+                            value="${ticker}"
+                        />
+                        <button class="btn" onclick="analyzeTicker()">
+                            🔍 Analyze
+                        </button>
+                    </div>
+                </div>
                 
-                // Learn from user's message - Enhanced for Options Trading
-                const learnings = {};
-                
-                // Track tickers mentioned
-                if (tickerMatches.length > 0) {
-                    const newTickers = tickerMatches.filter(t => !conversationContext.recentTickers.includes(t));
-                    if (newTickers.length > 0) {
-                        learnings.recentTickers = [...conversationContext.recentTickers, ...newTickers].slice(-10);
+                ${ticker && stockData[ticker] ? `
+                    <div class="card">
+                        <h4 style="margin-bottom: 1rem;">${ticker}</h4>
                         
-                        // Add to favorites if mentioned multiple times
-                        newTickers.forEach(ticker => {
-                            const mentionCount = messages.filter(m => m.text.includes(ticker)).length;
-                            if (mentionCount >= 2 && !userProfile.favoriteTickers.includes(ticker)) {
-                                updateUserProfile({
-                                    favoriteTickers: [...userProfile.favoriteTickers, ticker].slice(-8)
-                                });
-                            }
-                        });
-                    }
-                }
+                        <div class="stock-grid">
+                            <div class="stat">
+                                <div class="stat-label">Price</div>
+                                <div class="stat-value price-positive">$${stockData[ticker].price}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Change</div>
+                                <div class="stat-value ${stockData[ticker].change >= 0 ? 'price-positive' : 'price-negative'}">
+                                    ${stockData[ticker].change >= 0 ? '+' : ''}${stockData[ticker].change} (${stockData[ticker].changePercent}%)
+                                </div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Volume</div>
+                                <div class="stat-value">${stockData[ticker].volume}M</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Options Focus</div>
+                                <div class="stat-value" style="color: #7c3aed;">Ready</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
+                                <span>⚡</span>
+                                <span>Options Strategy Ideas for ${ticker}</span>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #374151;">
+                                <strong>For Options Traders:</strong><br/>
+                                • Check ${ticker}'s IV percentile for premium selling opportunities<br/>
+                                • Look for upcoming earnings or catalysts affecting volatility<br/>
+                                • Consider support/resistance levels for strike selection<br/>
+                                • Monitor options flow and unusual activity<br/><br/>
+                                <strong>Ask Rolo:</strong> "What's the best ${ticker} options strategy?" for detailed analysis!
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
                 
-                // Enhanced Options Trading Detection
-                const optionsTerms = [];
-                if (query.includes('call') || query.includes('calls')) optionsTerms.push('calls');
-                if (query.includes('put') || query.includes('puts')) optionsTerms.push('puts');
-                if (query.includes('0dte') || query.includes('0 dte')) optionsTerms.push('0dte');
-                if (query.includes('weekly') || query.includes('weeklies')) optionsTerms.push('weekly');
-                if (query.includes('monthly') || query.includes('monthlies')) optionsTerms.push('monthly');
-                if (query.includes('spread') || query.includes('spreads')) optionsTerms.push('spreads');
-                if (query.includes('straddle') || query.includes('strangle')) optionsTerms.push('straddles');
-                if (query.includes('iron condor') || query.includes('condor')) optionsTerms.push('condors');
-                if (query.includes('covered call')) optionsTerms.push('covered-calls');
-                if (query.includes('naked') || query.includes('cash secured')) optionsTerms.push('naked-options');
-                if (query.includes('butterfly')) optionsTerms.push('butterfly');
-                if (query.includes('collar')) optionsTerms.push('collar');
-                if (query.includes('dte') || query.includes('expiry') || query.includes('expiration')) optionsTerms.push('expiration');
-                if (query.includes('delta') || query.includes('gamma') || query.includes('theta') || query.includes('vega')) optionsTerms.push('greeks');
-                if (query.includes('iv') || query.includes('implied volatility')) optionsTerms.push('iv');
-                if (query.includes('earnings') && (query.includes('play') || query.includes('option'))) optionsTerms.push('earnings-plays');
-                
-                if (optionsTerms.length > 0) {
-                    learnings.optionsTermsUsed = [...new Set([...conversationContext.optionsTermsUsed, ...optionsTerms])].slice(-15);
-                    // Set trading style to options if not already
-                    if (userProfile.tradingStyle !== 'options') {
-                        updateUserProfile({ tradingStyle: 'options' });
-                    }
-                }
-                
-                // Detect options experience level
-                if (query.includes('beginner') || query.includes('new to options') || query.includes('just started')) {
-                    learnings.optionsExperience = 'beginner';
-                } else if (query.includes('advanced') || query.includes('complex strategies') || query.includes('sophisticated')) {
-                    learnings.optionsExperience = 'advanced';
-                } else if (optionsTerms.includes('greeks') || optionsTerms.includes('spreads') || optionsTerms.includes('condors')) {
-                    learnings.optionsExperience = 'advanced';
-                } else if (optionsTerms.length >= 3) {
-                    learnings.optionsExperience = 'intermediate';
-                }
-                
-                // Detect preferred expiry
-                if (query.includes('0dte') || query.includes('same day')) {
-                    learnings.preferredExpiry = 'daily';
-                } else if (query.includes('weekly') || query.includes('week')) {
-                    learnings.preferredExpiry = 'weekly';
-                } else if (query.includes('monthly') || query.includes('month') || query.includes('45 days')) {
-                    learnings.preferredExpiry = 'monthly';
-                }
-                
-                // Enhanced risk tolerance detection
-                if (query.includes('conservative') || query.includes('safe') || query.includes('low risk') || query.includes('covered calls only')) {
-                    learnings.riskTolerance = 'low';
-                    learnings.maxRisk = 'low';
-                } else if (query.includes('aggressive') || query.includes('high risk') || query.includes('yolo') || query.includes('0dte')) {
-                    learnings.riskTolerance = 'high';
-                    learnings.maxRisk = 'high';
-                } else if (query.includes('moderate') || query.includes('balanced')) {
-                    learnings.riskTolerance = 'medium';
-                    learnings.maxRisk = 'medium';
-                }
-                
-                // Detect trading style
-                if (query.includes('day trad') || query.includes('scalp') || query.includes('0dte') || query.includes('intraday')) {
-                    learnings.tradingStyle = 'day';
-                } else if (query.includes('swing') || query.includes('few days') || query.includes('weekly options')) {
-                    learnings.tradingStyle = 'swing';
-                } else if (query.includes('long term') || query.includes('invest') || query.includes('hold') || query.includes('leaps')) {
-                    learnings.tradingStyle = 'long-term';
-                }
-                
-                // Track topics discussed
-                const topics = [];
-                if (optionsTerms.length > 0) topics.push('options-trading');
-                if (query.includes('risk') || query.includes('stop') || query.includes('position size')) topics.push('risk-management');
-                if (query.includes('market') || query.includes('trend') || query.includes('spy') || query.includes('qqq')) topics.push('market-analysis');
-                if (query.includes('technical') || query.includes('chart') || query.includes('support') || query.includes('resistance')) topics.push('technical-analysis');
-                if (query.includes('earnings') || query.includes('catalyst') || query.includes('news')) topics.push('catalyst-trading');
-                if (query.includes('volatility') || query.includes('vix') || query.includes('iv')) topics.push('volatility-trading');
-                
-                if (topics.length > 0) {
-                    learnings.topicsDiscussed = [...new Set([...conversationContext.topicsDiscussed, ...topics])].slice(-10);
-                }
-                
-                // Track preferred strategies
-                const strategies = [];
-                if (query.includes('covered call')) strategies.push('covered-calls');
-                if (query.includes('cash secured put') || query.includes('csp')) strategies.push('cash-secured-puts');
-                if (query.includes('iron condor')) strategies.push('iron-condor');
-                if (query.includes('straddle')) strategies.push('straddle');
-                if (query.includes('strangle')) strategies.push('strangle');
-                if (query.includes('butterfly')) strategies.push('butterfly');
-                if (query.includes('calendar spread')) strategies.push('calendar-spread');
-                if (query.includes('vertical spread')) strategies.push('vertical-spread');
-                if (query.includes('wheel strategy') || query.includes('wheel')) strategies.push('wheel');
-                
-                if (strategies.length > 0) {
-                    learnings.preferredStrategies = [...new Set([...userProfile.preferredStrategies, ...strategies])].slice(-8);
-                }
-                
-                // Update profiles
-                if (Object.keys(learnings).length > 0) {
-                    const profileUpdates = {};
-                    const contextUpdates = {};
-                    
-                    Object.entries(learnings).forEach(([key, value]) => {
-                        if (['riskTolerance', 'tradingStyle', 'preferredStrategies', 'optionsExperience', 'preferredExpiry', 'maxRisk'].includes(key)) {
-                            profileUpdates[key] = value;
-                        } else {
-                            contextUpdates[key] = value;
-                        }
-                    });
-                    
-                    if (Object.keys(profileUpdates).length > 0) updateUserProfile(profileUpdates);
-                    if (Object.keys(contextUpdates).length > 0) updateConversationContext(contextUpdates);
-                }
-            };
+                <div class="card">
+                    <h4>📋 Quick Watchlist</h4>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                        ${['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT'].map(symbol => `
+                            <button 
+                                class="btn btn-small" 
+                                onclick="quickAnalyze('${symbol}')"
+                                style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db;"
+                            >
+                                ${symbol}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render plays tab
+        function renderPlays() {
+            const samplePlays = [
+                { symbol: 'SPY', type: 'Call', strike: 580, confidence: 85, reason: 'Strong momentum with high options volume' },
+                { symbol: 'QQQ', type: 'Call', strike: 500, confidence: 82, reason: 'Tech sector showing bullish options flow' },
+                { symbol: 'AAPL', type: 'Put', strike: 235, confidence: 78, reason: 'Overbought conditions, high IV environment' }
+            ];
             
-            const buildPersonalizedContext = (message) => {
-                const recentMessages = messages.slice(-5).map(m => `${m.type}: ${m.text}`).join('\n');
+            return `
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem;">🧠</span>
+                        <h3>High Confidence Options Plays</h3>
+                    </div>
+                    
+                    ${samplePlays.map(play => `
+                        <div style="border: 2px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem; background: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                <div>
+                                    <span style="font-size: 1rem; font-weight: 700;">${play.symbol}</span>
+                                    <span style="padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; background: ${play.type === 'Call' ? '#dcfce7' : '#fee2e2'}; color: ${play.type === 'Call' ? '#166534' : '#dc2626'};">
+                                        ${play.type}
+                                    </span>
+                                    <div style="margin-top: 0.25rem;">
+                                        <strong>$${play.strike} Strike</strong>
+                                    </div>
+                                </div>
+                                <div style="text-align: right; font-size: 1.25rem; font-weight: 700; color: #22c55e;">
+                                    ${play.confidence}%
+                                </div>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.75rem;">
+                                ${play.reason}
+                            </p>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 0.8rem; color: #6b7280;">
+                                    🧠 Rolo AI • Options Analysis
+                                </div>
+                                <button class="btn btn-small">Set Alert</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // Render alerts tab
+        function renderAlerts() {
+            return `
+                <div class="card">
+                    <h3>🔔 Options Trading Alerts</h3>
+                    
+                    <div style="padding: 0.75rem; background: #dcfce7; border-left: 4px solid #22c55e; border-radius: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 0.25rem;">✅ System Online</div>
+                        <div style="font-size: 0.8rem; color: #15803d; margin-bottom: 0.25rem;">Options trading mode active with AI analysis</div>
+                        <div style="font-size: 0.7rem; color: #6b7280;">Just now</div>
+                    </div>
+                    
+                    <div style="padding: 0.75rem; background: #faf5ff; border-left: 4px solid #7c3aed; border-radius: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.25rem;">⚡ High IV Environment</div>
+                        <div style="font-size: 0.8rem; color: #6d28d9; margin-bottom: 0.25rem;">Consider premium selling strategies - elevated options prices</div>
+                        <div style="font-size: 0.7rem; color: #6b7280;">5 minutes ago</div>
+                    </div>
+                    
+                    <div style="padding: 0.75rem; background: #fef3c7; border-left: 4px solid #eab308; border-radius: 0.75rem;">
+                        <div style="font-weight: 700; color: #92400e; margin-bottom: 0.25rem;">📊 Market Update</div>
+                        <div style="font-size: 0.8rem; color: #a16207; margin-bottom: 0.25rem;">SPY showing strong options flow - watch for breakout opportunities</div>
+                        <div style="font-size: 0.7rem; color: #6b7280;">15 minutes ago</div>
+                    </div>
+                </div>
                 
-                return `ROLO'S MEMORY - OPTIONS TRADER PROFILE:
-Trading Focus: ${userProfile.tradingStyle} (Options Specialist)
-Options Experience: ${userProfile.optionsExperience}
-Risk Tolerance: ${userProfile.riskTolerance} (Max Risk: ${userProfile.maxRisk})
-Preferred Expiry: ${userProfile.preferredExpiry}
-Favorite Tickers: ${userProfile.favoriteTickers.join(', ') || 'Building list...'}
-Recent Tickers: ${conversationContext.recentTickers.join(', ') || 'None'}
-Options Strategies Used: ${userProfile.preferredStrategies.join(', ') || 'Learning preferences'}
-Options Terms Discussed: ${conversationContext.optionsTermsUsed.join(', ') || 'Building knowledge'}
-Main Topics: ${conversationContext.topicsDiscussed.join(', ') || 'Getting started'}
-
-RECENT CONVERSATION CONTEXT:
-${recentMessages}
-
-USER'S CURRENT QUESTION: ${message}
-
-INSTRUCTIONS FOR ROLO:
-You are Rolo, an advanced AI assistant specializing in OPTIONS TRADING. This user is an options trader. 
-- Always prioritize options-related analysis and strategies
-- Reference their experience level (${userProfile.optionsExperience}) when explaining concepts
-- Consider their preferred expiry (${userProfile.preferredExpiry}) when suggesting plays
-- Match their risk tolerance (${userProfile.riskTolerance}) in recommendations
-- Remember their favorite tickers and previously discussed strategies
-- If they mention a ticker, think about options plays first
-- Use options terminology appropriately for their experience level
-- Be personal and reference previous conversations when relevant
-
-Respond as their dedicated options trading advisor with memory of their preferences and style.`;
+                <div class="card">
+                    <h4>Alert Settings</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" checked />
+                            <span>High Confidence Options Plays (80%+)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" checked />
+                            <span>Unusual Options Activity</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" checked />
+                            <span>IV Environment Changes</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" checked />
+                            <span>Earnings Calendar Updates</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Send message function
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
             
-            const testApiConnection = async () => {
-                try {
-                    const response = await fetch('/.netlify/functions/stock-data?symbol=SPY');
-                    if (response.ok) {
-                        setApiConnected(true);
-                        setApiError(null);
-                    } else {
-                        throw new Error('API connection failed');
-                    }
-                } catch (error) {
-                    console.error('API connection test failed:', error);
-                    setApiConnected(false);
-                    setApiError('API temporarily unavailable - using demo data');
-                }
-            };
+            if (!message || isTyping) return;
             
-            const loadWatchlistData = async () => {
-                const allTickers = Object.values(watchlists).flat();
-                const uniqueTickers = [...new Set(allTickers)];
+            // Add user message
+            messages.push({
+                id: messages.length + 1,
+                type: 'user',
+                text: message
+            });
+            
+            input.value = '';
+            isTyping = true;
+            renderCurrentTab();
+            
+            try {
+                // Call your Claude API
+                const response = await fetch('/.netlify/functions/claude-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
                 
-                for (const symbol of uniqueTickers.slice(0, 8)) {
-                    await fetchRealStockData(symbol, false);
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                }
-            };
-            
-            const fetchRealStockData = async (symbol, showLoading = true) => {
-                if (showLoading) setIsLoading(true);
+                const data = await response.json();
                 
-                try {
-                    const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.error && !data.fallback) {
-                        throw new Error(data.error);
-                    }
-                    
-                    // If it's fallback data, show warning
-                    if (data.fallback) {
-                        setApiError('Using demo data - live API temporarily unavailable');
-                        // Generate demo data
-                        const demoData = generateDemoData(symbol);
-                        setStockData(prev => ({ ...prev, [symbol]: demoData }));
-                        const analysis = generateAnalysis(symbol, demoData);
-                        setAnalysisResults(prev => ({ ...prev, [symbol]: analysis }));
-                        return demoData;
-                    }
-                    
-                    // Real API data
-                    setApiError(null);
-                    setStockData(prev => ({ ...prev, [symbol]: data }));
-                    const analysis = generateAnalysis(symbol, data);
-                    setAnalysisResults(prev => ({ ...prev, [symbol]: analysis }));
-                    return data;
-                    
-                } catch (error) {
-                    console.error('Error fetching stock data:', error);
-                    setApiError('Live data unavailable - using demo mode');
-                    
-                    // Fallback to demo data
-                    const demoData = generateDemoData(symbol);
-                    setStockData(prev => ({ ...prev, [symbol]: demoData }));
-                    const analysis = generateAnalysis(symbol, demoData);
-                    setAnalysisResults(prev => ({ ...prev, [symbol]: analysis }));
-                    return demoData;
-                } finally {
-                    if (showLoading) setIsLoading(false);
-                }
-            };
+                // Add AI response
+                messages.push({
+                    id: messages.length + 1,
+                    type: 'assistant',
+                    text: data.response || "I'm here to help with options trading! Ask me about any strategy or ticker."
+                });
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                messages.push({
+                    id: messages.length + 1,
+                    type: 'assistant',
+                    text: "I'm ready to help with options trading analysis! Try asking about specific strategies like covered calls, iron condors, or any ticker analysis."
+                });
+            }
             
-            const generateDemoData = (symbol) => ({
+            isTyping = false;
+            renderCurrentTab();
+        }
+        
+        // Analyze ticker function
+        function analyzeTicker() {
+            const input = document.getElementById('tickerInput');
+            const symbol = input.value.trim().toUpperCase();
+            
+            if (!symbol) return;
+            
+            ticker = symbol;
+            
+            // Generate mock data for demonstration
+            stockData[symbol] = {
                 price: (Math.random() * 200 + 50).toFixed(2),
                 change: (Math.random() * 20 - 10).toFixed(2),
                 changePercent: (Math.random() * 8 - 4).toFixed(2),
-                volume: (Math.random() * 100 + 10).toFixed(1),
-                high: (Math.random() * 220 + 60).toFixed(2),
-                low: (Math.random() * 180 + 40).toFixed(2),
-                open: (Math.random() * 200 + 50).toFixed(2),
-                prevClose: (Math.random() * 200 + 50).toFixed(2),
-                isLive: false
-            });
-            
-            const sendToClaudeAPI = async (message) => {
-                try {
-                    // Analyze user message for learning
-                    analyzeUserMessage(message);
-                    
-                    // Build personalized context
-                    const personalizedMessage = buildPersonalizedContext(message);
-
-                    const response = await fetch('/.netlify/functions/claude-chat', {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ message: personalizedMessage })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    return data.response;
-                    
-                } catch (error) {
-                    console.error('Claude API error:', error);
-                    
-                    // Enhanced fallback with user context
-                    const query = message.toLowerCase();
-                    const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
-                    
-                    if (tickerMatches.length > 0) {
-                        const ticker = tickerMatches[0];
-                        const isFavorite = userProfile.favoriteTickers.includes(ticker);
-                        const hasDiscussedBefore = conversationContext.recentTickers.includes(ticker);
-                        
-                        return `📈 ${ticker} Analysis (Fallback Mode):\n\n${isFavorite ? `I see ${ticker} is one of your favorites! ` : ''}${hasDiscussedBefore ? `We've talked about ${ticker} before. ` : ''}Here's my analysis:\n\n🔍 **Key Things to Watch for ${ticker}:**\n• Check recent volume patterns\n• Monitor support/resistance levels\n• Watch for earnings or news catalysts\n• Consider overall market correlation\n\n📊 **For Your ${userProfile.tradingStyle} Trading Style:**\n• ${userProfile.tradingStyle === 'day' ? 'Look for intraday momentum and quick scalp opportunities' : userProfile.tradingStyle === 'swing' ? 'Focus on 3-7 day moves and key technical levels' : 'Consider long-term fundamentals and major trend changes'}\n• Risk level: Appropriate for ${userProfile.riskTolerance} risk tolerance\n\nWhat specific aspect of ${ticker} interests you most?`;
-                    }
-                    
-                    return `🤖 Rolo here! I remember you prefer ${userProfile.tradingStyle} trading with ${userProfile.riskTolerance} risk tolerance. ${userProfile.favoriteTickers.length > 0 ? `Your favorites: ${userProfile.favoriteTickers.join(', ')}. ` : ''}I'm having a brief connection issue, but I'm ready to help!\n\nWhat's on your trading radar?`;
-                }
+                volume: (Math.random() * 100 + 10).toFixed(1)
             };
             
-            const generateAnalysis = (symbol, data) => {
-                const priceChange = parseFloat(data.change);
-                const volume = parseFloat(data.volume);
-                const isBullish = priceChange > 0;
-                const confidence = Math.min(95, Math.max(65, 75 + (Math.abs(priceChange) * 3) + (volume > 50 ? 10 : 0)));
-                
-                return {
-                    confidence: Math.floor(confidence),
-                    recommendation: isBullish ? 'BULLISH' : 'BEARISH',
-                    reasoning: `${symbol} showing ${isBullish ? 'positive' : 'negative'} momentum with ${data.changePercent}% change. Volume: ${data.volume}M. ${data.isLive ? 'Live data shows' : 'Analysis suggests'} ${isBullish ? 'continued strength' : 'potential weakness'}.`,
-                    technicalScore: Math.floor(60 + Math.random() * 35),
-                    sentimentScore: Math.floor(55 + Math.random() * 40),
-                    riskLevel: confidence > 80 ? 'Low' : confidence > 70 ? 'Medium' : 'High',
-                    priceTargets: {
-                        support: (parseFloat(data.price) * 0.92).toFixed(2),
-                        resistance: (parseFloat(data.price) * 1.08).toFixed(2)
-                    }
-                };
-            };
-            
-            const sendMessage = async () => {
-                if (!message.trim()) return;
-                
-                const userMessage = { id: Date.now(), type: 'user', text: message };
-                setMessages(prev => [...prev, userMessage]);
-                const userQuery = message;
-                setMessage('');
-                setIsTyping(true);
-                
-                try {
-                    const aiResponse = await sendToClaudeAPI(userQuery);
-                    
-                    const responseMessage = {
-                        id: Date.now() + 1,
-                        type: 'assistant',
-                        text: aiResponse
-                    };
-                    
-                    setMessages(prev => [...prev, responseMessage]);
-                } catch (error) {
-                    const errorMessage = {
-                        id: Date.now() + 1,
-                        type: 'assistant',
-                        text: "I'm here to help with trading analysis! Ask me about any stock or trading concept."
-                    };
-                    setMessages(prev => [...prev, errorMessage]);
-                } finally {
-                    setIsTyping(false);
-                }
-            };
-            
-            const analyzeStock = async () => {
-                if (!ticker.trim()) return;
-                
-                const symbol = ticker.toUpperCase().trim();
-                
-                // Track ticker in user's interests
-                updateConversationContext({
-                    recentTickers: [...new Set([...conversationContext.recentTickers, symbol])].slice(-10)
-                });
-                
-                await fetchRealStockData(symbol, true);
-            };
-            
-            // Watchlist functions
-            const createNewWatchlist = () => {
-                if (newWatchlistName.trim() && !watchlists[newWatchlistName]) {
-                    setWatchlists(prev => ({
-                        ...prev,
-                        [newWatchlistName]: []
-                    }));
-                    setActiveWatchlist(newWatchlistName);
-                    setNewWatchlistName('');
-                    setShowNewWatchlistInput(false);
-                }
-            };
-            
-            const deleteWatchlist = (name) => {
-                if (Object.keys(watchlists).length > 1) {
-                    const newWatchlists = { ...watchlists };
-                    delete newWatchlists[name];
-                    setWatchlists(newWatchlists);
-                    if (activeWatchlist === name) {
-                        setActiveWatchlist(Object.keys(newWatchlists)[0]);
-                    }
-                }
-            };
-            
-            const addToWatchlist = async () => {
-                if (newTicker.trim()) {
-                    const symbol = newTicker.toUpperCase();
-                    if (!watchlists[activeWatchlist].includes(symbol)) {
-                        setWatchlists(prev => ({
-                            ...prev,
-                            [activeWatchlist]: [...prev[activeWatchlist], symbol]
-                        }));
-                        
-                        // Learn user's interests
-                        if (!userProfile.favoriteTickers.includes(symbol)) {
-                            updateUserProfile({
-                                favoriteTickers: [...userProfile.favoriteTickers, symbol].slice(-8)
-                            });
-                        }
-                        
-                        await fetchRealStockData(symbol, false);
-                    }
-                    setNewTicker('');
-                }
-            };
-            
-            const removeFromWatchlist = (symbol) => {
-                setWatchlists(prev => ({
-                    ...prev,
-                    [activeWatchlist]: prev[activeWatchlist].filter(s => s !== symbol)
-                }));
-            };
-            
-            const getHighConfidencePlays = () => {
-                const plays = [];
-                Object.entries(analysisResults).forEach(([symbol, analysis]) => {
-                    if (analysis.confidence >= 75 && stockData[symbol]) {
-                        const stock = stockData[symbol];
-                        plays.push({
-                            symbol,
-                            type: analysis.recommendation === 'BULLISH' ? 'Call' : 'Put',
-                            strike: Math.floor(parseFloat(stock.price) * (analysis.recommendation === 'BULLISH' ? 1.03 : 0.97)),
-                            dte: Math.floor(Math.random() * 7) + 1,
-                            confidence: analysis.confidence,
-                            reason: analysis.reasoning.slice(0, 80) + '...',
-                            currentPrice: stock.price,
-                            changePercent: stock.changePercent
-                        });
-                    }
-                });
-                
-                return plays.slice(0, 6);
-            };
-            
-            const getRecentAlerts = () => {
-                const alerts = [];
-                
-                // System status alert
-                alerts.push({
-                    type: apiConnected ? 'success' : 'warning',
-                    title: apiConnected ? '✅ Live APIs Connected' : '⚠️ Demo Mode Active',
-                    message: apiConnected ? 'Real-time data from Alpha Vantage + Claude AI' : 'Live APIs temporarily unavailable - using demo data',
-                    time: 'Just now'
-                });
-                
-                // Generate alerts based on analysis
-                Object.entries(analysisResults).forEach(([symbol, analysis]) => {
-                    if (analysis.confidence >= 80) {
-                        alerts.push({
-                            type: 'success',
-                            title: '🎯 High Confidence Signal',
-                            message: `${symbol} ${analysis.recommendation} signal detected - ${analysis.confidence}% confidence`,
-                            time: '5 minutes ago'
-                        });
-                    }
-                    
-                    if (stockData[symbol] && Math.abs(parseFloat(stockData[symbol].changePercent)) > 3) {
-                        alerts.push({
-                            type: 'info',
-                            title: '📊 Unusual Movement',
-                            message: `${symbol} moving ${stockData[symbol].changePercent >= 0 ? 'up' : 'down'} ${Math.abs(stockData[symbol].changePercent)}% today`,
-                            time: '10 minutes ago'
-                        });
-                    }
-                });
-                
-                return alerts.slice(0, 5);
-            };
-            
-            // Render functions
-            const renderChat = () => (
-                <div className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3>💬 Chat with Rolo AI</h3>
-                        <button 
-                            className="btn btn-small"
-                            onClick={() => {
-                                if (window.confirm('Clear conversation history and reset Rolo\'s memory?')) {
-                                    setMessages([{ id: 1, type: 'assistant', text: "Hello! I'm Rolo, your AI-powered trading assistant. I'm starting fresh and ready to learn your trading style again!" }]);
-                                    setUserProfile({
-                                        favoriteTickers: [],
-                                        riskTolerance: 'medium',
-                                        tradingStyle: 'swing',
-                                        preferredStrategies: [],
-                                        successfulTrades: [],
-                                        interests: []
-                                    });
-                                    setConversationContext({
-                                        recentTickers: [],
-                                        topicsDiscussed: [],
-                                        questionsAsked: [],
-                                        tradingGoals: []
-                                    });
-                                    if (typeof Storage !== 'undefined') {
-                                        localStorage.removeItem('roloUserProfile');
-                                        localStorage.removeItem('roloConversationContext');
-                                        localStorage.removeItem('roloMessages');
-                                    }
-                                }
-                            }}
-                            style={{ fontSize: '0.75rem' }}
-                        >
-                            🔄 Reset Memory
-                        </button>
-                    </div>
-                    
-                    {/* Options Trader Focus Banner */}
-                    <div className="options-focused">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '1.25rem' }}>⚡</span>
-                            <strong>Options Trading Mode Active</strong>
-                        </div>
-                        <div style={{ fontSize: '0.8rem' }}>
-                            Rolo is optimized for options analysis, Greeks, strategies, and risk management
-                        </div>
-                    </div>
-                    
-                    {/* User Profile Display */}
-                    {(userProfile.favoriteTickers.length > 0 || conversationContext.recentTickers.length > 0 || conversationContext.optionsTermsUsed.length > 0) && (
-                        <div style={{ 
-                            background: '#f0f9ff', 
-                            border: '2px solid #0ea5e9', 
-                            borderRadius: '0.75rem', 
-                            padding: '0.75rem', 
-                            marginBottom: '1rem',
-                            fontSize: '0.8rem'
-                        }}>
-                            <div style={{ fontWeight: '700', color: '#0ea5e9', marginBottom: '0.5rem' }}>
-                                🧠 Rolo's Memory - Options Trader Profile:
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.25rem' }}>
-                                <div><strong>Experience:</strong> {userProfile.optionsExperience} • <strong>Style:</strong> {userProfile.tradingStyle}</div>
-                                <div><strong>Risk:</strong> {userProfile.riskTolerance} • <strong>Preferred Expiry:</strong> {userProfile.preferredExpiry}</div>
-                                {userProfile.favoriteTickers.length > 0 && (
-                                    <div><strong>Favorites:</strong> {userProfile.favoriteTickers.slice(-4).join(', ')}</div>
-                                )}
-                                {conversationContext.optionsTermsUsed.length > 0 && (
-                                    <div><strong>Options Strategies:</strong> {conversationContext.optionsTermsUsed.slice(-4).join(', ')}</div>
-                                )}
-                                {userProfile.preferredStrategies.length > 0 && (
-                                    <div><strong>Preferred Plays:</strong> {userProfile.preferredStrategies.slice(-3).join(', ')}</div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* API Status */}
-                    {apiError && (
-                        <div className="error-state">
-                            ⚠️ {apiError}
-                        </div>
-                    )}
-                    
-                    <div className="messages">
-                        {messages.map(msg => (
-                            <div key={msg.id} className={`message ${msg.type}`}>
-                                <div className="message-content">{msg.text}</div>
-                                {msg.type === 'assistant' && (
-                                    <div className="message-meta">
-                                        🧠 Rolo AI • {apiConnected ? 'Live Analysis' : 'Demo Mode'} • Learning Mode
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        {isTyping && (
-                            <div className="message assistant">
-                                <div className="message-content">🤔 Rolo is analyzing and learning...</div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="input-group">
-                        <input 
-                            className="input"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                            placeholder="Ask Rolo about any stock, strategy, or market trend..."
-                            disabled={isTyping}
-                        />
-                        <button className="btn" onClick={sendMessage} disabled={isTyping}>
-                            {isTyping ? '⏳' : '➤'}
-                        </button>
-                    </div>
-                </div>
-            );
-            
-            const renderTicker = () => (
-                <div>
-                    <div className="card">
-                        <h3>🔍 Universal Stock Analysis</h3>
-                        <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
-                            Analyze ANY stock ticker with {apiConnected ? 'live Alpha Vantage data' : 'demo data'}
-                        </p>
-                        
-                        {apiError && (
-                            <div className="error-state">
-                                ⚠️ {apiError}
-                            </div>
-                        )}
-                        
-                        <div className="input-group">
-                            <input 
-                                className="input"
-                                value={ticker}
-                                onChange={(e) => setTicker(e.target.value.toUpperCase())}
-                                onKeyPress={(e) => e.key === 'Enter' && analyzeStock()}
-                                placeholder="Enter ANY ticker (AAPL, TSLA, BRK.A, AMZN, etc.)"
-                                disabled={isLoading}
-                            />
-                            <button className="btn" onClick={analyzeStock} disabled={isLoading}>
-                                {isLoading ? '⏳ Analyzing...' : '🔍 Analyze'}
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {ticker && stockData[ticker] && (
-                        <div className="card">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                <h4 style={{ fontSize: '1.25rem' }}>{ticker}</h4>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div className="status-dot" style={{ backgroundColor: stockData[ticker].isLive ? '#22c55e' : '#eab308' }}></div>
-                                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                        {stockData[ticker].isLive ? 'Live Data' : 'Demo Data'}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div className="stock-grid">
-                                <div className="stat">
-                                    <div className="stat-label">Price</div>
-                                    <div className="stat-value price-positive">${stockData[ticker].price}</div>
-                                </div>
-                                <div className="stat">
-                                    <div className="stat-label">Change</div>
-                                    <div className={`stat-value ${stockData[ticker].change >= 0 ? 'price-positive' : 'price-negative'}`}>
-                                        {stockData[ticker].change >= 0 ? '+' : ''}{stockData[ticker].change} ({stockData[ticker].changePercent}%)
-                                    </div>
-                                </div>
-                                <div className="stat">
-                                    <div className="stat-label">Volume</div>
-                                    <div className="stat-value">{stockData[ticker].volume}M</div>
-                                </div>
-                                <div className="stat">
-                                    <div className="stat-label">High/Low</div>
-                                    <div className="stat-value">${stockData[ticker].high}/${stockData[ticker].low}</div>
-                                </div>
-                            </div>
-                            
-                            {analysisResults[ticker] && (
-                                <div className="analysis-section">
-                                    <div className="analysis-header">
-                                        <span>🧠</span>
-                                        <span>Rolo's AI Analysis for {ticker}</span>
-                                    </div>
-                                    <p style={{ marginBottom: '0.75rem', fontSize: '0.875rem' }}>
-                                        {analysisResults[ticker].reasoning}
-                                    </p>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                                        <div>
-                                            <span>Confidence: </span>
-                                            <span className="confidence-score">{analysisResults[ticker].confidence}%</span>
-                                        </div>
-                                        <div style={{ 
-                                            fontWeight: 'bold',
-                                            color: analysisResults[ticker].recommendation === 'BULLISH' ? '#22c55e' : '#ef4444'
-                                        }}>
-                                            {analysisResults[ticker].recommendation}
-                                        </div>
-                                    </div>
-                                    <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                                        Support: ${analysisResults[ticker].priceTargets.support} | 
-                                        Resistance: ${analysisResults[ticker].priceTargets.resistance}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                    
-                    {/* Multiple Watchlists */}
-                    <div className="card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h4>📋 Your Watchlists</h4>
-                            <button 
-                                className="btn btn-small"
-                                onClick={() => setShowNewWatchlistInput(!showNewWatchlistInput)}
-                            >
-                                + New List
-                            </button>
-                        </div>
-                        
-                        {showNewWatchlistInput && (
-                            <div className="input-group">
-                                <input 
-                                    className="input"
-                                    value={newWatchlistName}
-                                    onChange={(e) => setNewWatchlistName(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && createNewWatchlist()}
-                                    placeholder="Watchlist name..."
-                                />
-                                <button className="btn btn-success btn-small" onClick={createNewWatchlist}>
-                                    Create
-                                </button>
-                            </div>
-                        )}
-                        
-                        <div className="watchlist-tabs">
-                            {Object.keys(watchlists).map(name => (
-                                <div key={name} style={{ display: 'flex', alignItems: 'center' }}>
-                                    <div
-                                        className={`watchlist-tab ${activeWatchlist === name ? 'active' : ''}`}
-                                        onClick={() => setActiveWatchlist(name)}
-                                    >
-                                        {name} ({watchlists[name].length})
-                                    </div>
-                                    {Object.keys(watchlists).length > 1 && (
-                                        <button 
-                                            className="menu-btn"
-                                            onClick={() => deleteWatchlist(name)}
-                                            title="Delete watchlist"
-                                        >
-                                            🗑️
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        
-                        <div className="input-group">
-                            <input 
-                                className="input"
-                                value={newTicker}
-                                onChange={(e) => setNewTicker(e.target.value.toUpperCase())}
-                                onKeyPress={(e) => e.key === 'Enter' && addToWatchlist()}
-                                placeholder={`Add ticker to ${activeWatchlist}...`}
-                            />
-                            <button className="btn btn-small" onClick={addToWatchlist}>Add</button>
-                        </div>
-                        
-                        <div className="watchlist-section">
-                            {watchlists[activeWatchlist].map(symbol => (
-                                <div 
-                                    key={symbol} 
-                                    className="watchlist-item"
-                                    onClick={() => {
-                                        setTicker(symbol);
-                                        analyzeStock();
-                                    }}
-                                >
-                                    <div>
-                                        <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>{symbol}</div>
-                                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                            {stockData[symbol] 
-                                                ? `$${stockData[symbol].price} (${stockData[symbol].changePercent >= 0 ? '+' : ''}${stockData[symbol].changePercent}%)`
-                                                : 'Click to analyze'
-                                            }
-                                        </div>
-                                    </div>
-                                    <div className="watchlist-actions">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
-                                            <div className="status-dot" style={{ 
-                                                width: '6px', 
-                                                height: '6px', 
-                                                backgroundColor: stockData[symbol]?.isLive ? '#22c55e' : '#eab308' 
-                                            }}></div>
-                                            <span>{stockData[symbol] ? (stockData[symbol].isLive ? 'Live' : 'Demo') : 'Ready'}</span>
-                                        </div>
-                                        <button 
-                                            className="menu-btn"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeFromWatchlist(symbol);
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            {watchlists[activeWatchlist].length === 0 && (
-                                <div className="empty-state">
-                                    <div className="empty-icon">📈</div>
-                                    <div>No tickers in this watchlist yet</div>
-                                    <div style={{ fontSize: '0.875rem' }}>Add some above to get started!</div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
-            
-            const renderAnalysis = () => (
-                <div>
-                    <div className="card">
-                        <h3>📊 Technical Analysis Dashboard</h3>
-                        {ticker && analysisResults[ticker] ? (
-                            <div>
-                                <h4 style={{ marginBottom: '1rem' }}>Deep Analysis: {ticker}</h4>
-                                
-                                <div className="stock-grid">
-                                    <div className="stat">
-                                        <div className="stat-label">Technical Score</div>
-                                        <div className="stat-value" style={{ color: '#7c3aed' }}>
-                                            {analysisResults[ticker].technicalScore}/100
-                                        </div>
-                                    </div>
-                                    <div className="stat">
-                                        <div className="stat-label">Sentiment Score</div>
-                                        <div className="stat-value" style={{ color: '#7c3aed' }}>
-                                            {analysisResults[ticker].sentimentScore}/100
-                                        </div>
-                                    </div>
-                                    <div className="stat">
-                                        <div className="stat-label">Risk Level</div>
-                                        <div className="stat-value" style={{ 
-                                            color: analysisResults[ticker].riskLevel === 'Low' ? '#22c55e' : 
-                                                   analysisResults[ticker].riskLevel === 'Medium' ? '#eab308' : '#ef4444'
-                                        }}>
-                                            {analysisResults[ticker].riskLevel}
-                                        </div>
-                                    </div>
-                                    <div className="stat">
-                                        <div className="stat-label">AI Confidence</div>
-                                        <div className="stat-value" style={{ color: '#22c55e' }}>
-                                            {analysisResults[ticker].confidence}%
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="analysis-section">
-                                    <div className="analysis-header">
-                                        <span>🎯</span>
-                                        <span>Key Price Levels</span>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                        <div>
-                                            <strong>Support Level:</strong><br/>
-                                            <span style={{ fontSize: '1.25rem', color: '#ef4444' }}>
-                                                ${analysisResults[ticker].priceTargets.support}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <strong>Resistance Level:</strong><br/>
-                                            <span style={{ fontSize: '1.25rem', color: '#22c55e' }}>
-                                                ${analysisResults[ticker].priceTargets.resistance}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="analysis-section">
-                                    <div className="analysis-header">
-                                        <span>🧠</span>
-                                        <span>AI Analysis Summary</span>
-                                    </div>
-                                    <p>{analysisResults[ticker].reasoning}</p>
-                                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'white', borderRadius: '0.25rem' }}>
-                                        <strong>Recommendation: </strong>
-                                        <span style={{ 
-                                            color: analysisResults[ticker].recommendation === 'BULLISH' ? '#22c55e' : '#ef4444',
-                                            fontWeight: 'bold'
-                                        }}>
-                                            {analysisResults[ticker].recommendation}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="empty-state">
-                                <div className="empty-icon">📊</div>
-                                <div>No stock analyzed yet</div>
-                                <div style={{ fontSize: '0.875rem' }}>
-                                    Go to the Ticker tab and analyze a stock to see detailed technical analysis here
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-            
-            const renderPlays = () => {
-                const plays = getHighConfidencePlays();
-                
-                return (
-                    <div>
-                        <div className="card">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                                <span style={{ fontSize: '1.5rem' }}>🧠</span>
-                                <h3>High Confidence Trading Plays</h3>
-                            </div>
-                            
-                            {plays.length > 0 ? (
-                                <div>
-                                    {plays.map((play, index) => (
-                                        <div key={index} className="play-card">
-                                            <div className="play-header">
-                                                <div>
-                                                    <span className="play-symbol">{play.symbol}</span>
-                                                    <span className={`play-type ${play.type.toLowerCase()}`}>
-                                                        {play.type}
-                                                    </span>
-                                                    <div style={{ marginTop: '0.25rem' }}>
-                                                        <strong>${play.strike} Strike</strong> • {play.dte}DTE
-                                                    </div>
-                                                    <div className="play-details">
-                                                        Current: ${play.currentPrice} ({play.changePercent >= 0 ? '+' : ''}{play.changePercent}%)
-                                                    </div>
-                                                </div>
-                                                <div className="play-confidence">
-                                                    {play.confidence}%
-                                                </div>
-                                            </div>
-                                            <p className="play-details" style={{ marginBottom: '0.75rem' }}>
-                                                {play.reason}
-                                            </p>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                                    🧠 Rolo AI • {apiConnected ? 'Live Data' : 'Demo Mode'}
-                                                </div>
-                                                <button className="btn btn-small">Set Alert</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="empty-state">
-                                    <div className="empty-icon">🎯</div>
-                                    <div>No High Confidence Plays Yet</div>
-                                    <div style={{ fontSize: '0.875rem' }}>
-                                        Analyze stocks in the Ticker tab to generate AI-powered trading opportunities
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            };
-            
-            const renderAlerts = () => {
-                const alerts = getRecentAlerts();
-                
-                return (
-                    <div>
-                        <div className="card">
-                            <h3>🔔 Smart Alert System</h3>
-                            <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
-                                {apiConnected ? 'Live notifications from Alpha Vantage data' : 'Demo notifications - connect APIs for live alerts'}
-                            </p>
-                            
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <h4 style={{ marginBottom: '0.75rem' }}>Alert Settings</h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input type="checkbox" defaultChecked />
-                                        <span>High Confidence Plays (80%+)</span>
-                                    </label>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input type="checkbox" defaultChecked />
-                                        <span>Unusual Price Movement (3%+)</span>
-                                    </label>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input type="checkbox" defaultChecked />
-                                        <span>Watchlist Stock Alerts</span>
-                                    </label>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input type="checkbox" defaultChecked />
-                                        <span>Claude AI Analysis Updates</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="card">
-                            <h4 style={{ marginBottom: '1rem' }}>Recent Alerts</h4>
-                            
-                            {alerts.map((alert, index) => (
-                                <div key={index} className={`alert-item alert-${alert.type}`}>
-                                    <div className="alert-title" style={{
-                                        color: alert.type === 'success' ? '#166534' : 
-                                               alert.type === 'info' ? '#7c3aed' : '#92400e'
-                                    }}>
-                                        {alert.title}
-                                    </div>
-                                    <div className="alert-message" style={{
-                                        color: alert.type === 'success' ? '#15803d' : 
-                                               alert.type === 'info' ? '#6d28d9' : '#a16207'
-                                    }}>
-                                        {alert.message}
-                                    </div>
-                                    <div className="alert-time">{alert.time}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            };
-            
-            const tabs = [
-                { id: 'chat', icon: '💬', label: 'Chat', component: renderChat },
-                { id: 'ticker', icon: '🔍', label: 'Ticker', component: renderTicker },
-                { id: 'analysis', icon: '📊', label: 'Analysis', component: renderAnalysis },
-                { id: 'plays', icon: '📈', label: 'Plays', component: renderPlays },
-                { id: 'alerts', icon: '🔔', label: 'Alerts', component: renderAlerts }
-            ];
-            
-            return (
-                <div className="app">
-                    <div className="header">
-                        <h1>🤖 Rolo AI Trading</h1>
-                        <p>Live APIs: Alpha Vantage + Claude AI</p>
-                    </div>
-                    
-                    <div className="status-bar">
-                        <div className="status-dot" style={{ backgroundColor: apiConnected ? '#22c55e' : '#eab308' }}></div>
-                        <span>
-                            {apiConnected 
-                                ? '✅ Rolo Online: Live APIs • Learning Your Style • Memory Active' 
-                                : '⚠️ Demo Mode: APIs temporarily unavailable • Memory Active'
-                            }
-                        </span>
-                    </div>
-                    
-                    <div className="content">
-                        {tabs.find(tab => tab.id === activeTab)?.component()}
-                    </div>
-                    
-                    <div className="tabs">
-                        {tabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-                                onClick={() => setActiveTab(tab.id)}
-                            >
-                                <div className="tab-icon">{tab.icon}</div>
-                                <div>{tab.label}</div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            );
+            renderCurrentTab();
         }
         
-        ReactDOM.render(<App />, document.getElementById('app'));
+        // Quick analyze function
+        function quickAnalyze(symbol) {
+            document.getElementById('tickerInput').value = symbol;
+            analyzeTicker();
+        }
     </script>
 </body>
 </html>
