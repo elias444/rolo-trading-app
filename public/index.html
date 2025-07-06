@@ -46,13 +46,31 @@
         .status-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; }
         .content { 
             flex: 1; 
-            padding: 0.75rem; 
-            padding-bottom: 6rem; /* More space for tabs */
+            padding: 0.5rem; 
+            padding-bottom: 7rem; /* More space for input area */
             overflow-y: auto; 
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             transition: all 0.3s ease;
+            min-height: 0; /* Important for flex scrolling */
+        }
+        
+        /* FIXED INPUT AREA - ALWAYS VISIBLE */
+        .input-section {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            margin: 0 -0.5rem -1rem -0.5rem;
+            z-index: 50;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* ENSURE FULL SCROLLABILITY */
+        .scrollable-content {
+            padding-bottom: 2rem; /* Extra space at bottom */
         }
         
         /* SMOOTH PAGE TRANSITIONS */
@@ -412,30 +430,35 @@
             }
         }
         
-        // Render chat tab
+        // Render chat tab with fixed input positioning
         function renderChat() {
             return `
-                <div class="card">
-                    <div class="options-banner">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                            <span style="font-size: 1.25rem;">⚡</span>
-                            <strong>Options Trading Specialist</strong>
-                        </div>
-                        <div style="font-size: 0.8rem;">
-                            Ask about any ticker's options strategies • Greeks • Risk management
-                        </div>
-                    </div>
-                    
-                    <div class="messages">
-                        ${messages.map(msg => `
-                            <div class="message ${msg.type}">
-                                <div class="message-content">${msg.text}</div>
-                                ${msg.type === 'assistant' ? '<div class="message-meta">🧠 Rolo AI • Options Expert</div>' : ''}
+                <div class="scrollable-content">
+                    <div class="card">
+                        <div class="options-banner">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span style="font-size: 1.25rem;">⚡</span>
+                                <strong>Options Trading Specialist</strong>
                             </div>
-                        `).join('')}
-                        ${isTyping ? '<div class="message assistant"><div class="message-content">🤔 Rolo is analyzing options strategies...</div></div>' : ''}
+                            <div style="font-size: 0.8rem;">
+                                Ask about any ticker's options strategies • Greeks • Risk management
+                            </div>
+                        </div>
+                        
+                        <div class="messages">
+                            ${messages.map(msg => `
+                                <div class="message ${msg.type}">
+                                    <div class="message-content">${msg.text}</div>
+                                    ${msg.type === 'assistant' ? '<div class="message-meta">🧠 Rolo AI • Options Expert</div>' : ''}
+                                </div>
+                            `).join('')}
+                            ${isTyping ? '<div class="message assistant"><div class="message-content">🤔 Rolo is analyzing options strategies...</div></div>' : ''}
+                        </div>
                     </div>
-                    
+                </div>
+                
+                <!-- FIXED INPUT SECTION -->
+                <div class="input-section">
                     <div class="input-group">
                         <input 
                             type="text" 
