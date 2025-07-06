@@ -17,12 +17,18 @@
             display: flex; 
             flex-direction: column; 
             overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
         .header { 
             background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%); 
             color: white; 
             padding: 1rem; 
             flex-shrink: 0;
+            z-index: 10;
         }
         .header h1 { font-size: 1.125rem; margin-bottom: 0.25rem; font-weight: 700; }
         .header p { opacity: 0.9; font-size: 0.8rem; }
@@ -35,11 +41,13 @@
             align-items: center; 
             gap: 0.5rem;
             flex-shrink: 0;
+            z-index: 10;
         }
         .status-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; }
         .content { 
             flex: 1; 
             padding: 0.75rem; 
+            padding-bottom: 5rem; /* Space for tabs */
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
         }
@@ -50,12 +58,19 @@
             border-radius: 0.75rem; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        /* FIXED BOTTOM TABS */
         .tabs { 
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             display: flex; 
             background: white; 
             border-top: 1px solid #e5e7eb; 
-            flex-shrink: 0;
-            padding: 0.25rem 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            padding: 0.5rem 0;
+            height: 4rem;
         }
         .tab { 
             flex: 1; 
@@ -67,12 +82,39 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
+            justify-content: center;
             gap: 0.125rem;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             color: #6b7280;
+            transition: all 0.2s;
+            min-height: 3rem;
         }
-        .tab.active { background: #faf5ff; color: #7c3aed; font-weight: 600; border-radius: 0.5rem; }
-        .tab-icon { font-size: 1.1rem; }
+        .tab.active { 
+            background: #faf5ff; 
+            color: #7c3aed; 
+            font-weight: 600; 
+            border-radius: 0.5rem;
+            margin: 0.25rem;
+        }
+        .tab-icon { font-size: 1.2rem; }
+        .tab-label { font-size: 0.65rem; font-weight: 500; }
+        
+        /* HOME BUTTON */
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #7c3aed;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
         .input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
         .input { 
             flex: 1; 
@@ -99,9 +141,9 @@
         .btn-small { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
         
         .messages { 
-            height: 45vh;
+            height: 50vh;
             min-height: 300px;
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto; 
             border: 2px solid #e2e8f0; 
             padding: 0.75rem; 
@@ -154,11 +196,33 @@
             text-align: center;
         }
         
+        .play-card {
+            border: 2px solid #e2e8f0; 
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            margin-bottom: 1rem; 
+            background: white;
+        }
+        
+        .alert-item {
+            padding: 0.75rem; 
+            border-radius: 0.75rem; 
+            margin-bottom: 0.75rem; 
+            border-left: 4px solid;
+        }
+        .alert-success { background: #dcfce7; border-color: #22c55e; }
+        .alert-info { background: #faf5ff; border-color: #7c3aed; }
+        .alert-warning { background: #fef3c7; border-color: #eab308; }
+        
         @media (max-width: 768px) {
             .stock-grid { grid-template-columns: 1fr; gap: 0.5rem; }
-            .messages { height: 40vh; min-height: 250px; }
+            .messages { height: 45vh; min-height: 250px; }
             .header { padding: 0.75rem; }
-            .content { padding: 0.5rem; }
+            .content { padding: 0.5rem; padding-bottom: 5rem; }
+            .tabs { height: 4.5rem; padding: 0.75rem 0; }
+            .tab { min-height: 3rem; }
+            .tab-icon { font-size: 1.1rem; }
+            .tab-label { font-size: 0.6rem; }
         }
     </style>
 </head>
@@ -172,29 +236,30 @@
             
             <div class="status-bar">
                 <div class="status-dot"></div>
-                <span>✅ Rolo Online: Options Trading Mode Active</span>
+                <span>✅ Rolo Online: Options Trading Specialist</span>
             </div>
             
             <div class="content" id="content">
                 <!-- Content will be inserted here -->
             </div>
             
+            <!-- FIXED BOTTOM TABS -->
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('chat')">
+                <button class="tab active" onclick="switchTab('chat')" id="chat-tab">
                     <div class="tab-icon">💬</div>
-                    <div>Chat</div>
+                    <div class="tab-label">Chat</div>
                 </button>
-                <button class="tab" onclick="switchTab('ticker')">
+                <button class="tab" onclick="switchTab('ticker')" id="ticker-tab">
                     <div class="tab-icon">🔍</div>
-                    <div>Ticker</div>
+                    <div class="tab-label">Ticker</div>
                 </button>
-                <button class="tab" onclick="switchTab('plays')">
+                <button class="tab" onclick="switchTab('plays')" id="plays-tab">
                     <div class="tab-icon">📈</div>
-                    <div>Plays</div>
+                    <div class="tab-label">Plays</div>
                 </button>
-                <button class="tab" onclick="switchTab('alerts')">
+                <button class="tab" onclick="switchTab('alerts')" id="alerts-tab">
                     <div class="tab-icon">🔔</div>
-                    <div>Alerts</div>
+                    <div class="tab-label">Alerts</div>
                 </button>
             </div>
         </div>
@@ -207,7 +272,7 @@
             {
                 id: 1,
                 type: 'assistant',
-                text: "Hello! I'm Rolo, your AI-powered options trading assistant. I specialize in options strategies, Greeks analysis, and risk management. What would you like to explore today?"
+                text: "Hello! I'm Rolo, your AI-powered options trading assistant. I specialize in options strategies, Greeks analysis, and risk management. Ask me about any ticker's options opportunities!"
             }
         ];
         let isTyping = false;
@@ -226,9 +291,14 @@
             
             // Update tab styling
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.closest('.tab').classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
             
             renderCurrentTab();
+        }
+        
+        // Go home function
+        function goHome() {
+            switchTab('chat');
         }
         
         // Render current tab content
@@ -252,10 +322,12 @@
             
             // Scroll to bottom of messages if chat tab
             if (currentTab === 'chat') {
-                const messagesDiv = document.querySelector('.messages');
-                if (messagesDiv) {
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                }
+                setTimeout(() => {
+                    const messagesDiv = document.querySelector('.messages');
+                    if (messagesDiv) {
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }
+                }, 100);
             }
         }
         
@@ -266,10 +338,10 @@
                     <div class="options-banner">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                             <span style="font-size: 1.25rem;">⚡</span>
-                            <strong>Options Trading Mode Active</strong>
+                            <strong>Options Trading Specialist</strong>
                         </div>
                         <div style="font-size: 0.8rem;">
-                            Rolo specializes in options strategies, Greeks, and risk management
+                            Ask about any ticker's options strategies • Greeks • Risk management
                         </div>
                     </div>
                     
@@ -277,10 +349,10 @@
                         ${messages.map(msg => `
                             <div class="message ${msg.type}">
                                 <div class="message-content">${msg.text}</div>
-                                ${msg.type === 'assistant' ? '<div class="message-meta">🧠 Rolo AI • Options Specialist</div>' : ''}
+                                ${msg.type === 'assistant' ? '<div class="message-meta">🧠 Rolo AI • Options Expert</div>' : ''}
                             </div>
                         `).join('')}
-                        ${isTyping ? '<div class="message assistant"><div class="message-content">🤔 Rolo is analyzing...</div></div>' : ''}
+                        ${isTyping ? '<div class="message assistant"><div class="message-content">🤔 Rolo is analyzing options strategies...</div></div>' : ''}
                     </div>
                     
                     <div class="input-group">
@@ -288,7 +360,7 @@
                             type="text" 
                             class="input" 
                             id="messageInput"
-                            placeholder="Ask about options strategies, Greeks, or any ticker..."
+                            placeholder="Ask: 'HOOD options strategies' or 'best AAPL calls'"
                             onkeypress="if(event.key==='Enter') sendMessage()"
                             ${isTyping ? 'disabled' : ''}
                         />
@@ -304,6 +376,11 @@
         function renderTicker() {
             return `
                 <div class="card">
+                    <button class="home-btn" onclick="goHome()">
+                        <span>🏠</span>
+                        <span>Back to Chat</span>
+                    </button>
+                    
                     <h3>🔍 Options Stock Analysis</h3>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
                         Analyze ANY stock with focus on options opportunities
@@ -314,7 +391,7 @@
                             type="text" 
                             class="input" 
                             id="tickerInput"
-                            placeholder="Enter ticker (AAPL, TSLA, SPY...)"
+                            placeholder="Enter ticker (HOOD, AAPL, TSLA...)"
                             onkeypress="if(event.key==='Enter') analyzeTicker()"
                             value="${ticker}"
                         />
@@ -326,7 +403,7 @@
                 
                 ${ticker && stockData[ticker] ? `
                     <div class="card">
-                        <h4 style="margin-bottom: 1rem;">${ticker}</h4>
+                        <h4 style="margin-bottom: 1rem;">${ticker} - Options Focus</h4>
                         
                         <div class="stock-grid">
                             <div class="stat">
@@ -344,36 +421,38 @@
                                 <div class="stat-value">${stockData[ticker].volume}M</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">Options Focus</div>
-                                <div class="stat-value" style="color: #7c3aed;">Ready</div>
+                                <div class="stat-label">Options Flow</div>
+                                <div class="stat-value" style="color: #7c3aed;">Active</div>
                             </div>
                         </div>
                         
                         <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
                                 <span>⚡</span>
-                                <span>Options Strategy Ideas for ${ticker}</span>
+                                <span>Options Analysis for ${ticker}</span>
                             </div>
-                            <div style="font-size: 0.9rem; color: #374151;">
-                                <strong>For Options Traders:</strong><br/>
-                                • Check ${ticker}'s IV percentile for premium selling opportunities<br/>
-                                • Look for upcoming earnings or catalysts affecting volatility<br/>
-                                • Consider support/resistance levels for strike selection<br/>
-                                • Monitor options flow and unusual activity<br/><br/>
-                                <strong>Ask Rolo:</strong> "What's the best ${ticker} options strategy?" for detailed analysis!
+                            <div style="font-size: 0.9rem; color: #374151; line-height: 1.4;">
+                                <strong>For ${ticker} Options Traders:</strong><br/>
+                                ${stockData[ticker].change >= 0 ? 
+                                    `• Bullish momentum - consider call options or bull spreads<br/>• Check IV levels before buying - avoid overpaying for premium<br/>• Look at weekly options for shorter-term plays` : 
+                                    `• Bearish pressure - consider put options or bear spreads<br/>• High IV environment may favor selling strategies<br/>• Check support levels for cash-secured put opportunities`
+                                }<br/>
+                                • Current trend suggests ${stockData[ticker].change >= 0 ? 'bullish' : 'bearish'} options strategies<br/>
+                                • Volume: ${stockData[ticker].volume}M indicates ${parseFloat(stockData[ticker].volume) > 20 ? 'high' : 'normal'} liquidity<br/><br/>
+                                <button class="btn btn-small" onclick="askRoloAbout('${ticker}')">Ask Rolo: "${ticker} options strategies"</button>
                             </div>
                         </div>
                     </div>
                 ` : ''}
                 
                 <div class="card">
-                    <h4>📋 Quick Watchlist</h4>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-                        ${['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT'].map(symbol => `
+                    <h4>📋 Popular Options Tickers</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+                        ${['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'HOOD', 'MSFT', 'AMZN'].map(symbol => `
                             <button 
                                 class="btn btn-small" 
                                 onclick="quickAnalyze('${symbol}')"
-                                style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db;"
+                                style="background: #f3f4f6; color: #374141; border: 1px solid #d1d5db;"
                             >
                                 ${symbol}
                             </button>
@@ -386,45 +465,62 @@
         // Render plays tab
         function renderPlays() {
             const samplePlays = [
-                { symbol: 'SPY', type: 'Call', strike: 580, confidence: 85, reason: 'Strong momentum with high options volume' },
-                { symbol: 'QQQ', type: 'Call', strike: 500, confidence: 82, reason: 'Tech sector showing bullish options flow' },
-                { symbol: 'AAPL', type: 'Put', strike: 235, confidence: 78, reason: 'Overbought conditions, high IV environment' }
+                { symbol: 'SPY', type: 'Call', strike: 580, confidence: 85, reason: 'Strong momentum with bullish options flow and high volume' },
+                { symbol: 'QQQ', type: 'Call', strike: 500, confidence: 82, reason: 'Tech sector strength, low IV environment favors buying' },
+                { symbol: 'HOOD', type: 'Put', strike: 25, confidence: 78, reason: 'High IV, overbought conditions, resistance at current levels' }
             ];
             
             return `
                 <div class="card">
+                    <button class="home-btn" onclick="goHome()">
+                        <span>🏠</span>
+                        <span>Back to Chat</span>
+                    </button>
+                    
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                         <span style="font-size: 1.5rem;">🧠</span>
                         <h3>High Confidence Options Plays</h3>
                     </div>
                     
                     ${samplePlays.map(play => `
-                        <div style="border: 2px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem; background: white;">
+                        <div class="play-card">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                                 <div>
-                                    <span style="font-size: 1rem; font-weight: 700;">${play.symbol}</span>
+                                    <span style="font-size: 1.1rem; font-weight: 700;">${play.symbol}</span>
                                     <span style="padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; background: ${play.type === 'Call' ? '#dcfce7' : '#fee2e2'}; color: ${play.type === 'Call' ? '#166534' : '#dc2626'};">
                                         ${play.type}
                                     </span>
                                     <div style="margin-top: 0.25rem;">
-                                        <strong>$${play.strike} Strike</strong>
+                                        <strong>$${play.strike} Strike</strong> • Weekly Options
                                     </div>
                                 </div>
-                                <div style="text-align: right; font-size: 1.25rem; font-weight: 700; color: #22c55e;">
+                                <div style="text-align: right; font-size: 1.3rem; font-weight: 700; color: #22c55e;">
                                     ${play.confidence}%
                                 </div>
                             </div>
-                            <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.75rem;">
+                            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; line-height: 1.3;">
                                 ${play.reason}
                             </p>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div style="font-size: 0.8rem; color: #6b7280;">
-                                    🧠 Rolo AI • Options Analysis
+                                    🧠 Rolo AI • Options Specialist
                                 </div>
-                                <button class="btn btn-small">Set Alert</button>
+                                <button class="btn btn-small" onclick="askRoloAbout('${play.symbol}')">
+                                    Analyze ${play.symbol}
+                                </button>
                             </div>
                         </div>
                     `).join('')}
+                    
+                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; border: 1px solid #0ea5e9;">
+                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">💡 Want Personalized Plays?</div>
+                        <div style="font-size: 0.9rem; color: #0c4a6e; margin-bottom: 0.75rem;">
+                            Ask Rolo in chat: "What are the best options plays today?" or mention any specific ticker!
+                        </div>
+                        <button class="btn btn-small" onclick="goHome()" style="background: #0ea5e9;">
+                            Ask Rolo Now
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -433,52 +529,67 @@
         function renderAlerts() {
             return `
                 <div class="card">
+                    <button class="home-btn" onclick="goHome()">
+                        <span>🏠</span>
+                        <span>Back to Chat</span>
+                    </button>
+                    
                     <h3>🔔 Options Trading Alerts</h3>
                     
-                    <div style="padding: 0.75rem; background: #dcfce7; border-left: 4px solid #22c55e; border-radius: 0.75rem; margin-bottom: 0.75rem;">
-                        <div style="font-weight: 700; color: #166534; margin-bottom: 0.25rem;">✅ System Online</div>
-                        <div style="font-size: 0.8rem; color: #15803d; margin-bottom: 0.25rem;">Options trading mode active with AI analysis</div>
+                    <div class="alert-item alert-success">
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 0.25rem;">✅ Rolo Online</div>
+                        <div style="font-size: 0.8rem; color: #15803d; margin-bottom: 0.25rem;">Options trading specialist ready for analysis</div>
                         <div style="font-size: 0.7rem; color: #6b7280;">Just now</div>
                     </div>
                     
-                    <div style="padding: 0.75rem; background: #faf5ff; border-left: 4px solid #7c3aed; border-radius: 0.75rem; margin-bottom: 0.75rem;">
+                    <div class="alert-item alert-info">
                         <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.25rem;">⚡ High IV Environment</div>
-                        <div style="font-size: 0.8rem; color: #6d28d9; margin-bottom: 0.25rem;">Consider premium selling strategies - elevated options prices</div>
+                        <div style="font-size: 0.8rem; color: #6d28d9; margin-bottom: 0.25rem;">Elevated options premiums - consider selling strategies</div>
                         <div style="font-size: 0.7rem; color: #6b7280;">5 minutes ago</div>
                     </div>
                     
-                    <div style="padding: 0.75rem; background: #fef3c7; border-left: 4px solid #eab308; border-radius: 0.75rem;">
-                        <div style="font-weight: 700; color: #92400e; margin-bottom: 0.25rem;">📊 Market Update</div>
-                        <div style="font-size: 0.8rem; color: #a16207; margin-bottom: 0.25rem;">SPY showing strong options flow - watch for breakout opportunities</div>
+                    <div class="alert-item alert-warning">
+                        <div style="font-weight: 700; color: #92400e; margin-bottom: 0.25rem;">📊 HOOD Unusual Activity</div>
+                        <div style="font-size: 0.8rem; color: #a16207; margin-bottom: 0.25rem;">High options volume detected - potential catalyst incoming</div>
                         <div style="font-size: 0.7rem; color: #6b7280;">15 minutes ago</div>
                     </div>
                 </div>
                 
                 <div class="card">
                     <h4>Alert Settings</h4>
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
                         <label style="display: flex; align-items: center; gap: 0.5rem;">
                             <input type="checkbox" checked />
-                            <span>High Confidence Options Plays (80%+)</span>
+                            <span style="font-size: 0.9rem;">High Confidence Options Plays (80%+)</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem;">
                             <input type="checkbox" checked />
-                            <span>Unusual Options Activity</span>
+                            <span style="font-size: 0.9rem;">Unusual Options Activity</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem;">
                             <input type="checkbox" checked />
-                            <span>IV Environment Changes</span>
+                            <span style="font-size: 0.9rem;">IV Environment Changes</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem;">
                             <input type="checkbox" checked />
-                            <span>Earnings Calendar Updates</span>
+                            <span style="font-size: 0.9rem;">Earnings Calendar Updates</span>
                         </label>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #faf5ff; border-radius: 0.75rem; border: 1px solid #7c3aed;">
+                        <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.5rem;">🎯 Custom Alerts</div>
+                        <div style="font-size: 0.9rem; color: #6d28d9; margin-bottom: 0.75rem;">
+                            Ask Rolo to set up personalized alerts for your favorite tickers and strategies!
+                        </div>
+                        <button class="btn btn-small" onclick="goHome()" style="background: #7c3aed;">
+                            Setup with Rolo
+                        </button>
                     </div>
                 </div>
             `;
         }
         
-        // Send message function
+        // Send message function with enhanced options responses
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -510,7 +621,7 @@
                 messages.push({
                     id: messages.length + 1,
                     type: 'assistant',
-                    text: data.response || "I'm here to help with options trading! Ask me about any strategy or ticker."
+                    text: data.response || getSmartOptionsResponse(message)
                 });
                 
             } catch (error) {
@@ -518,12 +629,118 @@
                 messages.push({
                     id: messages.length + 1,
                     type: 'assistant',
-                    text: "I'm ready to help with options trading analysis! Try asking about specific strategies like covered calls, iron condors, or any ticker analysis."
+                    text: getSmartOptionsResponse(message)
                 });
             }
             
             isTyping = false;
             renderCurrentTab();
+        }
+        
+        // Smart options responses for when API fails
+        function getSmartOptionsResponse(message) {
+            const query = message.toLowerCase();
+            const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+            
+            if (tickerMatches.length > 0) {
+                const ticker = tickerMatches[0];
+                
+                if (query.includes('hood')) {
+                    return `⚡ **HOOD OPTIONS ANALYSIS:**
+
+🎯 **Robinhood (HOOD) Options Opportunities:**
+
+**📊 Current HOOD Setup:**
+• High volatility stock = rich options premiums
+• Retail trading focus makes it news-sensitive  
+• Earnings reactions tend to be explosive
+• Options volume typically high around catalysts
+
+**🚀 HOOD Options Strategies:**
+
+**For Bullish Outlook:**
+• **Call Options**: 30-45 DTE for earnings plays
+• **Bull Call Spreads**: Limit risk while maintaining upside
+• **Cash-Secured Puts**: Get paid to own HOOD at lower prices
+
+**For Bearish Outlook:**  
+• **Put Options**: High IV makes puts expensive but profitable on moves
+• **Bear Put Spreads**: Defined risk bearish play
+• **Covered Calls**: If you own shares, sell calls for income
+
+**For High Volatility:**
+• **Iron Condors**: Profit from range-bound action post-earnings
+• **Straddles**: Buy before earnings, sell before announcement
+• **Calendar Spreads**: Benefit from volatility crush
+
+**⚡ HOOD Risk Factors:**
+• News-driven stock = unpredictable moves
+• High IV = expensive options (time decay risk)
+• Meme stock behavior = extreme volatility
+• Regulatory risks affect fintech stocks
+
+**💡 Best HOOD Options Approach:**
+1. Wait for IV spikes to SELL premium
+2. Buy options only on pullbacks when IV is low
+3. Use spreads to manage the high premium costs
+4. Never hold through earnings unless you love gambling!
+
+**What's your specific HOOD outlook? Bullish, bearish, or just want to trade the volatility?** 📈`;
+                }
+                
+                return `⚡ **${ticker} OPTIONS ANALYSIS:**
+
+🎯 **Options Strategy for ${ticker}:**
+
+**📊 Key Considerations:**
+• Check ${ticker}'s current IV percentile vs historical
+• Look for upcoming earnings or catalyst events
+• Identify key support/resistance for strike selection
+• Monitor unusual options activity and flow
+
+**🚀 Strategy Menu for ${ticker}:**
+• **Bullish**: Call options, bull spreads, covered calls
+• **Bearish**: Put options, bear spreads, protective puts  
+• **Neutral**: Iron condors, butterflies, calendar spreads
+• **High IV**: Sell premium strategies (covered calls, CSPs)
+• **Low IV**: Buy options before volatility expansion
+
+**💡 ${ticker} Options Tips:**
+• Use liquid options with tight bid-ask spreads
+• Consider 30-45 DTE for optimal theta decay
+• Set profit targets (50% for credit, 100% for debit)
+• Always have an exit plan before entering
+
+**What's your market outlook for ${ticker}? I can suggest specific strikes and expirations!** 📊`;
+            }
+            
+            return `🧠 **Rolo's Options Expertise:**
+
+I specialize in options trading analysis! Try asking:
+
+• **"HOOD options strategies"** - Specific ticker analysis
+• **"Best covered call setup"** - Strategy deep dives  
+• **"How do I trade earnings with options?"** - Event trading
+• **"Explain the Greeks"** - Education on delta, theta, etc.
+• **"Iron condor vs butterfly"** - Strategy comparisons
+
+**🎯 Popular Questions:**
+• Risk management for options positions
+• When to buy vs sell volatility  
+• Best strikes and expirations to target
+• How to handle losing options trades
+
+**What specific options topic interests you most?** 📈`;
+        }
+        
+        // Helper functions
+        function askRoloAbout(ticker) {
+            switchTab('chat');
+            setTimeout(() => {
+                const input = document.getElementById('messageInput');
+                input.value = `${ticker} options strategies`;
+                sendMessage();
+            }, 300);
         }
         
         // Analyze ticker function
@@ -535,7 +752,7 @@
             
             ticker = symbol;
             
-            // Generate mock data for demonstration
+            // Generate realistic mock data
             stockData[symbol] = {
                 price: (Math.random() * 200 + 50).toFixed(2),
                 change: (Math.random() * 20 - 10).toFixed(2),
