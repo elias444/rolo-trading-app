@@ -1,4 +1,4 @@
-// netlify/functions/claude-chat.js
+// netlify/functions/claude-chat.js - Enhanced for Options Trading
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -29,209 +29,176 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Enhanced ticker detection - look for stock symbols
-    const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+    // Enhanced options trading detection
     const query = message.toLowerCase();
+    const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+    const isOptionsQuery = query.includes('call') || query.includes('put') || query.includes('option') || 
+                          query.includes('strike') || query.includes('expiry') || query.includes('dte') ||
+                          query.includes('premium') || query.includes('delta') || query.includes('theta') ||
+                          query.includes('gamma') || query.includes('vega') || query.includes('iv') ||
+                          query.includes('spread') || query.includes('straddle') || query.includes('strangle');
+    
     let response = '';
 
-    // Handle specific stock analysis for ANY ticker
+    // Enhanced ticker analysis with options focus
     if (tickerMatches.length > 0) {
       const ticker = tickerMatches[0];
-      response = `📈 **${ticker} Analysis:**
+      
+      if (isOptionsQuery) {
+        response = `⚡ **${ticker} OPTIONS ANALYSIS:**
 
-🔍 **What Rolo Sees for ${ticker}:**
+🎯 **Options Opportunities for ${ticker}:**
 
-**📊 Key Analysis Points:**
-- **Volume & Momentum**: Check if ${ticker} is seeing unusual volume or momentum shifts
-- **Technical Levels**: Watch key support/resistance zones for breakout opportunities  
-- **Sector Performance**: How is ${ticker}'s sector performing vs broader market
-- **News & Catalysts**: Any earnings, product launches, or industry news affecting ${ticker}
-- **Options Activity**: Unusual options flow can signal institutional positioning
+**📊 Current Setup Analysis:**
+- **Implied Volatility (IV)**: Check if ${ticker} options are cheap or expensive
+- **Earnings Date**: Any upcoming catalyst that could spike IV?
+- **Technical Levels**: Key support/resistance for strike selection
+- **Volume**: Is there institutional options flow in ${ticker}?
+- **Trend**: Bullish/bearish bias for directional plays
 
-**⚡ Trading Considerations for ${ticker}:**
-- **Entry Strategy**: Wait for clear trend confirmation or bounce off support
-- **Risk Management**: Set stop loss below recent swing low/high depending on direction
-- **Position Sizing**: Size based on volatility - ${ticker} may have higher/lower risk than SPY
-- **Time Horizon**: Day trade, swing, or longer-term position?
-- **Market Context**: How does ${ticker} correlate with SPY/QQQ movements?
+**🚀 Strategy Considerations for ${ticker}:**
 
-**💡 Rolo's Approach:**
-For the most accurate ${ticker} analysis, check current price action in the **Ticker tab** for live data! I combine technical patterns with market sentiment.
+**For Bullish Outlook:**
+- **Call Options**: ITM for high delta, OTM for leverage
+- **Bull Call Spreads**: Limit risk while maintaining upside
+- **Covered Calls**: If you own shares, sell calls for income
 
-**🎯 What's your specific ${ticker} question?**
-- Looking for entry/exit points?
-- Considering options plays (calls/puts)?
-- Want to know key levels to watch?
-- Need risk management advice?
+**For Bearish Outlook:**
+- **Put Options**: Protective puts or speculative puts
+- **Bear Put Spreads**: Defined risk bearish play
+- **Cash-Secured Puts**: Get paid to wait for lower entry
 
-The more specific you are, the better I can help with your ${ticker} strategy! 📊`;
+**For Neutral/Range-Bound:**
+- **Iron Condors**: Profit from low volatility
+- **Straddles/Strangles**: Bet on big moves (buy before earnings)
+- **Butterflies**: Profit from price staying near strike
+
+**⚡ Risk Management for ${ticker} Options:**
+- **Position Size**: Never risk more than 2-5% on single options play
+- **Time Decay**: Avoid buying options with <7 DTE unless scalping
+- **IV Crush**: Be careful buying options before earnings
+- **Delta Hedging**: Consider underlying stock movements
+
+**💡 Next Steps:**
+1. Check ${ticker}'s options chain for volume and open interest
+2. Look at the Greeks for your preferred strikes
+3. Consider market conditions and overall trend
+4. Set profit targets (50-100% gains) and stop losses (50% loss)
+
+**What specific ${ticker} options strategy are you considering?** Calls, puts, or something more complex? And what's your market outlook? 📈`;
+      } else {
+        // Regular stock analysis but with options perspective
+        response = `📈 **${ticker} Analysis (Options Trader Perspective):**
+
+🔍 **${ticker} Stock Analysis for Options Trading:**
+
+**📊 Key Metrics for Options Plays:**
+- **Current Price Action**: Is ${ticker} trending, consolidating, or breaking out?
+- **Volume Profile**: High volume = better options liquidity
+- **Volatility**: Recent price swings affect options pricing
+- **Support/Resistance**: Critical for strike price selection
+- **Earnings Date**: Major catalyst that affects all options strategies
+
+**⚡ Options Trading Considerations:**
+- **IV Environment**: Are ${ticker} options expensive or cheap right now?
+- **Liquidity Check**: Tight bid-ask spreads = easier entry/exit
+- **Open Interest**: High OI = more liquid options markets
+- **Pin Risk**: Be aware of weekly expiration effects
+
+**🎯 Strategy Ideas for ${ticker}:**
+- **Trending Up**: Consider call options or bull spreads
+- **Trending Down**: Put options or bear spreads
+- **Range-Bound**: Iron condors or butterflies
+- **High IV**: Sell premium (covered calls, cash-secured puts)
+- **Low IV**: Buy options before potential catalysts
+
+**📅 Time Frame Considerations:**
+- **0-3 DTE**: High risk/reward scalping plays
+- **1-2 weeks**: Swing trading with weekly options
+- **30-45 DTE**: Higher probability theta plays
+
+**💡 For the most accurate ${ticker} options analysis, check:**
+1. Current IV percentile vs historical
+2. Upcoming earnings or news catalysts  
+3. Technical support/resistance levels
+4. Options flow and unusual activity
+
+**What's your ${ticker} options strategy? Looking for directional plays, income generation, or volatility trades?** 🎯`;
+      }
     }
-    // Handle options-related questions
-    else if (query.includes('option') || query.includes('call') || query.includes('put') || query.includes('strike')) {
-      response = `⚡ **Options Strategy Deep Dive:**
+    // Enhanced options strategy responses
+    else if (isOptionsQuery) {
+      const strategies = [];
+      if (query.includes('covered call')) strategies.push('covered calls');
+      if (query.includes('cash secured put') || query.includes('csp')) strategies.push('cash-secured puts');
+      if (query.includes('iron condor')) strategies.push('iron condors');
+      if (query.includes('straddle')) strategies.push('straddles');
+      if (query.includes('spread')) strategies.push('spreads');
+      if (query.includes('0dte')) strategies.push('0DTE trades');
+      
+      if (strategies.length > 0) {
+        response = `⚡ **${strategies[0].toUpperCase()} STRATEGY GUIDE:**
 
-**🎯 The Greeks That Matter:**
-- **Delta (0-1.00)**: How much option price moves per $1 stock move
-  - 0.50 Delta = Option moves ~50¢ per $1 stock move
-- **Theta (Time Decay)**: Your enemy on long positions, friend on short
-  - Higher closer to expiration - be careful with 0-2 DTE!
-- **Vega (Volatility)**: Earnings = high vega risk/reward
-- **Gamma**: Delta acceleration - powerful near expiration
+🎯 **Deep Dive into ${strategies[0]}:**
 
-**⚡ Smart Options Setups:**
-- **0-1 DTE**: High risk/reward scalps - need quick directional moves
-- **Weekly (5-7 DTE)**: Good for earnings or catalyst plays
-- **Monthly (30+ DTE)**: More time but higher premium cost
-- **Spreads**: Limit risk but cap reward - great for range-bound stocks
+**📋 Strategy Overview:**
+${getStrategyDetails(strategies[0])}
 
-**🛡️ Risk Management Rules:**
-- Never risk more than you can afford to lose (options can go to $0)
-- Have exit plan BEFORE entering (profit target + stop loss)
-- Watch IV (implied volatility) - don't buy expensive options
-- Check liquidity (bid-ask spread) - wide spreads = harder to exit
-
-**💡 Which strategy are you considering?** 
-Tell me the ticker and your market outlook - I can help structure the play! 📈`;
-    }
-    // Handle market/trend questions
-    else if (query.includes('market') || query.includes('trend') || query.includes('spy') || query.includes('qqq')) {
-      response = `🌊 **Market Pulse Check:**
-
-**📈 Key Market Drivers:**
-- **SPY (S&P 500)**: The market benchmark - watch 570-590 range closely
-- **QQQ (Nasdaq)**: Tech-heavy, sensitive to rates & growth expectations  
-- **IWM (Russell 2000)**: Small caps = economic sentiment gauge
-- **VIX**: Fear gauge - Low VIX (<20) = complacency, High VIX (>30) = fear
-
-**🔍 Market Health Indicators:**
-- **Sector Rotation**: Which sectors leading/lagging?
-- **Breadth**: More stocks advancing vs declining = healthy
-- **Volume**: Confirming moves or showing exhaustion?
-- **Interest Rates**: Rising rates pressure growth stocks
-- **Economic Data**: GDP, employment, inflation impacts
-
-**💡 Trading the Market Environment:**
-- **Trending Market**: Follow momentum, use pullbacks to add
-- **Range-Bound**: Sell resistance, buy support, avoid breakouts
-- **High Volatility**: Smaller positions, wider stops
-- **Low Volatility**: Bigger positions, but watch for sudden moves
-
-**🎯 Current Market Questions:**
-- Are we in risk-on or risk-off mode?
-- Which sectors are showing strength?
-- Is this a dip to buy or start of correction?
-
-What's your market outlook right now? Bullish, bearish, or waiting for direction? 📊`;
-    }
-    // Handle risk management questions  
-    else if (query.includes('risk') || query.includes('stop') || query.includes('loss') || query.includes('management')) {
-      response = `🛡️ **Risk Management Mastery:**
-
-**💰 Position Sizing (The Foundation):**
-- **1-2% Rule**: Risk only 1-2% of account per trade maximum
-- **Volatility Adjustment**: Smaller size for high-beta stocks
-- **Conviction Scaling**: Larger size for highest conviction setups only
-- **Never "Bet the Farm"**: No single trade should make or break you
-
-**🎯 Stop Loss Strategy:**
-- **Set Before Entry**: Decide stop loss BEFORE you enter position
-- **Technical Stops**: Use support/resistance, moving averages, chart patterns
-- **Percentage Stops**: Fixed % below entry (adjust for volatility)
-- **Time Stops**: Exit if thesis doesn't play out in expected timeframe
-- **Mental Stops**: If you set it, stick to it - no "hope" trading!
-
-**📊 Portfolio Management:**
-- **Diversification**: Spread risk across sectors, timeframes, strategies
-- **Correlation**: Don't load up on similar stocks (all tech, all energy, etc.)
-- **Cash Reserves**: Keep powder dry for high-conviction opportunities
-- **Win/Loss Tracking**: Know your hit rate and average R:R ratio
-
-**💪 Psychology & Discipline:**
-- **Plan Your Trade, Trade Your Plan**: Write it down, follow it
-- **No Revenge Trading**: Don't chase losses with bigger bets
-- **Profit Taking**: Take some off the table on big winners
-- **Learn From Every Trade**: Keep a trading journal
-
-**🎯 What's your biggest risk management challenge?**
-Position sizing? Setting stops? Emotional control? Let's tackle it! 💪`;
-    }
-    // Handle general greetings
-    else if (query.includes('hello') || query.includes('hi') || query.includes('hey') || query.includes('what') && query.includes('up')) {
-      response = `👋 **Hey there! Rolo here - ready to dive into trading!**
-
-**🎯 I'm your AI trading partner for:**
-- **Stock Analysis**: ANY ticker - just name it! (AAPL, TSLA, HOOD, NVDA, etc.)
-- **Options Strategies**: Calls, puts, spreads, timing, Greeks
-- **Risk Management**: Position sizing, stops, psychology  
-- **Market Analysis**: Trends, sectors, indices, volatility
-- **Technical Analysis**: Charts, levels, patterns, indicators
-
-**💡 Try these specific questions:**
-- *"What do you think about HOOD?"*
-- *"Help me with a call option strategy for AAPL"*
-- *"How should I manage risk on this swing trade?"*
-- *"What's your take on current market trends?"*
-- *"Should I buy the SPY dip or wait?"*
-
-**🚀 Pro Tip:** The more specific your question, the better analysis I can provide!
-
-**What's on your trading radar today?** Drop a ticker, strategy question, or market thought - let's make some smart moves! 📈`;
-    }
-    // Default response for any other question
-    else {
-      response = `🤖 **Rolo here - your AI trading analyst!**
-
-**🚀 I specialize in helping with:**
-
-**📈 Stock Analysis:**
-- Just mention ANY ticker (AAPL, TSLA, HOOD, AMZN, etc.)
-- Technical levels, momentum, sentiment analysis
-- Entry/exit strategies and key levels to watch
-
-**⚡ Options Trading:**
-- Calls vs puts strategy selection
-- Greeks explanation and timing
-- Risk/reward setup analysis
+**⚡ When to Use This Strategy:**
+${getStrategyTiming(strategies[0])}
 
 **🛡️ Risk Management:**
-- Position sizing and stop loss placement  
-- Portfolio management and diversification
-- Trading psychology and discipline
+${getStrategyRiskManagement(strategies[0])}
 
-**🌊 Market Analysis:**
-- SPY/QQQ trends and sector rotation
-- Volatility analysis and market sentiment
-- Economic factors and their trading impact
+**💡 Pro Tips:**
+${getStrategyProTips(strategies[0])}
 
-**💡 Example questions that work great:**
-- *"Analyze [TICKER] for me"*
-- *"Should I buy calls or puts on [STOCK]?"*
-- *"What's your market outlook today?"*  
-- *"Help me size this position properly"*
+**🎯 Want me to analyze specific tickers for ${strategies[0]} opportunities?** Just mention a stock symbol and I'll break down the setup! 📊`;
+      } else {
+        response = `⚡ **OPTIONS TRADING MASTERY:**
 
-**What specific trading topic can I help you with right now?** 🎯`;
+🚀 **The Greeks That Rule Your P&L:**
+
+**🔸 Delta (Direction):**
+- Call Delta: 0.30 = 30¢ move per $1 stock move
+- Put Delta: -0.30 = 30¢ gain per $1 stock drop
+- **Sweet Spot**: 0.40-0.70 for directional plays
+
+**🔸 Theta (Time Decay):**
+- Your biggest enemy when buying options
+- Accelerates in final 30 days to expiration
+- **Strategy**: Sell theta with covered calls, CSPs
+
+**🔸 Vega (Volatility):**
+- High before earnings, crashes after
+- **Buy Low IV**: Before known catalysts
+- **Sell High IV**: When everyone's scared
+
+**🔸 Gamma (Acceleration):**
+- ATM options have highest gamma
+- Creates explosive moves near expiration
+- **Risk**: Can work for or against you fast
+
+**⚡ High-Probability Setups:**
+- **Weekly Iron Condors**: 16-20 delta wings
+- **Covered Calls**: 30-45 DTE, 15-30 delta
+- **Cash-Secured Puts**: Below support levels
+- **Earnings Straddles**: Buy low IV, sell high IV
+
+**🛡️ Risk Rules That Save Accounts:**
+- Max 2-5% risk per trade
+- Take profits at 50% for credit spreads
+- Cut losses at 50% for debit spreads
+- Never hold through earnings unless planned
+
+**🎯 What's your current options challenge?** Strategy selection, risk management, or specific trade analysis? Drop a ticker and let's build a play! 📈`;
+      }
     }
+    // Market analysis with options perspective
+    else if (query.includes('market') || query.includes('spy') || query.includes('qqq') || query.includes('vix')) {
+      response = `🌊 **OPTIONS MARKET ANALYSIS:**
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        response: response,
-        isLive: true 
-      })
-    };
+**📈 Current Options Environment:**
 
-  } catch (error) {
-    console.error('Claude Function Error:', error);
-    
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        response: `🤖 Rolo here! Ready to help with trading analysis.\n\nTry asking me about:\n• Any stock ticker\n• Options strategies\n• Risk management\n• Market trends\n\nWhat's on your mind?`,
-        isLive: false,
-        fallback: true 
-      })
-    };
-  }
-};
+**🎯 Key Indices for Options Traders:**
+- **SPY**: L
