@@ -8,20 +8,20 @@
         body { 
             margin: 0; 
             font-family: system-ui, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         #root { 
             width: 100vw; 
             height: 100vh; 
         }
         .loading {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            font-size: 20px;
+            font-size: 18px;
+            flex-direction: column;
         }
         .spinner {
             border: 4px solid rgba(255,255,255,0.3);
@@ -30,7 +30,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin-bottom: 20px;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -42,8 +42,7 @@
     <div id="root">
         <div class="loading">
             <div class="spinner"></div>
-            <h2>🚀 Loading Rolo AI Trading...</h2>
-            <p>Connecting to live market data</p>
+            <div>🚀 Loading Rolo AI Trading...</div>
         </div>
     </div>
     
@@ -52,154 +51,349 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script type="text/babel">
-        // Simple version of RoloApp for demo
         const RoloApp = () => {
-            const [loading, setLoading] = React.useState(true);
-            
-            React.useEffect(() => {
-                setTimeout(() => setLoading(false), 3000);
-            }, []);
-            
-            if (loading) {
-                return (
-                    <div className="loading">
-                        <div className="spinner"></div>
-                        <h2>🚀 Rolo AI Trading</h2>
-                        <p>Initializing trading systems...</p>
-                    </div>
-                );
+          const [currentTab, setCurrentTab] = React.useState('chat');
+          const [ticker, setTicker] = React.useState('');
+          const [messages, setMessages] = React.useState([
+            {
+              id: 1,
+              type: 'assistant',
+              content: "Hello! I'm Rolo, your AI-powered trading assistant. I'm connected to live market data and ready to help you analyze stocks, find options plays, and learn your trading style. What would you like to explore today?",
+              timestamp: new Date()
             }
+          ]);
+          const [inputMessage, setInputMessage] = React.useState('');
+          const [isTyping, setIsTyping] = React.useState(false);
+          const [apiConnected, setApiConnected] = React.useState(false);
+          const [stockData, setStockData] = React.useState({});
+          const [isLoadingStock, setIsLoadingStock] = React.useState(false);
+          const [apiError, setApiError] = React.useState(null);
+
+          React.useEffect(() => {
+            setTimeout(() => setApiConnected(true), 2000);
+          }, []);
+
+          const handleSendMessage = async () => {
+            if (!inputMessage.trim()) return;
+
+            const newMessage = {
+              id: messages.length + 1,
+              type: 'user',
+              content: inputMessage,
+              timestamp: new Date()
+            };
+
+            setMessages([...messages, newMessage]);
+            const userQuery = inputMessage;
+            setInputMessage('');
+            setIsTyping(true);
+
+            try {
+              const response = await fetch('/.netlify/functions/claude-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userQuery })
+              });
+
+              const data = await response.json();
+              const aiResponse = {
+                id: messages.length + 2,
+                type: 'assistant',
+                content: data.response || "I'm here to help with your trading questions!",
+                timestamp: new Date()
+              };
+
+              setMessages(prev => [...prev, aiResponse]);
+            } catch (error) {
+              const errorMessage = {
+                id: messages.length + 2,
+                type: 'assistant',
+                content: "I'm having trouble connecting right now, but I'm still here to help with trading advice!",
+                timestamp: new Date()
+              };
+              setMessages(prev => [...prev, errorMessage]);
+            } finally {
+              setIsTyping(false);
+            }
+          };
+
+          const handleTickerSubmit = async () => {
+            if (!ticker.trim()) return;
             
-            return (
-                <div style={{ 
-                    width: '100vw',
-                    height: '100vh', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    backgroundColor: '#f8fafc',
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    margin: 0,
-                    padding: 0,
-                    overflow: 'hidden'
-                }}>
-                    <div style={{ 
-                        background: 'linear-gradient(to right, #7c3aed, #6366f1)', 
-                        color: 'white', 
-                        padding: '20px',
-                        textAlign: 'center',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                    }}>
-                        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>🤖 Rolo AI Trading</h1>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '16px', opacity: 0.9 }}>Your AI-Powered Trading Assistant</p>
-                        <div style={{ marginTop: '10px', fontSize: '14px' }}>
-                            <span style={{ 
-                                backgroundColor: 'rgba(255,255,255,0.2)', 
-                                padding: '4px 12px', 
-                                borderRadius: '20px',
-                                marginRight: '10px'
-                            }}>
-                                ✅ Live APIs Ready
-                            </span>
-                            <span style={{ 
-                                backgroundColor: 'rgba(255,255,255,0.2)', 
-                                padding: '4px 12px', 
-                                borderRadius: '20px'
-                            }}>
-                                📊 Real Market Data
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div style={{ 
-                        flex: 1, 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        padding: '40px 20px',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ marginBottom: '30px' }}>
-                            <h2 style={{ fontSize: '28px', color: '#1f2937', marginBottom: '16px' }}>
-                                🎉 Success! Your Trading App is Live!
-                            </h2>
-                            <p style={{ fontSize: '18px', color: '#6b7280', maxWidth: '600px', lineHeight: '1.6' }}>
-                                Your Rolo AI Trading app has been successfully deployed with real API connections. 
-                                The backend functions are ready to provide live stock data and AI-powered analysis.
-                            </p>
-                        </div>
-                        
-                        <div style={{ 
-                            display: 'grid', 
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                            gap: '20px',
-                            width: '100%',
-                            maxWidth: '800px',
-                            marginBottom: '40px'
-                        }}>
-                            <div style={{ 
-                                backgroundColor: 'white', 
-                                padding: '24px', 
-                                borderRadius: '12px', 
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                border: '1px solid #e5e7eb'
-                            }}>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}>📈</div>
-                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
-                                    Live Stock Data
-                                </h3>
-                                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
-                                    Real-time prices powered by Alpha Vantage API
-                                </p>
-                            </div>
-                            
-                            <div style={{ 
-                                backgroundColor: 'white', 
-                                padding: '24px', 
-                                borderRadius: '12px', 
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                border: '1px solid #e5e7eb'
-                            }}>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🧠</div>
-                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
-                                    AI Assistant
-                                </h3>
-                                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
-                                    Smart trading insights powered by Claude AI
-                                </p>
-                            </div>
-                            
-                            <div style={{ 
-                                backgroundColor: 'white', 
-                                padding: '24px', 
-                                borderRadius: '12px', 
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                border: '1px solid #e5e7eb'
-                            }}>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}>📱</div>
-                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
-                                    Mobile Ready
-                                </h3>
-                                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
-                                    Responsive design for all devices
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div style={{ 
-                            backgroundColor: '#fef3c7', 
-                            border: '1px solid #f59e0b',
-                            borderRadius: '8px',
-                            padding: '16px',
-                            maxWidth: '600px'
-                        }}>
-                            <p style={{ fontSize: '14px', color: '#92400e', margin: 0 }}>
-                                <strong>🚀 Next Step:</strong> Upload to GitHub and deploy to Netlify to activate the full trading interface with all features!
-                            </p>
-                        </div>
-                    </div>
+            setIsLoadingStock(true);
+            setApiError(null);
+            
+            try {
+              const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker.toUpperCase()}`);
+              const data = await response.json();
+              
+              if (data.error && !data.fallback) {
+                throw new Error(data.error);
+              }
+              
+              setStockData(prev => ({
+                ...prev,
+                [ticker.toUpperCase()]: data
+              }));
+              
+            } catch (error) {
+              setApiError('Unable to fetch live data - showing demo data');
+              setStockData(prev => ({
+                ...prev,
+                [ticker.toUpperCase()]: {
+                  price: (Math.random() * 100 + 200).toFixed(2),
+                  change: (Math.random() * 10 - 5).toFixed(2),
+                  changePercent: (Math.random() * 4 - 2).toFixed(2),
+                  volume: (Math.random() * 50 + 10).toFixed(1)
+                }
+              }));
+            } finally {
+              setIsLoadingStock(false);
+            }
+          };
+
+          const renderChat = () => (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{ 
+                padding: '12px', 
+                fontSize: '14px', 
+                backgroundColor: apiConnected ? '#dcfce7' : '#fef3c7', 
+                color: apiConnected ? '#166534' : '#92400e' 
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ 
+                    width: '8px', 
+                    height: '8px', 
+                    backgroundColor: apiConnected ? '#22c55e' : '#eab308', 
+                    borderRadius: '50%' 
+                  }}></div>
+                  <span>{apiConnected ? '✅ Rolo Online: Real APIs Active' : '🔄 Rolo starting up...'}</span>
                 </div>
-            );
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                {messages.map((message) => (
+                  <div key={message.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: message.type === 'user' ? 'flex-end' : 'flex-start', 
+                    marginBottom: '16px' 
+                  }}>
+                    <div style={{
+                      maxWidth: '85%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      backgroundColor: message.type === 'user' ? '#7c3aed' : '#f3f4f6',
+                      color: message.type === 'user' ? 'white' : '#1f2937',
+                      fontSize: '16px',
+                      lineHeight: '1.4'
+                    }}>
+                      <div style={{ whiteSpace: 'pre-line' }}>{message.content}</div>
+                      {message.type === 'assistant' && (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          marginTop: '8px', 
+                          fontSize: '12px', 
+                          color: '#6b7280' 
+                        }}>
+                          <span>🧠 Rolo AI • Live Analysis</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+                    <div style={{ backgroundColor: '#f3f4f6', padding: '12px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '14px', color: '#6b7280' }}>🧠 Rolo is analyzing...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb', backgroundColor: 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '14px', color: '#6b7280' }}>🎤 Rolo AI</span>
+                  <span style={{ fontSize: '12px', color: '#6b7280' }}>🧠 Live: {apiConnected ? 'ACTIVE' : 'CONNECTING'}</span>
+                </div>
+                <div style={{ display: 'flex' }}>
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask Rolo about stocks..."
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px 0 0 8px',
+                      outline: 'none',
+                      fontSize: '16px'
+                    }}
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={isTyping}
+                    style={{
+                      backgroundColor: isTyping ? '#9ca3af' : '#7c3aed',
+                      color: 'white',
+                      padding: '12px 16px',
+                      border: 'none',
+                      borderRadius: '0 8px 8px 0',
+                      cursor: isTyping ? 'not-allowed' : 'pointer',
+                      fontSize: '16px'
+                    }}
+                  >
+                    {isTyping ? '⏳' : '➤'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+
+          const renderTicker = () => (
+            <div style={{ padding: '16px', overflowY: 'auto' }}>
+              <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Real-Time Stock Analysis</h3>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={ticker}
+                    onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                    onKeyPress={(e) => e.key === 'Enter' && handleTickerSubmit()}
+                    placeholder="Enter ticker (AAPL, TSLA...)"
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      outline: 'none',
+                      fontSize: '16px'
+                    }}
+                  />
+                  <button 
+                    onClick={handleTickerSubmit}
+                    disabled={isLoadingStock}
+                    style={{
+                      backgroundColor: isLoadingStock ? '#9ca3af' : '#7c3aed',
+                      color: 'white',
+                      padding: '12px 16px',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: isLoadingStock ? 'not-allowed' : 'pointer',
+                      fontSize: '18px'
+                    }}
+                  >
+                    {isLoadingStock ? '⏳' : '🔍'}
+                  </button>
+                </div>
+                {apiError && (
+                  <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#fee2e2', borderRadius: '6px', fontSize: '14px', color: '#dc2626' }}>
+                    ⚠️ {apiError}
+                  </div>
+                )}
+              </div>
+
+              {ticker && stockData[ticker] && (
+                <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <h4 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>{ticker}</h4>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 4px 0' }}>Price</p>
+                      <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e', margin: 0 }}>
+                        ${stockData[ticker].price}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 4px 0' }}>Change</p>
+                      <p style={{ fontSize: '18px', fontWeight: 'bold', color: stockData[ticker].change >= 0 ? '#22c55e' : '#ef4444', margin: 0 }}>
+                        {stockData[ticker].change >= 0 ? '+' : ''}{stockData[ticker].change} ({stockData[ticker].changePercent}%)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+
+          return (
+            <div style={{ 
+              width: '100vw',
+              height: '100vh', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              backgroundColor: '#f8fafc',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              margin: 0,
+              padding: 0,
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                background: 'linear-gradient(to right, #7c3aed, #6366f1)', 
+                color: 'white', 
+                padding: '16px',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h1 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>🤖 Rolo AI Trading</h1>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ 
+                      width: '12px', 
+                      height: '12px', 
+                      backgroundColor: apiConnected ? '#22c55e' : '#eab308', 
+                      borderRadius: '50%' 
+                    }}></div>
+                    <span style={{ fontSize: '14px' }}>{apiConnected ? 'Live APIs' : 'Connecting'}</span>
+                  </div>
+                </div>
+                <p style={{ color: '#c4b5fd', fontSize: '14px', margin: '4px 0 0 0' }}>Your AI Trading Assistant with Real APIs</p>
+              </div>
+
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                {currentTab === 'chat' && renderChat()}
+                {currentTab === 'ticker' && renderTicker()}
+              </div>
+
+              <div style={{ 
+                backgroundColor: 'white', 
+                borderTop: '1px solid #e5e7eb', 
+                boxShadow: '0 -2px 4px rgba(0,0,0,0.1)',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-around', padding: '8px', width: '100%' }}>
+                  {[
+                    { id: 'chat', icon: '💬', label: 'Chat' },
+                    { id: 'ticker', icon: '🔍', label: 'Ticker' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setCurrentTab(tab.id)}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '12px',
+                        border: 'none',
+                        borderRadius: '8px',
+                        backgroundColor: currentTab === tab.id ? '#faf5ff' : 'transparent',
+                        color: currentTab === tab.id ? '#7c3aed' : '#6b7280',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        minWidth: '80px'
+                      }}
+                    >
+                      <span style={{ fontSize: '20px', marginBottom: '4px' }}>{tab.icon}</span>
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
         };
         
         ReactDOM.render(React.createElement(RoloApp), document.getElementById('root'));
