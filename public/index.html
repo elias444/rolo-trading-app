@@ -97,6 +97,7 @@
             padding: 0.75rem; 
             border-radius: 0.5rem; 
             line-height: 1.4; 
+            white-space: pre-line;
         }
         .message.user .message-content { background: #7c3aed; color: white; }
         .message.assistant .message-content { background: #f3f4f6; color: #1f2937; }
@@ -222,6 +223,15 @@
         }
         .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
         
+        .error-state {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #dc2626;
+        }
+        
         @media (max-width: 768px) {
             .stock-grid { grid-template-columns: 1fr; }
             .input-group { flex-direction: column; }
@@ -244,13 +254,15 @@
             const [activeTab, setActiveTab] = useState('chat');
             const [message, setMessage] = useState('');
             const [messages, setMessages] = useState([
-                { id: 1, type: 'assistant', text: "Hello! I'm Rolo, your AI-powered trading assistant. I can analyze ANY stock ticker and help you find trading opportunities. What would you like to explore today?" }
+                { id: 1, type: 'assistant', text: "Hello! I'm Rolo, your AI-powered trading assistant. I'm connected to live market data and ready to help you analyze stocks, find options plays, and learn your trading style. What would you like to explore today?" }
             ]);
             const [ticker, setTicker] = useState('');
             const [stockData, setStockData] = useState({});
             const [analysisResults, setAnalysisResults] = useState({});
             const [isLoading, setIsLoading] = useState(false);
             const [isTyping, setIsTyping] = useState(false);
+            const [apiConnected, setApiConnected] = useState(false);
+            const [apiError, setApiError] = useState(null);
             
             // Watchlist management
             const [watchlists, setWatchlists] = useState({
@@ -263,42 +275,121 @@
             const [showNewWatchlistInput, setShowNewWatchlistInput] = useState(false);
             const [newTicker, setNewTicker] = useState('');
             
-            // Load initial data
+            // Initialize and test API connection
             useEffect(() => {
-                setTimeout(() => {
-                    loadWatchlistData();
-                }, 1000);
+                testApiConnection();
+                loadWatchlistData();
             }, []);
+            
+            const testApiConnection = async () => {
+                try {
+                    const response = await fetch('/.netlify/functions/stock-data?symbol=SPY');
+                    if (response.ok) {
+                        setApiConnected(true);
+                        setApiError(null);
+                    } else {
+                        throw new Error('API connection failed');
+                    }
+                } catch (error) {
+                    console.error('API connection test failed:', error);
+                    setApiConnected(false);
+                    setApiError('API temporarily unavailable - using demo data');
+                }
+            };
             
             const loadWatchlistData = async () => {
                 const allTickers = Object.values(watchlists).flat();
                 const uniqueTickers = [...new Set(allTickers)];
                 
                 for (const symbol of uniqueTickers.slice(0, 8)) {
-                    await generateStockData(symbol);
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await fetchRealStockData(symbol, false);
+                    await new Promise(resolve => setTimeout(resolve, 200));
                 }
             };
             
-            const generateStockData = async (symbol) => {
-                const data = {
-                    price: (Math.random() * 200 + 50).toFixed(2),
-                    change: (Math.random() * 20 - 10).toFixed(2),
-                    changePercent: (Math.random() * 8 - 4).toFixed(2),
-                    volume: (Math.random() * 100 + 10).toFixed(1),
-                    high: (Math.random() * 220 + 60).toFixed(2),
-                    low: (Math.random() * 180 + 40).toFixed(2),
-                    marketCap: (Math.random() * 500 + 100).toFixed(1) + 'B',
-                    pe: (Math.random() * 30 + 10).toFixed(1)
-                };
+            const fetchRealStockData = async (symbol, showLoading = true) => {
+                if (showLoading) setIsLoading(true);
                 
-                setStockData(prev => ({ ...prev, [symbol]: data }));
-                
-                // Generate analysis
-                const analysis = generateAnalysis(symbol, data);
-                setAnalysisResults(prev => ({ ...prev, [symbol]: analysis }));
-                
-                return data;
+                try {
+                    const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.error && !data.fallback) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // If it's fallback data, show warning
+                    if (data.fallback) {
+                        setApiError('Using demo data - live API temporarily unavailable');
+                        // Generate demo data
+                        const demoData = generateDemoData(symbol);
+                        setStockData(prev => ({ ...prev, [symbol]: demoData }));
+                        const analysis = generateAnalysis(symbol, demoData);
+                        setAnalysisResults(prev => ({ ...prev, [symbol]: analysis }));
+                        return demoData;
+                    }
+                    
+                    // Real API data
+                    setApiError(null);
+                    setStockData(prev => ({ ...prev, [symbol]: data }));
+                    const analysis = generateAnalysis(symbol, data);
+                    setAnalysisResults(prev => ({ ...prev, [symbol]: analysis }));
+                    return data;
+                    
+                } catch (error) {
+                    console.error('Error fetching stock data:', error);
+                    setApiError('Live data unavailable - using demo mode');
+                    
+                    // Fallback to demo data
+                    const demoData = generateDemoData(symbol);
+                    setStockData(prev => ({ ...prev, [symbol]: demoData }));
+                    const analysis = generateAnalysis(symbol, demoData);
+                    setAnalysisResults(prev => ({ ...prev, [symbol]: analysis }));
+                    return demoData;
+                } finally {
+                    if (showLoading) setIsLoading(false);
+                }
+            };
+            
+            const generateDemoData = (symbol) => ({
+                price: (Math.random() * 200 + 50).toFixed(2),
+                change: (Math.random() * 20 - 10).toFixed(2),
+                changePercent: (Math.random() * 8 - 4).toFixed(2),
+                volume: (Math.random() * 100 + 10).toFixed(1),
+                high: (Math.random() * 220 + 60).toFixed(2),
+                low: (Math.random() * 180 + 40).toFixed(2),
+                open: (Math.random() * 200 + 50).toFixed(2),
+                prevClose: (Math.random() * 200 + 50).toFixed(2),
+                isLive: false
+            });
+            
+            const sendToClaudeAPI = async (message) => {
+                try {
+                    const response = await fetch('/.netlify/functions/claude-chat', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ message })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data.response;
+                    
+                } catch (error) {
+                    console.error('Claude API error:', error);
+                    return `🤖 Rolo here! I'm ready to help with trading analysis, but I'm having a brief connection issue. Try asking me about:\n\n• Any stock ticker analysis\n• Options strategies\n• Risk management tips\n• Market trends\n\nWhat's on your trading radar?`;
+                }
             };
             
             const generateAnalysis = (symbol, data) => {
@@ -310,7 +401,7 @@
                 return {
                     confidence: Math.floor(confidence),
                     recommendation: isBullish ? 'BULLISH' : 'BEARISH',
-                    reasoning: `${symbol} showing ${isBullish ? 'positive' : 'negative'} momentum with ${data.changePercent}% change. Volume: ${data.volume}M. Technical indicators suggest ${isBullish ? 'continued strength' : 'potential weakness'}.`,
+                    reasoning: `${symbol} showing ${isBullish ? 'positive' : 'negative'} momentum with ${data.changePercent}% change. Volume: ${data.volume}M. ${data.isLive ? 'Live data shows' : 'Analysis suggests'} ${isBullish ? 'continued strength' : 'potential weakness'}.`,
                     technicalScore: Math.floor(60 + Math.random() * 35),
                     sentimentScore: Math.floor(55 + Math.random() * 40),
                     riskLevel: confidence > 80 ? 'Low' : confidence > 70 ? 'Medium' : 'High',
@@ -326,35 +417,37 @@
                 
                 const userMessage = { id: Date.now(), type: 'user', text: message };
                 setMessages(prev => [...prev, userMessage]);
+                const userQuery = message;
                 setMessage('');
                 setIsTyping(true);
                 
-                setTimeout(() => {
-                    const responses = [
-                        `📊 Great question about "${message}"! I can analyze any stock ticker for you. Try entering a symbol in the Ticker tab for detailed analysis.`,
-                        `🔍 Based on "${message}", I recommend checking current market conditions. What specific stock would you like me to analyze?`,
-                        `📈 Interesting query! For "${message}", I suggest looking at both technical and fundamental analysis. Which ticker interests you most?`,
-                        `🧠 I'm processing your request about "${message}". My AI models are ready to analyze any stock symbol you provide!`,
-                        `💡 Regarding "${message}" - I can provide real-time analysis on thousands of stocks. What's your target symbol?`
-                    ];
+                try {
+                    const aiResponse = await sendToClaudeAPI(userQuery);
                     
-                    const response = { 
-                        id: Date.now() + 1, 
-                        type: 'assistant', 
-                        text: responses[Math.floor(Math.random() * responses.length)]
+                    const responseMessage = {
+                        id: Date.now() + 1,
+                        type: 'assistant',
+                        text: aiResponse
                     };
-                    setMessages(prev => [...prev, response]);
+                    
+                    setMessages(prev => [...prev, responseMessage]);
+                } catch (error) {
+                    const errorMessage = {
+                        id: Date.now() + 1,
+                        type: 'assistant',
+                        text: "I'm here to help with trading analysis! Ask me about any stock or trading concept."
+                    };
+                    setMessages(prev => [...prev, errorMessage]);
+                } finally {
                     setIsTyping(false);
-                }, 1500);
+                }
             };
             
             const analyzeStock = async () => {
                 if (!ticker.trim()) return;
-                setIsLoading(true);
                 
                 const symbol = ticker.toUpperCase().trim();
-                await generateStockData(symbol);
-                setIsLoading(false);
+                await fetchRealStockData(symbol, true);
             };
             
             // Watchlist functions
@@ -389,7 +482,7 @@
                             ...prev,
                             [activeWatchlist]: [...prev[activeWatchlist], symbol]
                         }));
-                        await generateStockData(symbol);
+                        await fetchRealStockData(symbol, false);
                     }
                     setNewTicker('');
                 }
@@ -420,20 +513,19 @@
                     }
                 });
                 
-                // Add some default plays if none generated
-                if (plays.length === 0) {
-                    return [
-                        { symbol: 'SPY', type: 'Call', strike: 580, dte: 3, confidence: 85, reason: 'Strong market momentum with high volume support...', currentPrice: '579.45', changePercent: '0.85' },
-                        { symbol: 'QQQ', type: 'Call', strike: 500, dte: 5, confidence: 82, reason: 'Tech sector showing bullish patterns...', currentPrice: '498.32', changePercent: '1.2' },
-                        { symbol: 'NVDA', type: 'Call', strike: 140, dte: 2, confidence: 78, reason: 'AI momentum continuing with earnings catalyst...', currentPrice: '138.90', changePercent: '2.1' }
-                    ];
-                }
-                
                 return plays.slice(0, 6);
             };
             
             const getRecentAlerts = () => {
                 const alerts = [];
+                
+                // System status alert
+                alerts.push({
+                    type: apiConnected ? 'success' : 'warning',
+                    title: apiConnected ? '✅ Live APIs Connected' : '⚠️ Demo Mode Active',
+                    message: apiConnected ? 'Real-time data from Alpha Vantage + Claude AI' : 'Live APIs temporarily unavailable - using demo data',
+                    time: 'Just now'
+                });
                 
                 // Generate alerts based on analysis
                 Object.entries(analysisResults).forEach(([symbol, analysis]) => {
@@ -442,7 +534,7 @@
                             type: 'success',
                             title: '🎯 High Confidence Signal',
                             message: `${symbol} ${analysis.recommendation} signal detected - ${analysis.confidence}% confidence`,
-                            time: 'Just now'
+                            time: '5 minutes ago'
                         });
                     }
                     
@@ -451,28 +543,10 @@
                             type: 'info',
                             title: '📊 Unusual Movement',
                             message: `${symbol} moving ${stockData[symbol].changePercent >= 0 ? 'up' : 'down'} ${Math.abs(stockData[symbol].changePercent)}% today`,
-                            time: '5 minutes ago'
+                            time: '10 minutes ago'
                         });
                     }
                 });
-                
-                // Default alerts
-                if (alerts.length === 0) {
-                    alerts.push(
-                        {
-                            type: 'success',
-                            title: '✅ System Online',
-                            message: 'Rolo AI analysis engine fully operational with real-time data',
-                            time: 'Just now'
-                        },
-                        {
-                            type: 'info',
-                            title: '📈 Market Update',
-                            message: 'Markets showing mixed signals - opportunities detected in tech sector',
-                            time: '15 minutes ago'
-                        }
-                    );
-                }
                 
                 return alerts.slice(0, 5);
             };
@@ -481,18 +555,28 @@
             const renderChat = () => (
                 <div className="card">
                     <h3>💬 Chat with Rolo AI</h3>
+                    
+                    {/* API Status */}
+                    {apiError && (
+                        <div className="error-state">
+                            ⚠️ {apiError}
+                        </div>
+                    )}
+                    
                     <div className="messages">
                         {messages.map(msg => (
                             <div key={msg.id} className={`message ${msg.type}`}>
                                 <div className="message-content">{msg.text}</div>
                                 {msg.type === 'assistant' && (
-                                    <div className="message-meta">🧠 Rolo AI • Live Analysis</div>
+                                    <div className="message-meta">
+                                        🧠 Rolo AI • {apiConnected ? 'Live Analysis' : 'Demo Mode'}
+                                    </div>
                                 )}
                             </div>
                         ))}
                         {isTyping && (
                             <div className="message assistant">
-                                <div className="message-content">🤔 Rolo is thinking...</div>
+                                <div className="message-content">🤔 Rolo is analyzing...</div>
                             </div>
                         )}
                     </div>
@@ -517,8 +601,15 @@
                     <div className="card">
                         <h3>🔍 Universal Stock Analysis</h3>
                         <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
-                            Analyze ANY stock ticker with Rolo's AI-powered analysis engine
+                            Analyze ANY stock ticker with {apiConnected ? 'live Alpha Vantage data' : 'demo data'}
                         </p>
+                        
+                        {apiError && (
+                            <div className="error-state">
+                                ⚠️ {apiError}
+                            </div>
+                        )}
+                        
                         <div className="input-group">
                             <input 
                                 className="input"
@@ -539,8 +630,10 @@
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                 <h4 style={{ fontSize: '1.25rem' }}>{ticker}</h4>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div className="status-dot"></div>
-                                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Live Analysis</span>
+                                    <div className="status-dot" style={{ backgroundColor: stockData[ticker].isLive ? '#22c55e' : '#eab308' }}></div>
+                                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                        {stockData[ticker].isLive ? 'Live Data' : 'Demo Data'}
+                                    </span>
                                 </div>
                             </div>
                             
@@ -560,8 +653,8 @@
                                     <div className="stat-value">{stockData[ticker].volume}M</div>
                                 </div>
                                 <div className="stat">
-                                    <div className="stat-label">Market Cap</div>
-                                    <div className="stat-value">${stockData[ticker].marketCap}</div>
+                                    <div className="stat-label">High/Low</div>
+                                    <div className="stat-value">${stockData[ticker].high}/${stockData[ticker].low}</div>
                                 </div>
                             </div>
                             
@@ -676,8 +769,12 @@
                                     </div>
                                     <div className="watchlist-actions">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
-                                            <div className="status-dot" style={{ width: '6px', height: '6px' }}></div>
-                                            <span>{stockData[symbol] ? 'Live' : 'Ready'}</span>
+                                            <div className="status-dot" style={{ 
+                                                width: '6px', 
+                                                height: '6px', 
+                                                backgroundColor: stockData[symbol]?.isLive ? '#22c55e' : '#eab308' 
+                                            }}></div>
+                                            <span>{stockData[symbol] ? (stockData[symbol].isLive ? 'Live' : 'Demo') : 'Ready'}</span>
                                         </div>
                                         <button 
                                             className="menu-btn"
@@ -829,7 +926,7 @@
                                             </p>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                                    🧠 Rolo AI Analysis • Live Data
+                                                    🧠 Rolo AI • {apiConnected ? 'Live Data' : 'Demo Mode'}
                                                 </div>
                                                 <button className="btn btn-small">Set Alert</button>
                                             </div>
@@ -858,7 +955,7 @@
                         <div className="card">
                             <h3>🔔 Smart Alert System</h3>
                             <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
-                                Intelligent notifications based on your trading activity and market conditions
+                                {apiConnected ? 'Live notifications from Alpha Vantage data' : 'Demo notifications - connect APIs for live alerts'}
                             </p>
                             
                             <div style={{ marginBottom: '1.5rem' }}>
@@ -878,7 +975,7 @@
                                     </label>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <input type="checkbox" defaultChecked />
-                                        <span>Market News & Analysis</span>
+                                        <span>Claude AI Analysis Updates</span>
                                     </label>
                                 </div>
                             </div>
@@ -921,12 +1018,17 @@
                 <div className="app">
                     <div className="header">
                         <h1>🤖 Rolo AI Trading</h1>
-                        <p>Complete AI-Powered Trading Assistant</p>
+                        <p>Live APIs: Alpha Vantage + Claude AI</p>
                     </div>
                     
                     <div className="status-bar">
-                        <div className="status-dot"></div>
-                        <span>✅ Rolo Online: Universal Stock Analysis • Smart Alerts • Live Data Simulation</span>
+                        <div className="status-dot" style={{ backgroundColor: apiConnected ? '#22c55e' : '#eab308' }}></div>
+                        <span>
+                            {apiConnected 
+                                ? '✅ Rolo Online: Live Alpha Vantage Data • Claude AI Chat • Real Analysis' 
+                                : '⚠️ Demo Mode: APIs temporarily unavailable'
+                            }
+                        </span>
                     </div>
                     
                     <div className="content">
