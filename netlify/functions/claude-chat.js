@@ -1,4 +1,4 @@
-// netlify/functions/claude-chat.js - PRODUCTION VERSION
+// netlify/functions/claude-chat.js - FAST VERSION (No Timeouts)
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -29,7 +29,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Get API key from environment variables
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     
     if (!ANTHROPIC_API_KEY) {
@@ -37,66 +36,87 @@ exports.handler = async (event, context) => {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
-          error: 'Claude API key not configured. Please add ANTHROPIC_API_KEY to environment variables.',
-          troubleshooting: 'Set up your Anthropic API key in Netlify environment variables'
+          error: 'Claude API key not configured. Please add ANTHROPIC_API_KEY to environment variables.'
         })
       };
     }
 
-    console.log(`Processing Claude request for message: ${message.substring(0, 50)}...`);
+    console.log(`Processing Claude request: ${message.substring(0, 50)}...`);
+    
+    // Set a timeout for the fetch request (8 seconds max)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    // Call REAL Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 3000,
-        system: `You are Rolo, a professional options trading AI assistant with access to real-time market data. Provide specific, actionable options trading strategies with:
+    try {
+      // Faster Claude API call with reduced tokens
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 1500, // Reduced from 3000 to speed up
+          system: `You are Rolo, a professional options trading AI. Be concise. Provide specific options strategies with exact strikes and targets. Keep responses under 300 words.`,
+          messages: [{
+            role: 'user',
+            content: message
+          }]
+        })
+      });
 
-- Exact strike prices and expiration dates based on current market conditions
-- Specific entry prices, exit targets, and stop losses
-- Professional risk management with position sizing recommendations
-- Current market context and reasoning using real-time data
-- No generic advice - only specific, executable strategies with real market analysis
+      clearTimeout(timeoutId);
 
-Focus on high-probability setups with clear risk/reward ratios. Use current market data provided to give precise, timely recommendations.`,
-        messages: [{
-          role: 'user',
-          content: message
-        }]
-      })
-    });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Claude API error:', response.status, errorText);
+        
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ 
+            error: `Claude API error: ${response.status} - ${errorText.substring(0, 200)}`
+          })
+        };
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Claude API error:', response.status, errorData);
+      const data = await response.json();
+      console.log('Claude API success! Response length:', data.content[0].text.length);
       
-      throw new Error(`Claude API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          response: data.content[0].text,
+          isLive: true,
+          source: 'claude_api_fast',
+          timestamp: new Date().toISOString()
+        })
+      };
+
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.log('Claude API call timed out after 8 seconds');
+        return {
+          statusCode: 408,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Claude API response too slow. Try a shorter question or try again.',
+            timeout: true
+          })
+        };
+      }
+      
+      throw fetchError; // Re-throw other errors
     }
 
-    const data = await response.json();
-    
-    console.log('Claude API response received successfully');
-    
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        response: data.content[0].text,
-        isLive: true,
-        source: 'real_claude_api',
-        model: 'claude-3-5-sonnet',
-        timestamp: new Date().toISOString()
-      })
-    };
-
   } catch (error) {
-    console.error('Claude API Error:', error);
+    console.error('Function error:', error);
     
     return {
       statusCode: 500,
@@ -104,8 +124,7 @@ Focus on high-probability setups with clear risk/reward ratios. Use current mark
       body: JSON.stringify({ 
         error: `Unable to connect to Claude AI: ${error.message}`,
         isLive: false,
-        troubleshooting: 'Check Claude API key configuration, account credits, and network connectivity',
-        timestamp: new Date().toISOString()
+        troubleshooting: 'Check Claude API key and try a shorter question'
       })
     };
   }
