@@ -1,4 +1,4 @@
-// netlify/functions/claude-chat.js - REAL CLAUDE API INTEGRATION
+// netlify/functions/claude-chat.js - REPLACE YOUR EXISTING FILE WITH THIS
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -29,62 +29,49 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Check if we have Anthropic API key in environment variables
+    // Get API key from environment variables (SECURE)
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     
-    if (ANTHROPIC_API_KEY) {
-      // Call REAL Anthropic Claude API
-      return await callRealClaudeAPI(message, ANTHROPIC_API_KEY, headers);
-    } else {
-      // No API key - return real market data instead of fake AI responses
-      return await getRealMarketResponse(message, headers);
+    if (!ANTHROPIC_API_KEY) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Claude API key not configured. Please add ANTHROPIC_API_KEY to environment variables.' 
+        })
+      };
     }
 
-  } catch (error) {
-    console.error('Claude API Error:', error);
-    
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        response: "I'm having trouble processing your request. Could you try asking about a specific ticker or strategy? For example: 'AAPL current price and analysis' or 'SPY options strategies'",
-        isLive: false,
-        error: true
-      })
-    };
-  }
-};
-
-// Call REAL Anthropic Claude API
-async function callRealClaudeAPI(message, apiKey, headers) {
-  try {
+    // Call REAL Anthropic Claude API - NO FALLBACKS TO MOCK DATA
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
+        'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 1000,
+        model: 'claude-3-sonnet-20240229', // You can use claude-3-5-sonnet-20241022 for latest
+        max_tokens: 1500,
+        system: `You are Rolo, a professional options trading assistant. You provide:
+- Specific, actionable options trading strategies
+- Exact strike prices and expiration dates  
+- Clear entry and exit points with reasoning
+- Risk management strategies
+- Current market context analysis
+- NO generic advice - only specific, actionable recommendations
+
+Be direct, specific, and avoid disclaimers. Focus on practical trading strategies.`,
         messages: [{
           role: 'user',
-          content: `You are Rolo, a professional options trading assistant. The user asked: "${message}"
-
-Please provide specific, actionable options trading advice. Include:
-- Specific strike prices and expiration dates
-- Entry and exit points
-- Risk management strategies
-- Current market context
-
-Avoid generic templates. Give real, practical trading advice.`
+          content: message
         }]
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Claude API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
     }
 
     const data = await response.json();
@@ -95,131 +82,22 @@ Avoid generic templates. Give real, practical trading advice.`
       body: JSON.stringify({ 
         response: data.content[0].text,
         isLive: true,
-        source: 'real_claude_api'
+        source: 'claude_api',
+        model: 'claude-3-sonnet'
       })
     };
 
   } catch (error) {
-    console.error('Real Claude API error:', error);
-    // Fallback to real market data
-    return await getRealMarketResponse(message, headers);
-  }
-}
-
-// Get real market data response (NO MOCK DATA)
-async function getRealMarketResponse(message, headers) {
-  try {
-    const query = message.toLowerCase();
-    const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+    console.error('Claude API Error:', error);
     
-    if (tickerMatches.length > 0) {
-      const ticker = tickerMatches[0];
-      
-      // Get REAL stock data
-      const stockData = await getRealStockData(ticker);
-      
-      if (stockData && !stockData.error) {
-        const response = `**${ticker} Real Market Data:**
-
-**Current Price**: $${stockData.price}
-**Change**: ${stockData.change >= 0 ? '+' : ''}${stockData.change} (${stockData.changePercent}%)
-**Volume**: ${stockData.volume}M shares
-**Day Range**: $${stockData.low} - $${stockData.high}
-**Previous Close**: $${stockData.prevClose}
-
-**Options Trading Considerations:**
-• Price movement of ${stockData.changePercent}% suggests ${Math.abs(parseFloat(stockData.changePercent)) > 2 ? 'elevated volatility' : 'normal volatility'}
-• Volume of ${stockData.volume}M is ${parseFloat(stockData.volume) > 20 ? 'above average' : 'normal'}
-• Current price near ${parseFloat(stockData.price) > (parseFloat(stockData.low) + parseFloat(stockData.high))/2 ? 'day high' : 'day low'}
-
-**For specific options strategies on ${ticker}, consider:**
-• Strike prices around current levels: $${Math.round(parseFloat(stockData.price) * 0.95)} - $${Math.round(parseFloat(stockData.price) * 1.05)}
-• Check earnings calendar before entering positions
-• Monitor volume for options liquidity
-
-This is live market data for ${ticker}. For detailed options strategies, I'd recommend consulting with a financial advisor or using professional trading platforms with real-time options chains.`;
-
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({ 
-            response: response,
-            isLive: true,
-            source: 'real_market_data'
-          })
-        };
-      }
-    }
-    
-    // General market response without mock data
+    // NO MOCK DATA - Return real error
     return {
-      statusCode: 200,
+      statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        response: `I provide real market data and analysis, not simulated responses. 
-
-To get live market analysis:
-• Ask about specific tickers: "AAPL current data" or "TSLA analysis"
-• Request market information: "SPY current price" or "QQQ volume"
-• Check live feeds in the Alerts tab for real social sentiment
-
-For detailed options strategies, I recommend:
-• Using professional trading platforms with real-time options chains
-• Consulting with licensed financial advisors
-• Checking current IV levels and Greeks before trading
-
-What specific ticker would you like real market data for?`,
-        isLive: true,
-        source: 'real_data_only'
-      })
-    };
-
-  } catch (error) {
-    console.error('Real market response error:', error);
-    
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        response: "I'm experiencing technical difficulties. Please try asking about a specific ticker for real market data, or check the live feeds in the Alerts tab.",
-        isLive: false,
-        error: true
+        error: `Unable to process request: ${error.message}. Please check API configuration.`,
+        isLive: false
       })
     };
   }
-}
-
-// Get REAL stock data (no mock data)
-async function getRealStockData(symbol) {
-  try {
-    const API_KEY = 'MAQEUTLGYYXC1HF1';
-    const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`);
-    const data = await response.json();
-    
-    if (data['Error Message'] || data['Note']) {
-      return { error: 'API limit or invalid symbol' };
-    }
-
-    const quote = data['Global Quote'];
-    if (!quote || !quote['01. symbol']) {
-      return { error: 'No data available' };
-    }
-
-    return {
-      symbol: quote['01. symbol'],
-      price: parseFloat(quote['05. price']).toFixed(2),
-      change: parseFloat(quote['09. change']).toFixed(2),
-      changePercent: parseFloat(quote['10. change percent'].replace('%', '')).toFixed(2),
-      volume: (parseFloat(quote['06. volume']) / 1000000).toFixed(1),
-      high: parseFloat(quote['03. high']).toFixed(2),
-      low: parseFloat(quote['04. low']).toFixed(2),
-      open: parseFloat(quote['02. open']).toFixed(2),
-      prevClose: parseFloat(quote['08. previous close']).toFixed(2),
-      isLive: true
-    };
-
-  } catch (error) {
-    console.error('Stock data error:', error);
-    return { error: 'Unable to fetch real stock data' };
-  }
-}
+};
