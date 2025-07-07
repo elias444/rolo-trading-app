@@ -1,4 +1,4 @@
-// netlify/functions/stock-data.js - REAL DATA ONLY
+// netlify/functions/stock-data.js - SECURE VERSION
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -21,7 +21,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const API_KEY = 'MAQEUTLGYYXC1HF1';
+    // Get API key from environment variables (SECURE)
+    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY || 'MAQEUTLGYYXC1HF1';
     const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
     
     const response = await fetch(url);
@@ -79,7 +80,7 @@ exports.handler = async (event, context) => {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: `Unable to fetch real stock data: ${error.message}`,
+        error: `Unable to fetch stock data: ${error.message}`,
         troubleshooting: 'Check Alpha Vantage API status and rate limits'
       })
     };
