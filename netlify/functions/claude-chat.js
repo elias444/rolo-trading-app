@@ -1,4 +1,4 @@
-// netlify/functions/claude-chat.js - BASIC CLAUDE CHAT (FALLBACK)
+// netlify/functions/claude-chat.js - BASIC CLAUDE CHAT (WORKING)
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -65,51 +65,75 @@ RESPONSE GUIDELINES:
 
 Always remind users that trading involves risk and to do their own research.`;
 
-    // Claude API call
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: message
-        }]
-      })
-    });
+    // Claude API call with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Claude API error:', response.status, errorText);
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [{
+            role: 'user',
+            content: message
+          }]
+        })
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Claude API error:', response.status, errorText);
+        
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ 
+            error: `Claude API error: ${response.status}`,
+            details: 'Check API key and credits'
+          })
+        };
+      }
+
+      const data = await response.json();
+      console.log('✅ Basic Claude response generated');
       
       return {
-        statusCode: 500,
+        statusCode: 200,
         headers,
         body: JSON.stringify({ 
-          error: `Claude API error: ${response.status}`,
-          details: 'Check API key and credits'
+          response: data.content[0].text,
+          type: 'basic',
+          timestamp: new Date().toISOString()
         })
       };
-    }
 
-    const data = await response.json();
-    console.log('✅ Basic Claude response generated');
-    
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        response: data.content[0].text,
-        type: 'basic',
-        timestamp: new Date().toISOString()
-      })
-    };
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        return {
+          statusCode: 408,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Request timed out. Please try again.',
+            timeout: true
+          })
+        };
+      }
+      
+      throw fetchError;
+    }
 
   } catch (error) {
     console.error('Basic Claude function error:', error);
