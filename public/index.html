@@ -47,33 +47,32 @@
         .content { 
             flex: 1; 
             padding: 0.5rem; 
-            padding-bottom: 7rem; /* More space for input area */
+            padding-bottom: 6rem; /* Space for input + tabs */
             overflow-y: auto; 
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             transition: all 0.3s ease;
-            min-height: 0; /* Important for flex scrolling */
+            min-height: 0;
         }
         
-        /* FIXED INPUT AREA - ALWAYS VISIBLE */
+        /* FIXED INPUT AREA */
         .input-section {
-            position: sticky;
-            bottom: 0;
+            position: fixed;
+            bottom: 4.5rem; /* Above tabs */
+            left: 0;
+            right: 0;
             background: white;
             padding: 1rem;
             border-top: 1px solid #e5e7eb;
-            margin: 0 -0.5rem -1rem -0.5rem;
-            z-index: 50;
+            z-index: 60;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }
         
-        /* ENSURE FULL SCROLLABILITY */
         .scrollable-content {
-            padding-bottom: 2rem; /* Extra space at bottom */
+            padding-bottom: 2rem;
         }
         
-        /* SMOOTH PAGE TRANSITIONS */
         .page-content {
             opacity: 1;
             transform: translateX(0);
@@ -94,7 +93,8 @@
             border-radius: 0.75rem; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        /* FIXED BOTTOM TABS - NATIVE APP FEEL */
+        
+        /* FIXED BOTTOM TABS */
         .tabs { 
             position: fixed;
             bottom: 0;
@@ -156,7 +156,6 @@
         .tab-icon { font-size: 1.2rem; }
         .tab-label { font-size: 0.65rem; font-weight: 500; }
         
-        /* HOME BUTTON */
         .home-btn {
             display: inline-flex;
             align-items: center;
@@ -275,7 +274,7 @@
             .stock-grid { grid-template-columns: 1fr; gap: 0.5rem; }
             .messages { height: 45vh; min-height: 250px; }
             .header { padding: 0.75rem; }
-            .content { padding: 0.5rem; padding-bottom: 5rem; }
+            .content { padding: 0.5rem; padding-bottom: 6rem; }
             .tabs { height: 4.5rem; padding: 0.75rem 0; }
             .tab { min-height: 3rem; }
             .tab-icon { font-size: 1.1rem; }
@@ -300,7 +299,23 @@
                 <!-- Content will be inserted here -->
             </div>
             
-            <!-- FIXED BOTTOM TABS WITH ANALYSIS -->
+            <!-- FIXED INPUT SECTION - ONLY SHOWS IN CHAT TAB -->
+            <div class="input-section" id="inputSection" style="display: none;">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        class="input" 
+                        id="messageInput"
+                        placeholder="Ask: 'HOOD options strategies' or 'best AAPL calls'"
+                        onkeypress="if(event.key==='Enter') sendMessage()"
+                    />
+                    <button class="btn" onclick="sendMessage()" id="sendBtn">
+                        ➤
+                    </button>
+                </div>
+            </div>
+            
+            <!-- FIXED BOTTOM TABS -->
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('chat')" id="chat-tab">
                     <div class="tab-icon">💬</div>
@@ -346,12 +361,22 @@
             renderCurrentTab();
         });
         
-        // Enhanced tab switching with smooth animations
+        // Enhanced tab switching with input visibility control
         function switchTab(tab) {
-            if (currentTab === tab) return; // Prevent unnecessary switches
+            if (currentTab === tab) return;
             
             const content = document.getElementById('content');
+            const inputSection = document.getElementById('inputSection');
             const oldTab = currentTab;
+            
+            // Control input section visibility
+            if (tab === 'chat') {
+                inputSection.style.display = 'block';
+                content.style.paddingBottom = '7rem'; // Space for input + tabs
+            } else {
+                inputSection.style.display = 'none';
+                content.style.paddingBottom = '5rem'; // Just tabs
+            }
             
             // Add fade out effect
             content.classList.add('fade-out');
@@ -359,7 +384,7 @@
             setTimeout(() => {
                 currentTab = tab;
                 
-                // Update tab styling with smooth transitions
+                // Update tab styling
                 document.querySelectorAll('.tab').forEach(t => {
                     t.classList.remove('active');
                     t.style.transform = 'scale(1)';
@@ -389,12 +414,10 @@
             }, 150);
         }
         
-        // Go home function
         function goHome() {
             switchTab('chat');
         }
         
-        // Render current tab content with page wrapper
         function renderCurrentTab() {
             const content = document.getElementById('content');
             let tabContent = '';
@@ -430,7 +453,7 @@
             }
         }
         
-        // Render chat tab with fixed input positioning
+        // Render chat tab
         function renderChat() {
             return `
                 <div class="scrollable-content">
@@ -456,27 +479,10 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- FIXED INPUT SECTION -->
-                <div class="input-section">
-                    <div class="input-group">
-                        <input 
-                            type="text" 
-                            class="input" 
-                            id="messageInput"
-                            placeholder="Ask: 'HOOD options strategies' or 'best AAPL calls'"
-                            onkeypress="if(event.key==='Enter') sendMessage()"
-                            ${isTyping ? 'disabled' : ''}
-                        />
-                        <button class="btn" onclick="sendMessage()" ${isTyping ? 'disabled' : ''}>
-                            ${isTyping ? '⏳' : '➤'}
-                        </button>
-                    </div>
-                </div>
             `;
         }
         
-        // Render ticker tab
+        // Render ticker tab with live data functionality
         function renderTicker() {
             return `
                 <div class="card">
@@ -485,9 +491,9 @@
                         <span>Back to Chat</span>
                     </button>
                     
-                    <h3>🔍 Options Stock Analysis</h3>
+                    <h3>🔍 Live Stock Analysis</h3>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                        Analyze ANY stock with focus on options opportunities
+                        Get real-time data and options analysis for any stock
                     </p>
                     
                     <div class="input-group">
@@ -499,15 +505,22 @@
                             onkeypress="if(event.key==='Enter') analyzeTicker()"
                             value="${ticker}"
                         />
-                        <button class="btn" onclick="analyzeTicker()">
+                        <button class="btn" onclick="analyzeTicker()" id="analyzeBtn">
                             🔍 Analyze
                         </button>
                     </div>
+                    
+                    ${stockData.error ? `
+                        <div style="background: #fee2e2; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #fecaca; color: #dc2626;">
+                            <strong>⚠️ API Error:</strong> ${stockData.error}
+                            <br><small>Using demo data for demonstration</small>
+                        </div>
+                    ` : ''}
                 </div>
                 
                 ${ticker && stockData[ticker] ? `
                     <div class="card">
-                        <h4 style="margin-bottom: 1rem;">${ticker} - Options Focus</h4>
+                        <h4 style="margin-bottom: 1rem;">${ticker} - Live Options Data ${stockData[ticker].isLive ? '🟢' : '🟡'}</h4>
                         
                         <div class="stock-grid">
                             <div class="stat">
@@ -525,15 +538,15 @@
                                 <div class="stat-value">${stockData[ticker].volume}M</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-label">Options Flow</div>
-                                <div class="stat-value" style="color: #7c3aed;">Active</div>
+                                <div class="stat-label">High / Low</div>
+                                <div class="stat-value" style="font-size: 0.9rem;">${stockData[ticker].high} / ${stockData[ticker].low}</div>
                             </div>
                         </div>
                         
                         <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
                                 <span>⚡</span>
-                                <span>Live Options Analysis for ${ticker}</span>
+                                <span>Options Analysis for ${ticker}</span>
                             </div>
                             <div style="font-size: 0.9rem; color: #374151; line-height: 1.4;">
                                 ${window.currentAnalysis && window.currentAnalysis.ticker === ticker ? 
@@ -546,13 +559,13 @@
                                             }
                                         </div>
                                     </div>` : 
-                                    `<strong>For ${ticker} Options Traders:</strong><br/>
+                                    `<strong>Quick ${ticker} Options Overview:</strong><br/>
                                     ${stockData[ticker].change >= 0 ? 
-                                        `• Bullish momentum - consider call options or bull spreads<br/>• Check IV levels before buying - avoid overpaying for premium<br/>• Look at weekly options for shorter-term plays` : 
-                                        `• Bearish pressure - consider put options or bear spreads<br/>• High IV environment may favor selling strategies<br/>• Check support levels for cash-secured put opportunities`
+                                        `• Bullish momentum - consider call options or bull spreads<br/>• Current price: $${stockData[ticker].price} (up ${stockData[ticker].changePercent}%)<br/>• Volume: ${stockData[ticker].volume}M suggests ${parseFloat(stockData[ticker].volume) > 20 ? 'strong' : 'normal'} interest` : 
+                                        `• Bearish pressure - consider put options or protective strategies<br/>• Current price: $${stockData[ticker].price} (down ${stockData[ticker].changePercent}%)<br/>• Support may emerge around recent lows of $${stockData[ticker].low}`
                                     }<br/>
-                                    • Current trend suggests ${stockData[ticker].change >= 0 ? 'bullish' : 'bearish'} options strategies<br/>
-                                    • Volume: ${stockData[ticker].volume}M indicates ${parseFloat(stockData[ticker].volume) > 20 ? 'high' : 'normal'} liquidity<br/>`
+                                    • Day Range: $${stockData[ticker].low} - $${stockData[ticker].high}<br/>
+                                    • Previous Close: $${stockData[ticker].prevClose}<br/>`
                                 }
                                 <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                     <button class="btn btn-small" onclick="askRoloAbout('${ticker}')">Ask Rolo: "${ticker} strategies"</button>
@@ -582,7 +595,7 @@
             `;
         }
         
-        // Render analysis tab - MISSING TAB ADDED
+        // Render analysis tab
         function renderAnalysis() {
             return `
                 <div class="card">
@@ -598,7 +611,7 @@
                     
                     ${ticker && stockData[ticker] ? `
                         <div style="background: #f8fafc; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0;">
-                            <h4 style="margin-bottom: 0.75rem; color: #1f2937;">Deep Analysis: ${ticker}</h4>
+                            <h4 style="margin-bottom: 0.75rem; color: #1f2937;">Deep Analysis: ${ticker} ${stockData[ticker].isLive ? '🟢 Live' : '🟡 Demo'}</h4>
                             
                             <div class="stock-grid">
                                 <div class="stat">
@@ -654,86 +667,28 @@
                                     }
                                 </div>
                             </div>
-                            
-                            <div style="background: white; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border: 1px solid #e2e8f0;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; font-weight: 700; color: #1f2937;">
-                                    <span>🧠</span>
-                                    <span>AI Analysis Summary</span>
-                                </div>
-                                <p style="margin-bottom: 0.75rem; line-height: 1.4; color: #374151;">
-                                    ${ticker} is currently ${stockData[ticker].change >= 0 ? 'showing bullish characteristics' : 'displaying bearish signals'} with ${stockData[ticker].changePercent}% movement. 
-                                    Volume of ${stockData[ticker].volume}M indicates ${parseFloat(stockData[ticker].volume) > 20 ? 'strong institutional interest' : 'normal trading activity'}. 
-                                    Options traders should consider ${stockData[ticker].change >= 0 ? 'upside strategies' : 'downside protection'} while monitoring key technical levels.
-                                </p>
-                                <div style="background: #f8fafc; padding: 0.75rem; border-radius: 0.5rem;">
-                                    <strong>Recommendation: </strong>
-                                    <span style="color: ${stockData[ticker].change >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 700;">
-                                        ${stockData[ticker].change >= 0 ? 'BULLISH BIAS' : 'BEARISH BIAS'}
-                                    </span>
-                                    <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #6b7280;">
-                                        Confidence Level: ${Math.floor(Math.random() * 20 + 75)}% • Risk-Adjusted Rating: ${['A-', 'B+', 'B', 'B-'][Math.floor(Math.random() * 4)]}
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     ` : `
                         <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
                             <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
                             <h4 style="margin-bottom: 0.5rem; color: #374151;">No Stock Analyzed Yet</h4>
                             <p style="margin-bottom: 1.5rem; line-height: 1.4;">
-                                Go to the Ticker tab and analyze a stock to see detailed technical analysis, options recommendations, and AI insights here.
+                                Go to the Ticker tab and analyze a stock to see detailed analysis here.
                             </p>
                             <button class="btn" onclick="switchTab('ticker')" style="margin-right: 0.5rem;">
                                 🔍 Analyze Stock
                             </button>
-                            <button class="btn" onclick="quickAnalyze('SPY')" style="background: #22c55e;">
-                                📈 Try SPY
-                            </button>
                         </div>
                     `}
                 </div>
-                
-                <div class="card">
-                    <h4 style="margin-bottom: 1rem;">🎯 Market Overview</h4>
-                    
-                    <div class="stock-grid">
-                        <div class="stat">
-                            <div class="stat-label">Market Sentiment</div>
-                            <div class="stat-value" style="color: #22c55e;">Bullish</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">VIX Level</div>
-                            <div class="stat-value" style="color: #eab308;">${Math.floor(Math.random() * 10 + 18)}</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">Options Flow</div>
-                            <div class="stat-value" style="color: #7c3aed;">Active</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">Best Strategy</div>
-                            <div class="stat-value" style="color: #22c55e; font-size: 0.9rem;">Spreads</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border: 1px solid #0ea5e9;">
-                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">💡 Today's Market Focus</div>
-                        <div style="font-size: 0.9rem; color: #0c4a6e; margin-bottom: 0.75rem;">
-                            Current market conditions favor ${['covered calls', 'cash-secured puts', 'iron condors', 'call spreads'][Math.floor(Math.random() * 4)]} 
-                            strategies. Volatility is ${Math.random() > 0.5 ? 'elevated' : 'compressed'}, creating opportunities for 
-                            ${Math.random() > 0.5 ? 'premium selling' : 'volatility buying'} approaches.
-                        </div>
-                        <button class="btn btn-small" onclick="goHome()" style="background: #0ea5e9;">
-                            Ask Rolo for Strategy
-                        </button>
-                    </div>
-                </div>
             `;
         }
+        
         function renderPlays() {
             const samplePlays = [
-                { symbol: 'SPY', type: 'Call', strike: 580, confidence: 85, reason: 'Strong momentum with bullish options flow and high volume' },
-                { symbol: 'QQQ', type: 'Call', strike: 500, confidence: 82, reason: 'Tech sector strength, low IV environment favors buying' },
-                { symbol: 'HOOD', type: 'Put', strike: 25, confidence: 78, reason: 'High IV, overbought conditions, resistance at current levels' }
+                { symbol: 'SPY', type: 'Call', strike: 580, confidence: 85, reason: 'Strong momentum with bullish options flow' },
+                { symbol: 'QQQ', type: 'Call', strike: 500, confidence: 82, reason: 'Tech sector strength, low IV environment' },
+                { symbol: 'HOOD', type: 'Put', strike: 25, confidence: 78, reason: 'High IV, overbought conditions' }
             ];
             
             return `
@@ -745,7 +700,7 @@
                     
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                         <span style="font-size: 1.5rem;">🧠</span>
-                        <h3>High Confidence Options Plays</h3>
+                        <h3>AI Options Plays</h3>
                     </div>
                     
                     ${samplePlays.map(play => `
@@ -757,7 +712,7 @@
                                         ${play.type}
                                     </span>
                                     <div style="margin-top: 0.25rem;">
-                                        <strong>$${play.strike} Strike</strong> • Weekly Options
+                                        <strong>$${play.strike} Strike</strong>
                                     </div>
                                 </div>
                                 <div style="text-align: right; font-size: 1.3rem; font-weight: 700; color: #22c55e;">
@@ -767,31 +722,15 @@
                             <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; line-height: 1.3;">
                                 ${play.reason}
                             </p>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="font-size: 0.8rem; color: #6b7280;">
-                                    🧠 Rolo AI • Options Specialist
-                                </div>
-                                <button class="btn btn-small" onclick="askRoloAbout('${play.symbol}')">
-                                    Analyze ${play.symbol}
-                                </button>
-                            </div>
+                            <button class="btn btn-small" onclick="askRoloAbout('${play.symbol}')">
+                                Analyze ${play.symbol}
+                            </button>
                         </div>
                     `).join('')}
-                    
-                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; border: 1px solid #0ea5e9;">
-                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">💡 Want Personalized Plays?</div>
-                        <div style="font-size: 0.9rem; color: #0c4a6e; margin-bottom: 0.75rem;">
-                            Ask Rolo in chat: "What are the best options plays today?" or mention any specific ticker!
-                        </div>
-                        <button class="btn btn-small" onclick="goHome()" style="background: #0ea5e9;">
-                            Ask Rolo Now
-                        </button>
-                    </div>
                 </div>
             `;
         }
         
-        // Render alerts tab
         function renderAlerts() {
             return `
                 <div class="card">
@@ -800,64 +739,25 @@
                         <span>Back to Chat</span>
                     </button>
                     
-                    <h3>🔔 Options Trading Alerts</h3>
+                    <h3>🔔 Trading Alerts</h3>
                     
                     <div class="alert-item alert-success">
                         <div style="font-weight: 700; color: #166534; margin-bottom: 0.25rem;">✅ Rolo Online</div>
-                        <div style="font-size: 0.8rem; color: #15803d; margin-bottom: 0.25rem;">Options trading specialist ready for analysis</div>
-                        <div style="font-size: 0.7rem; color: #6b7280;">Just now</div>
+                        <div style="font-size: 0.8rem; color: #15803d;">Options specialist ready for analysis</div>
                     </div>
                     
                     <div class="alert-item alert-info">
                         <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.25rem;">⚡ High IV Environment</div>
-                        <div style="font-size: 0.8rem; color: #6d28d9; margin-bottom: 0.25rem;">Elevated options premiums - consider selling strategies</div>
-                        <div style="font-size: 0.7rem; color: #6b7280;">5 minutes ago</div>
-                    </div>
-                    
-                    <div class="alert-item alert-warning">
-                        <div style="font-weight: 700; color: #92400e; margin-bottom: 0.25rem;">📊 HOOD Unusual Activity</div>
-                        <div style="font-size: 0.8rem; color: #a16207; margin-bottom: 0.25rem;">High options volume detected - potential catalyst incoming</div>
-                        <div style="font-size: 0.7rem; color: #6b7280;">15 minutes ago</div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h4>Alert Settings</h4>
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" checked />
-                            <span style="font-size: 0.9rem;">High Confidence Options Plays (80%+)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" checked />
-                            <span style="font-size: 0.9rem;">Unusual Options Activity</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" checked />
-                            <span style="font-size: 0.9rem;">IV Environment Changes</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" checked />
-                            <span style="font-size: 0.9rem;">Earnings Calendar Updates</span>
-                        </label>
-                    </div>
-                    
-                    <div style="margin-top: 1.5rem; padding: 1rem; background: #faf5ff; border-radius: 0.75rem; border: 1px solid #7c3aed;">
-                        <div style="font-weight: 700; color: #7c3aed; margin-bottom: 0.5rem;">🎯 Custom Alerts</div>
-                        <div style="font-size: 0.9rem; color: #6d28d9; margin-bottom: 0.75rem;">
-                            Ask Rolo to set up personalized alerts for your favorite tickers and strategies!
-                        </div>
-                        <button class="btn btn-small" onclick="goHome()" style="background: #7c3aed;">
-                            Setup with Rolo
-                        </button>
+                        <div style="font-size: 0.8rem; color: #6d28d9;">Consider premium selling strategies</div>
                     </div>
                 </div>
             `;
         }
         
-        // Send message function with enhanced options responses
+        // Send message function with API integration
         async function sendMessage() {
             const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
             const message = input.value.trim();
             
             if (!message || isTyping) return;
@@ -871,6 +771,8 @@
             
             input.value = '';
             isTyping = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '⏳';
             renderCurrentTab();
             
             try {
@@ -900,118 +802,15 @@
             }
             
             isTyping = false;
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '➤';
             renderCurrentTab();
         }
         
-        // Smart options responses for when API fails
-        function getSmartOptionsResponse(message) {
-            const query = message.toLowerCase();
-            const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
-            
-            if (tickerMatches.length > 0) {
-                const ticker = tickerMatches[0];
-                
-                if (query.includes('hood')) {
-                    return `⚡ **HOOD OPTIONS ANALYSIS:**
-
-🎯 **Robinhood (HOOD) Options Opportunities:**
-
-**📊 Current HOOD Setup:**
-• High volatility stock = rich options premiums
-• Retail trading focus makes it news-sensitive  
-• Earnings reactions tend to be explosive
-• Options volume typically high around catalysts
-
-**🚀 HOOD Options Strategies:**
-
-**For Bullish Outlook:**
-• **Call Options**: 30-45 DTE for earnings plays
-• **Bull Call Spreads**: Limit risk while maintaining upside
-• **Cash-Secured Puts**: Get paid to own HOOD at lower prices
-
-**For Bearish Outlook:**  
-• **Put Options**: High IV makes puts expensive but profitable on moves
-• **Bear Put Spreads**: Defined risk bearish play
-• **Covered Calls**: If you own shares, sell calls for income
-
-**For High Volatility:**
-• **Iron Condors**: Profit from range-bound action post-earnings
-• **Straddles**: Buy before earnings, sell before announcement
-• **Calendar Spreads**: Benefit from volatility crush
-
-**⚡ HOOD Risk Factors:**
-• News-driven stock = unpredictable moves
-• High IV = expensive options (time decay risk)
-• Meme stock behavior = extreme volatility
-• Regulatory risks affect fintech stocks
-
-**💡 Best HOOD Options Approach:**
-1. Wait for IV spikes to SELL premium
-2. Buy options only on pullbacks when IV is low
-3. Use spreads to manage the high premium costs
-4. Never hold through earnings unless you love gambling!
-
-**What's your specific HOOD outlook? Bullish, bearish, or just want to trade the volatility?** 📈`;
-                }
-                
-                return `⚡ **${ticker} OPTIONS ANALYSIS:**
-
-🎯 **Options Strategy for ${ticker}:**
-
-**📊 Key Considerations:**
-• Check ${ticker}'s current IV percentile vs historical
-• Look for upcoming earnings or catalyst events
-• Identify key support/resistance for strike selection
-• Monitor unusual options activity and flow
-
-**🚀 Strategy Menu for ${ticker}:**
-• **Bullish**: Call options, bull spreads, covered calls
-• **Bearish**: Put options, bear spreads, protective puts  
-• **Neutral**: Iron condors, butterflies, calendar spreads
-• **High IV**: Sell premium strategies (covered calls, CSPs)
-• **Low IV**: Buy options before volatility expansion
-
-**💡 ${ticker} Options Tips:**
-• Use liquid options with tight bid-ask spreads
-• Consider 30-45 DTE for optimal theta decay
-• Set profit targets (50% for credit, 100% for debit)
-• Always have an exit plan before entering
-
-**What's your market outlook for ${ticker}? I can suggest specific strikes and expirations!** 📊`;
-            }
-            
-            return `🧠 **Rolo's Options Expertise:**
-
-I specialize in options trading analysis! Try asking:
-
-• **"HOOD options strategies"** - Specific ticker analysis
-• **"Best covered call setup"** - Strategy deep dives  
-• **"How do I trade earnings with options?"** - Event trading
-• **"Explain the Greeks"** - Education on delta, theta, etc.
-• **"Iron condor vs butterfly"** - Strategy comparisons
-
-**🎯 Popular Questions:**
-• Risk management for options positions
-• When to buy vs sell volatility  
-• Best strikes and expirations to target
-• How to handle losing options trades
-
-**What specific options topic interests you most?** 📈`;
-        }
-        
-        // Helper functions
-        function askRoloAbout(ticker) {
-            switchTab('chat');
-            setTimeout(() => {
-                const input = document.getElementById('messageInput');
-                input.value = `${ticker} options strategies`;
-                sendMessage();
-            }, 300);
-        }
-        
-        // Enhanced analyze ticker function with API integration
+        // Enhanced analyze ticker with proper error handling
         async function analyzeTicker() {
             const input = document.getElementById('tickerInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
             const symbol = input.value.trim().toUpperCase();
             
             if (!symbol) return;
@@ -1019,54 +818,78 @@ I specialize in options trading analysis! Try asking:
             ticker = symbol;
             
             // Show loading state
-            const analyzeBtn = document.querySelector('button[onclick="analyzeTicker()"]');
             const originalText = analyzeBtn.innerHTML;
             analyzeBtn.innerHTML = '⏳ Loading...';
             analyzeBtn.disabled = true;
             
             try {
-                // First get stock data from your API
+                // First get stock data
                 const stockResponse = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
-                const stockInfo = await stockResponse.json();
+                const stockResult = await stockResponse.json();
                 
-                if (stockInfo.error && !stockInfo.fallback) {
-                    throw new Error(stockInfo.error);
+                if (stockResult.error && !stockResult.fallback) {
+                    // API error, use fallback data
+                    stockData[symbol] = {
+                        price: (Math.random() * 200 + 50).toFixed(2),
+                        change: (Math.random() * 20 - 10).toFixed(2),
+                        changePercent: (Math.random() * 8 - 4).toFixed(2),
+                        volume: (Math.random() * 100 + 10).toFixed(1),
+                        high: (Math.random() * 220 + 60).toFixed(2),
+                        low: (Math.random() * 180 + 40).toFixed(2),
+                        open: (Math.random() * 200 + 50).toFixed(2),
+                        prevClose: (Math.random() * 200 + 50).toFixed(2),
+                        isLive: false
+                    };
+                    stockData.error = stockResult.error;
+                } else {
+                    // Real data or API fallback
+                    stockData[symbol] = {
+                        price: stockResult.price,
+                        change: stockResult.change,
+                        changePercent: stockResult.changePercent,
+                        volume: stockResult.volume,
+                        high: stockResult.high,
+                        low: stockResult.low,
+                        open: stockResult.open,
+                        prevClose: stockResult.prevClose,
+                        isLive: stockResult.isLive !== false
+                    };
+                    delete stockData.error;
                 }
                 
-                // Store the real stock data
-                stockData[symbol] = {
-                    price: stockInfo.price || (Math.random() * 200 + 50).toFixed(2),
-                    change: stockInfo.change || (Math.random() * 20 - 10).toFixed(2),
-                    changePercent: stockInfo.changePercent || (Math.random() * 8 - 4).toFixed(2),
-                    volume: stockInfo.volume || (Math.random() * 100 + 10).toFixed(1),
-                    high: stockInfo.high || (Math.random() * 220 + 60).toFixed(2),
-                    low: stockInfo.low || (Math.random() * 180 + 40).toFixed(2),
-                    isLive: stockInfo.isLive || false
-                };
-                
-                // Now get AI analysis from Claude
-                const analysisResponse = await fetch('/.netlify/functions/claude-chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        message: `${symbol} options analysis with current data: Price ${stockData[symbol].price}, Change ${stockData[symbol].change} (${stockData[symbol].changePercent}%), Volume ${stockData[symbol].volume}M. Provide specific options strategies for ${symbol}.`
-                    })
-                });
-                
-                const analysisData = await analysisResponse.json();
-                
-                // Store the analysis for the Analysis tab
-                window.currentAnalysis = {
-                    ticker: symbol,
-                    aiResponse: analysisData.response,
-                    stockData: stockData[symbol],
-                    timestamp: new Date()
-                };
+                // Get AI analysis
+                try {
+                    const analysisResponse = await fetch('/.netlify/functions/claude-chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            message: `${symbol} options analysis with current data: Price ${stockData[symbol].price}, Change ${stockData[symbol].change} (${stockData[symbol].changePercent}%), Volume ${stockData[symbol].volume}M. Provide specific options strategies.`
+                        })
+                    });
+                    
+                    const analysisData = await analysisResponse.json();
+                    
+                    // Store analysis
+                    window.currentAnalysis = {
+                        ticker: symbol,
+                        aiResponse: analysisData.response,
+                        stockData: stockData[symbol],
+                        timestamp: new Date()
+                    };
+                } catch (analysisError) {
+                    console.error('Analysis error:', analysisError);
+                    window.currentAnalysis = {
+                        ticker: symbol,
+                        aiResponse: `${symbol} analysis shows ${stockData[symbol].change >= 0 ? 'bullish' : 'bearish'} momentum. Consider ${stockData[symbol].change >= 0 ? 'call options or bull spreads' : 'put options or protective strategies'}.`,
+                        stockData: stockData[symbol],
+                        timestamp: new Date()
+                    };
+                }
                 
             } catch (error) {
                 console.error('Error analyzing ticker:', error);
                 
-                // Fallback to demo data
+                // Complete fallback
                 stockData[symbol] = {
                     price: (Math.random() * 200 + 50).toFixed(2),
                     change: (Math.random() * 20 - 10).toFixed(2),
@@ -1074,15 +897,11 @@ I specialize in options trading analysis! Try asking:
                     volume: (Math.random() * 100 + 10).toFixed(1),
                     high: (Math.random() * 220 + 60).toFixed(2),
                     low: (Math.random() * 180 + 40).toFixed(2),
+                    open: (Math.random() * 200 + 50).toFixed(2),
+                    prevClose: (Math.random() * 200 + 50).toFixed(2),
                     isLive: false
                 };
-                
-                window.currentAnalysis = {
-                    ticker: symbol,
-                    aiResponse: `${symbol} analysis temporarily using demo data. The stock shows ${stockData[symbol].change >= 0 ? 'bullish' : 'bearish'} momentum. Consider ${stockData[symbol].change >= 0 ? 'call options or bull spreads' : 'put options or bear spreads'} for directional plays.`,
-                    stockData: stockData[symbol],
-                    timestamp: new Date()
-                };
+                stockData.error = 'API temporarily unavailable - using demo data';
             } finally {
                 // Reset button
                 analyzeBtn.innerHTML = originalText;
@@ -1091,10 +910,35 @@ I specialize in options trading analysis! Try asking:
             }
         }
         
-        // Quick analyze function with API integration
+        // Quick analyze
         async function quickAnalyze(symbol) {
             document.getElementById('tickerInput').value = symbol;
             await analyzeTicker();
+        }
+        
+        // Ask Rolo about ticker
+        function askRoloAbout(ticker) {
+            switchTab('chat');
+            setTimeout(() => {
+                const input = document.getElementById('messageInput');
+                if (input) {
+                    input.value = `${ticker} options strategies`;
+                    sendMessage();
+                }
+            }, 300);
+        }
+        
+        // Smart fallback responses
+        function getSmartOptionsResponse(message) {
+            const query = message.toLowerCase();
+            const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+            
+            if (tickerMatches.length > 0) {
+                const ticker = tickerMatches[0];
+                return `⚡ **${ticker} OPTIONS ANALYSIS:**\n\n🎯 I can analyze ${ticker} options strategies including:\n• Call and put options for directional plays\n• Spreads for risk management\n• Income strategies like covered calls\n• Greeks analysis for risk assessment\n\nWhat's your specific outlook on ${ticker}? Bullish, bearish, or neutral?`;
+            }
+            
+            return `🧠 **Rolo's Options Expertise:**\n\nI specialize in options trading! Ask me about:\n• Any ticker's options strategies\n• Covered calls and cash-secured puts\n• Iron condors and spreads\n• The Greeks (delta, theta, gamma, vega)\n• Risk management techniques\n\nTry: "AAPL options strategies" or "explain covered calls"`;
         }
     </script>
 </body>
