@@ -47,13 +47,14 @@
         .content { 
             flex: 1; 
             padding: 0.5rem; 
-            padding-bottom: 6rem; /* Space for input + tabs */
+            padding-bottom: 8rem; /* Space for input + tabs */
             overflow-y: auto; 
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             transition: all 0.3s ease;
             min-height: 0;
+            max-height: calc(100vh - 200px); /* Ensure proper scrolling */
         }
         
         /* FIXED INPUT AREA */
@@ -67,10 +68,12 @@
             border-top: 1px solid #e5e7eb;
             z-index: 60;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: block; /* Show by default for chat */
         }
         
         .scrollable-content {
-            padding-bottom: 2rem;
+            padding-bottom: 4rem; /* Extra space at bottom for proper scrolling */
+            min-height: 100%;
         }
         
         .page-content {
@@ -274,11 +277,18 @@
             .stock-grid { grid-template-columns: 1fr; gap: 0.5rem; }
             .messages { height: 45vh; min-height: 250px; }
             .header { padding: 0.75rem; }
-            .content { padding: 0.5rem; padding-bottom: 6rem; }
+            .content { 
+                padding: 0.5rem; 
+                padding-bottom: 8rem; 
+                max-height: calc(100vh - 180px);
+            }
             .tabs { height: 4.5rem; padding: 0.75rem 0; }
             .tab { min-height: 3rem; }
             .tab-icon { font-size: 1.1rem; }
             .tab-label { font-size: 0.6rem; }
+            .scrollable-content {
+                padding-bottom: 5rem;
+            }
         }
     </style>
 </head>
@@ -299,8 +309,8 @@
                 <!-- Content will be inserted here -->
             </div>
             
-            <!-- FIXED INPUT SECTION - ONLY SHOWS IN CHAT TAB -->
-            <div class="input-section" id="inputSection" style="display: none;">
+            <!-- FIXED INPUT SECTION - SHOWS IN CHAT TAB -->
+            <div class="input-section" id="inputSection">
                 <div class="input-group">
                     <input 
                         type="text" 
@@ -358,6 +368,15 @@
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            // Set initial input visibility for chat tab
+            const inputSection = document.getElementById('inputSection');
+            const content = document.getElementById('content');
+            
+            if (currentTab === 'chat') {
+                inputSection.style.display = 'block';
+                content.style.paddingBottom = '8rem';
+            }
+            
             renderCurrentTab();
         });
         
@@ -369,10 +388,10 @@
             const inputSection = document.getElementById('inputSection');
             const oldTab = currentTab;
             
-            // Control input section visibility
+            // Control input section visibility and content padding
             if (tab === 'chat') {
                 inputSection.style.display = 'block';
-                content.style.paddingBottom = '7rem'; // Space for input + tabs
+                content.style.paddingBottom = '8rem'; // Space for input + tabs
             } else {
                 inputSection.style.display = 'none';
                 content.style.paddingBottom = '5rem'; // Just tabs
@@ -405,6 +424,16 @@
                 // Haptic feedback on mobile
                 if (navigator.vibrate) {
                     navigator.vibrate(10);
+                }
+                
+                // Focus input if chat tab
+                if (tab === 'chat') {
+                    setTimeout(() => {
+                        const messageInput = document.getElementById('messageInput');
+                        if (messageInput) {
+                            messageInput.focus();
+                        }
+                    }, 350);
                 }
                 
                 setTimeout(() => {
@@ -448,6 +477,12 @@
                     const messagesDiv = document.querySelector('.messages');
                     if (messagesDiv) {
                         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }
+                    
+                    // Also scroll main content to bottom
+                    const contentDiv = document.getElementById('content');
+                    if (contentDiv) {
+                        contentDiv.scrollTop = contentDiv.scrollHeight;
                     }
                 }, 100);
             }
@@ -805,6 +840,14 @@
             sendBtn.disabled = false;
             sendBtn.innerHTML = '➤';
             renderCurrentTab();
+            
+            // Scroll to bottom after message is added
+            setTimeout(() => {
+                const messagesDiv = document.querySelector('.messages');
+                if (messagesDiv) {
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            }, 100);
         }
         
         // Enhanced analyze ticker with proper error handling
