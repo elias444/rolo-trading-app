@@ -251,6 +251,15 @@
             border: 2px solid #f87171;
         }
         
+        .timeout-banner {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            color: #ea580c;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 2px solid #fb923c;
+        }
+        
         @media (max-width: 768px) {
             .stock-grid { grid-template-columns: 1fr; gap: 0.5rem; }
             .messages { height: 45vh; min-height: 250px; }
@@ -328,7 +337,7 @@
     </div>
     
     <script>
-        // PRODUCTION VERSION - NO MOCK DATA
+        // PRODUCTION VERSION - OPTIMIZED FOR PERFORMANCE
         let currentTab = 'chat';
         let messages = [
             {
@@ -395,14 +404,22 @@
             }
         }
 
-        // REAL-TIME STOCK DATA ONLY
+        // OPTIMIZED REAL-TIME STOCK DATA
         async function fetchRealStockData(symbol, showLoading = true) {
             if (showLoading) {
                 updateStatusBar(`🔄 Fetching real-time data for ${symbol}...`, 'warning');
             }
             
             try {
-                const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
+                // Set timeout for stock data
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                
+                const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`, {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     throw new Error(`API Error: ${response.status}`);
@@ -437,7 +454,7 @@
             }
         }
 
-        // CLAUDE AI MESSAGING WITH REAL-TIME STOCK DATA
+        // OPTIMIZED CLAUDE AI MESSAGING - REDUCED TIMEOUTS & BETTER ERROR HANDLING
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -458,54 +475,70 @@
             renderCurrentTab();
             
             try {
-                // Extract stock tickers from the message
+                // 🔧 OPTIMIZED: Extract stock tickers and get ONLY the first one to avoid timeouts
                 const tickers = extractTickers(message);
                 let stockContext = '';
                 
-                // If user mentions stock tickers, get real-time data first
+                // 🔧 OPTIMIZED: Only process 1 ticker to avoid API delays
                 if (tickers.length > 0) {
-                    console.log('Detected tickers:', tickers);
+                    const primaryTicker = tickers[0]; // Only get the first ticker
+                    console.log('Processing primary ticker:', primaryTicker);
                     
-                    for (const ticker of tickers.slice(0, 3)) { // Max 3 stocks to avoid delays
-                        try {
-                            const stockResponse = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
-                            const stockData = await stockResponse.json();
-                            
-                            if (stockData && !stockData.error) {
-                                stockContext += `\n\nREAL-TIME DATA FOR ${ticker} (${stockData.timestamp}):\n`;
-                                stockContext += `- Current Price: ${stockData.price}\n`;
-                                stockContext += `- Change: ${stockData.change} (${stockData.changePercent}%)\n`;
-                                stockContext += `- Volume: ${stockData.volume}M shares\n`;
-                                stockContext += `- Day Range: ${stockData.low} - ${stockData.high}\n`;
-                                stockContext += `- Previous Close: ${stockData.prevClose}\n`;
-                                stockContext += `- Data Source: ${stockData.dataSource}\n`;
-                            }
-                        } catch (stockError) {
-                            console.error(`Error fetching ${ticker} data:`, stockError);
+                    try {
+                        // 🔧 OPTIMIZED: 3 second timeout for stock data
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 3000);
+                        
+                        const stockResponse = await fetch(`/.netlify/functions/stock-data?symbol=${primaryTicker}`, {
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+                        
+                        const stockData = await stockResponse.json();
+                        
+                        if (stockData && !stockData.error) {
+                            // 🔧 OPTIMIZED: Compact context to reduce message size
+                            stockContext = `\n\nCURRENT ${primaryTicker} DATA:\nPrice: $${stockData.price} | Change: ${stockData.change} (${stockData.changePercent}%) | Volume: ${stockData.volume}M\n\nUSE THIS CURRENT PRICE, NOT TRAINING DATA.`;
                         }
+                    } catch (stockError) {
+                        console.error(`Error fetching ${primaryTicker}:`, stockError);
+                        // Continue without stock data if it fails
                     }
                 }
                 
-                // Enhance message with real-time stock context
+                // 🔧 OPTIMIZED: Shorter, more focused message
                 const enhancedMessage = stockContext ? 
-                    `${message}\n\n--- CURRENT REAL-TIME MARKET DATA ---${stockContext}\n\nPlease use the REAL-TIME prices above, not any older training data. Base your analysis on these current prices.` : 
+                    `${message}${stockContext}` : 
                     message;
+                
+                // 🔧 OPTIMIZED: Longer timeout for Claude (15 seconds instead of 8)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
                 
                 const response = await fetch('/.netlify/functions/claude-chat', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ message: enhancedMessage })
+                    body: JSON.stringify({ message: enhancedMessage }),
+                    signal: controller.signal
                 });
                 
+                clearTimeout(timeoutId);
+                
                 if (!response.ok) {
+                    if (response.status === 408) {
+                        throw new Error('Claude API timed out. Try a shorter question or ask about fewer stocks at once.');
+                    }
                     throw new Error(`Claude API Error: ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
                 if (data.error) {
+                    if (data.timeout) {
+                        throw new Error('Claude API response was too slow. Try asking about one stock at a time or use shorter questions.');
+                    }
                     throw new Error(data.error);
                 }
                 
@@ -516,12 +549,20 @@
                 });
                 
             } catch (error) {
-                console.error('Claude API Error:', error);
+                console.error('API Error:', error);
+                
+                let errorMessage = `❌ **API Connection Issue**\n\n**Error**: ${error.message}\n\n`;
+                
+                if (error.name === 'AbortError' || error.message.includes('timeout') || error.message.includes('timed out')) {
+                    errorMessage += `**⏱️ Timeout Fix:**\n• Ask about one stock at a time\n• Use shorter questions\n• Try: "AAPL analysis" instead of "analyze AAPL, TSLA, NVDA"\n• Wait a moment and try again\n\n**Stock data still works in Ticker tab!**`;
+                } else {
+                    errorMessage += `**🔧 Possible Fixes:**\n1. Check ANTHROPIC_API_KEY in Netlify environment\n2. Try a simpler question\n3. Use the Ticker tab for stock analysis\n4. Wait a moment and retry`;
+                }
                 
                 messages.push({
                     id: messages.length + 1,
                     type: 'assistant',
-                    text: `❌ **Claude AI Connection Failed**\n\n**Error**: ${error.message}\n\n**To fix this:**\n1. Ensure ANTHROPIC_API_KEY is set in Netlify environment variables\n2. Verify your API key is valid and has credits\n3. Check network connection\n\n**Real-time stock data still available in other tabs.**`
+                    text: errorMessage
                 });
             }
             
@@ -538,23 +579,26 @@
             }, 100);
         }
 
-        // Extract stock tickers from message
+        // OPTIMIZED: Extract only clear stock tickers
         function extractTickers(message) {
-            // Look for 1-5 letter combinations that could be stock tickers
-            const tickerPattern = /\b[A-Z]{1,5}\b/g;
+            // More strict ticker pattern - must be 2-5 letters and commonly used
+            const tickerPattern = /\b([A-Z]{2,5})\b/g;
             const matches = message.toUpperCase().match(tickerPattern) || [];
             
-            // Filter common words that aren't tickers
-            const commonWords = ['THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WHO', 'BOY', 'DID', 'DOT', 'GOT', 'LET', 'MAN', 'PUT', 'RUN', 'SET', 'TRY', 'USE', 'WIN', 'YES'];
+            // Filter common words and only keep likely tickers
+            const commonWords = ['THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WHO', 'BOY', 'DID', 'GOT', 'LET', 'MAN', 'PUT', 'RUN', 'SET', 'TRY', 'USE', 'WIN', 'YES', 'API', 'VIX'];
             
-            return matches.filter(ticker => 
+            const validTickers = matches.filter(ticker => 
                 !commonWords.includes(ticker) && 
-                ticker.length >= 1 && 
+                ticker.length >= 2 && 
                 ticker.length <= 5
             );
+            
+            // Only return first 1 ticker to avoid timeouts
+            return validTickers.slice(0, 1);
         }
 
-        // TICKER ANALYSIS WITH REAL DATA
+        // TICKER ANALYSIS WITH OPTIMIZED TIMEOUTS
         async function analyzeTicker() {
             const input = document.getElementById('tickerInput');
             const analyzeBtn = document.getElementById('analyzeBtn');
@@ -571,25 +615,31 @@
             try {
                 const stockResult = await fetchRealStockData(symbol);
                 
-                const analysisPrompt = `Analyze ${symbol} for options trading with real-time data:
+                // 🔧 OPTIMIZED: Shorter, more focused analysis prompt
+                const analysisPrompt = `${symbol} options analysis:
 
-REAL-TIME STOCK DATA:
-- Price: $${stockResult.price}
-- Change: ${stockResult.change} (${stockResult.changePercent}%)
-- Volume: ${stockResult.volume}M
-- High/Low: $${stockResult.high}/$${stockResult.low}
-- Data Source: ${stockResult.isPremium ? 'Premium Alpha Vantage Real-Time' : 'Basic Alpha Vantage'}
-- Last Updated: ${stockResult.timestamp}
+CURRENT DATA:
+Price: $${stockResult.price} | Change: ${stockResult.change} (${stockResult.changePercent}%) | Volume: ${stockResult.volume}M
 
-Provide specific options strategies with exact strikes, entry/exit points, and risk management based on this real-time data.`;
+Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4) Risk management. Keep response concise.`;
+                
+                // 🔧 OPTIMIZED: Shorter timeout for analysis
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
                 
                 const analysisResponse = await fetch('/.netlify/functions/claude-chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: analysisPrompt })
+                    body: JSON.stringify({ message: analysisPrompt }),
+                    signal: controller.signal
                 });
                 
+                clearTimeout(timeoutId);
+                
                 if (!analysisResponse.ok) {
+                    if (analysisResponse.status === 408) {
+                        throw new Error('Analysis timed out. Try again or ask in chat tab.');
+                    }
                     throw new Error(`Analysis API error: ${analysisResponse.status}`);
                 }
                 
@@ -609,9 +659,15 @@ Provide specific options strategies with exact strikes, entry/exit points, and r
             } catch (error) {
                 console.error('Analysis error:', error);
                 
+                let errorMessage = `❌ **Unable to analyze ${symbol}**\n\n**Error**: ${error.message}`;
+                
+                if (error.name === 'AbortError' || error.message.includes('timeout')) {
+                    errorMessage += `\n\n**⏱️ Analysis timed out. Try:**\n• Asking in chat: "${symbol} options strategy"\n• Wait a moment and try again\n• Use shorter analysis requests`;
+                }
+                
                 window.currentAnalysis = {
                     ticker: symbol,
-                    aiResponse: `❌ **Unable to analyze ${symbol}**\n\n**Error**: ${error.message}\n\nPlease check the ticker symbol and try again.`,
+                    aiResponse: errorMessage,
                     stockData: null,
                     timestamp: new Date()
                 };
@@ -622,7 +678,7 @@ Provide specific options strategies with exact strikes, entry/exit points, and r
             }
         }
 
-        // Helper functions
+        // Helper functions (unchanged)
         async function quickAnalyze(symbol) {
             document.getElementById('tickerInput').value = symbol;
             await analyzeTicker();
@@ -633,7 +689,7 @@ Provide specific options strategies with exact strikes, entry/exit points, and r
             setTimeout(() => {
                 const input = document.getElementById('messageInput');
                 if (input) {
-                    input.value = `${ticker} real-time options analysis`;
+                    input.value = `${ticker} options strategy`;
                     sendMessage();
                 }
             }, 300);
@@ -743,6 +799,18 @@ Provide specific options strategies with exact strikes, entry/exit points, and r
                             </div>
                             <div style="font-size: 0.8rem;">
                                 Professional options analysis • Live market data • No mock data
+                            </div>
+                        </div>
+                        
+                        <div class="timeout-banner">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span style="font-size: 1.1rem;">⚡</span>
+                                <strong>PERFORMANCE OPTIMIZED</strong>
+                            </div>
+                            <div style="font-size: 0.8rem;">
+                                • Ask about ONE stock at a time for faster responses<br>
+                                • Use short questions: "AAPL strategy" instead of long requests<br>
+                                • Timeout issues fixed with better error handling
                             </div>
                         </div>
                         
@@ -900,17 +968,17 @@ Provide specific options strategies with exact strikes, entry/exit points, and r
                         <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
                         <h4 style="margin-bottom: 1rem;">Smart Strategies with Real-Time Intelligence</h4>
                         <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
-                            <button class="btn" onclick="askClaude('Give me 3 options plays this week based on current VIX levels with specific strikes and targets using real-time data')">
-                                📈 Real-Time VIX Plays
+                            <button class="btn" onclick="askClaude('SPY options strategy this week')">
+                                📈 SPY Strategy
                             </button>
-                            <button class="btn" onclick="askClaude('Contrarian options strategy based on current market conditions with real-time analysis')" style="background: #dc2626;">
-                                🔄 Contrarian Strategy
+                            <button class="btn" onclick="askClaude('AAPL options analysis')" style="background: #dc2626;">
+                                🍎 AAPL Options
                             </button>
-                            <button class="btn" onclick="askClaude('What are the best high-probability options plays right now with current market data?')" style="background: #059669;">
-                                💰 High-Probability Plays
+                            <button class="btn" onclick="askClaude('TSLA volatility play')" style="background: #059669;">
+                                ⚡ TSLA Volatility
                             </button>
-                            <button class="btn" onclick="askClaude('Iron condor setups for this week using real-time volatility data')" style="background: #7c3aed;">
-                                🎯 Premium Selling
+                            <button class="btn" onclick="askClaude('QQQ iron condor setup')" style="background: #7c3aed;">
+                                🎯 QQQ Condor
                             </button>
                         </div>
                         <button class="btn" onclick="switchTab('chat')" style="background: #22c55e;">
@@ -938,13 +1006,13 @@ Provide specific options strategies with exact strikes, entry/exit points, and r
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
                         <h4 style="margin-bottom: 1rem;">Market Analysis with Real-Time Data</h4>
                         <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
-                            <button class="btn" onclick="askClaude('Analyze current market conditions with real-time VIX and SPY data for options strategies')">
-                                📊 Full Market Analysis
+                            <button class="btn" onclick="askClaude('VIX analysis today')">
+                                📊 VIX Analysis
                             </button>
-                            <button class="btn" onclick="askClaude('What are the key market levels to watch right now with real-time data?')" style="background: #dc2626;">
-                                🎯 Key Levels Analysis
+                            <button class="btn" onclick="askClaude('SPY key levels')" style="background: #dc2626;">
+                                🎯 SPY Levels
                             </button>
-                            <button class="btn" onclick="askClaude('Best volatility plays based on current VIX levels and market conditions')" style="background: #059669;">
+                            <button class="btn" onclick="askClaude('Market volatility play')" style="background: #059669;">
                                 💰 Volatility Plays
                             </button>
                         </div>
