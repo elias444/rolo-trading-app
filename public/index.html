@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rolo AI Trading</title>
+    <title>Rolo AI Trading - Professional Options Analysis</title>
+    <meta name="description" content="Professional Options Trading Assistant powered by Claude AI and live market data">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; }
@@ -297,12 +298,12 @@
         <div class="app">
             <div class="header">
                 <h1>🤖 Rolo AI Trading</h1>
-                <p>Your Options Trading Assistant</p>
+                <p>Professional Options Assistant - Powered by Claude AI</p>
             </div>
             
             <div class="status-bar">
                 <div class="status-dot"></div>
-                <span>✅ Rolo Online: Live Market Data • No Mock Data • Real Intelligence</span>
+                <span>🟢 Live APIs: Claude AI • Alpha Vantage • Real Data Only • No Mock Responses</span>
             </div>
             
             <div class="content" id="content">
@@ -316,7 +317,7 @@
                         type="text" 
                         class="input" 
                         id="messageInput"
-                        placeholder="Ask: 'HOOD options strategies' or 'best AAPL calls'"
+                        placeholder="Ask: 'AAPL options strategy' or 'best SPY calls for tomorrow'"
                         onkeypress="if(event.key==='Enter') sendMessage()"
                     />
                     <button class="btn" onclick="sendMessage()" id="sendBtn">
@@ -352,23 +353,22 @@
     </div>
     
     <script>
-        // Global state
+        // Global state - NO MOCK DATA
         let currentTab = 'chat';
         let messages = [
             {
                 id: 1,
                 type: 'assistant',
-                text: "Hello! I'm Rolo, your trading intelligence system. I provide REAL market data from live sources:\n\n✅ Live Reddit sentiment from 14+ trading communities\n✅ Real financial news with sentiment analysis\n✅ Actual stock prices and volume data\n✅ Live earnings calendar and market events\n✅ No mock or simulated data anywhere\n\nI can give you real market data and analysis. For advanced AI-powered options strategies, ask your admin to add the Anthropic API key to get intelligent responses.\n\nTry asking: 'AAPL current data' or check the Alerts tab for live market intelligence!"
+                text: "🤖 **Rolo AI Trading Assistant**\n\nI'm your professional options trading AI powered by Claude. I provide:\n\n✅ **Real-time market analysis** with live data\n✅ **Specific options strategies** with exact strikes and entry/exit points\n✅ **Professional risk management** recommendations\n✅ **Current market context** and reasoning\n\n**No mock data - everything is live and actionable.**\n\nAsk me:\n• \"AAPL options strategy for tomorrow\"\n• \"Best SPY iron condor setup this week\"\n• \"TSLA earnings play with risk management\"\n• \"High probability income strategy\"\n\n**Ready to analyze real trades!** 🚀"
             }
         ];
         let isTyping = false;
         let apiConnected = true;
         let stockData = {};
         let ticker = '';
-        
-        // Initialize app and start comprehensive live feeds
+
+        // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
-            // Set initial input visibility for chat tab
             const inputSection = document.getElementById('inputSection');
             const content = document.getElementById('content');
             
@@ -378,146 +378,229 @@
             }
             
             renderCurrentTab();
-            
-            // Start comprehensive live feeds on alerts tab
-            if (currentTab === 'alerts') {
-                setTimeout(() => {
-                    loadComprehensiveFeeds();
-                }, 1000);
-            }
-            
-            // Initialize background feed loading for faster subsequent loads
-            setTimeout(() => {
-                if (currentTab !== 'alerts') {
-                    loadBackgroundFeeds();
-                }
-            }, 5000);
         });
-        
-        // Load comprehensive feeds from all sources
-        async function loadComprehensiveFeeds() {
-            updateFeedStatus('🔄 Loading comprehensive market intelligence from all sources...');
+
+        // REAL CLAUDE API MESSAGING - NO FALLBACKS
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            // Add user message
+            messages.push({
+                id: messages.length + 1,
+                type: 'user',
+                text: message
+            });
+            
+            input.value = '';
+            isTyping = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '⏳';
+            renderCurrentTab();
             
             try {
-                // Clear previous alerts
-                liveAlerts = [];
-                
-                // Load enhanced feeds (primary sources)
-                const enhancedResponse = await fetch('/.netlify/functions/enhanced-feeds');
-                const enhancedData = await enhancedResponse.json();
-                
-                if (enhancedData && enhancedData.feeds) {
-                    liveAlerts = [...liveAlerts, ...enhancedData.feeds];
-                }
-                
-                // Load additional market data
-                try {
-                    const additionalResponse = await fetch('/.netlify/functions/additional-market-data');
-                    const additionalData = await additionalResponse.json();
-                    
-                    if (additionalData && additionalData.feeds) {
-                        liveAlerts = [...liveAlerts, ...additionalData.feeds];
-                    }
-                } catch (error) {
-                    console.error('Additional feeds error:', error);
-                }
-                
-                // Process and display all feeds
-                displayLiveAlerts();
-                
-                const totalFeeds = liveAlerts.length;
-                updateFeedStatus(`✅ ${totalFeeds} live feeds loaded from all sources • Last refresh: ${new Date().toLocaleTimeString()}`);
-                
-                // Update stats
-                const sourceStats = {};
-                liveAlerts.forEach(alert => {
-                    const sourceType = alert.type || 'unknown';
-                    sourceStats[sourceType] = (sourceStats[sourceType] || 0) + 1;
+                // ONLY REAL CLAUDE API - NO MOCK DATA
+                const response = await fetch('/.netlify/functions/claude-chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
                 });
                 
-                updateFeedStats(sourceStats);
-                
-            } catch (error) {
-                console.error('Error loading comprehensive feeds:', error);
-                updateFeedStatus('⚠️ Some feeds unavailable • Loading fallback data...');
-                
-                // Fallback to basic feeds
-                await loadFallbackFeeds();
-            }
-        }
-        
-        // Background feed loading for performance
-        async function loadBackgroundFeeds() {
-            try {
-                // Silently load feeds in background for faster subsequent access
-                const [enhancedResponse, additionalResponse] = await Promise.all([
-                    fetch('/.netlify/functions/enhanced-feeds').catch(() => null),
-                    fetch('/.netlify/functions/additional-market-data').catch(() => null)
-                ]);
-                
-                // Cache the data for faster loading when user switches to alerts tab
-                if (enhancedResponse) {
-                    const enhancedData = await enhancedResponse.json();
-                    if (enhancedData && enhancedData.feeds) {
-                        // Store in memory for quick access
-                        window.cachedFeeds = enhancedData.feeds;
-                    }
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
                 }
                 
-                console.log('Background feeds loaded successfully');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Add REAL Claude response
+                messages.push({
+                    id: messages.length + 1,
+                    type: 'assistant',
+                    text: data.response || 'No response received from Claude API'
+                });
                 
             } catch (error) {
-                console.error('Background feed loading error:', error);
+                console.error('Claude API Error:', error);
+                
+                // REAL ERROR - NO MOCK RESPONSES
+                messages.push({
+                    id: messages.length + 1,
+                    type: 'assistant',
+                    text: `❌ **Claude AI Connection Failed**\n\n**Error**: ${error.message}\n\n**To fix this:**\n1. Ensure ANTHROPIC_API_KEY is set in Netlify environment variables\n2. Verify your API key is valid and has credits\n3. Check network connection\n\n**For live market data**: Use the Ticker tab for real stock prices.`
+                });
+            }
+            
+            isTyping = false;
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '➤';
+            renderCurrentTab();
+            
+            // Scroll to bottom
+            setTimeout(() => {
+                const messagesDiv = document.querySelector('.messages');
+                if (messagesDiv) {
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            }, 100);
+        }
+
+        // REAL STOCK DATA ONLY
+        async function fetchRealStockData(symbol, showLoading = true) {
+            try {
+                const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Stock API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                stockData[symbol] = data;
+                return data;
+                
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+                stockData[symbol] = { error: error.message };
+                throw error;
             }
         }
-        
-        // Enhanced tab switching with input visibility control
+
+        // REAL TICKER ANALYSIS
+        async function analyzeTicker() {
+            const input = document.getElementById('tickerInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const symbol = input.value.trim().toUpperCase();
+            
+            if (!symbol) return;
+            
+            ticker = symbol;
+            
+            const originalText = analyzeBtn.innerHTML;
+            analyzeBtn.innerHTML = '⏳ Loading...';
+            analyzeBtn.disabled = true;
+            
+            try {
+                // Get REAL stock data
+                const stockResult = await fetchRealStockData(symbol);
+                
+                // Get REAL Claude analysis
+                const analysisResponse = await fetch('/.netlify/functions/claude-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: `Analyze ${symbol} for options trading. Current data: Price $${stockResult.price}, Change ${stockResult.change} (${stockResult.changePercent}%), Volume ${stockResult.volume}M. Provide specific options strategies with exact strikes, entry/exit points, and risk management. Be specific and actionable.`
+                    })
+                });
+                
+                if (!analysisResponse.ok) {
+                    throw new Error(`Analysis API error: ${analysisResponse.status}`);
+                }
+                
+                const analysisData = await analysisResponse.json();
+                
+                if (analysisData.error) {
+                    throw new Error(analysisData.error);
+                }
+                
+                // Store REAL analysis
+                window.currentAnalysis = {
+                    ticker: symbol,
+                    aiResponse: analysisData.response,
+                    stockData: stockResult,
+                    timestamp: new Date()
+                };
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                
+                stockData[symbol] = { error: error.message };
+                
+                window.currentAnalysis = {
+                    ticker: symbol,
+                    aiResponse: `❌ **Unable to analyze ${symbol}**\n\n**Error**: ${error.message}\n\nPlease:\n1. Check the ticker symbol is correct\n2. Verify API services are available\n3. Try again in a moment`,
+                    stockData: null,
+                    timestamp: new Date()
+                };
+            } finally {
+                analyzeBtn.innerHTML = originalText;
+                analyzeBtn.disabled = false;
+                renderCurrentTab();
+            }
+        }
+
+        // Helper functions
+        async function quickAnalyze(symbol) {
+            document.getElementById('tickerInput').value = symbol;
+            await analyzeTicker();
+        }
+
+        function askRoloAbout(ticker) {
+            switchTab('chat');
+            setTimeout(() => {
+                const input = document.getElementById('messageInput');
+                if (input) {
+                    input.value = `${ticker} options strategies with specific entry and exit points`;
+                    sendMessage();
+                }
+            }, 300);
+        }
+
+        function askClaude(question) {
+            switchTab('chat');
+            setTimeout(() => {
+                const input = document.getElementById('messageInput');
+                if (input) {
+                    input.value = question;
+                    sendMessage();
+                }
+            }, 300);
+        }
+
+        // Tab switching
         function switchTab(tab) {
             if (currentTab === tab) return;
             
             const content = document.getElementById('content');
             const inputSection = document.getElementById('inputSection');
-            const oldTab = currentTab;
             
-            // Control input section visibility and content padding
             if (tab === 'chat') {
                 inputSection.style.display = 'block';
-                content.style.paddingBottom = '8rem'; // Space for input + tabs
+                content.style.paddingBottom = '8rem';
             } else {
                 inputSection.style.display = 'none';
-                content.style.paddingBottom = '5rem'; // Just tabs
+                content.style.paddingBottom = '5rem';
             }
             
-            // Add fade out effect
             content.classList.add('fade-out');
             
             setTimeout(() => {
                 currentTab = tab;
                 
-                // Update tab styling
                 document.querySelectorAll('.tab').forEach(t => {
                     t.classList.remove('active');
-                    t.style.transform = 'scale(1)';
                 });
                 
                 const activeTab = document.getElementById(tab + '-tab');
                 if (activeTab) {
                     activeTab.classList.add('active');
-                    activeTab.style.transform = 'scale(1.02)';
                 }
                 
                 renderCurrentTab();
-                
-                // Add fade in effect
                 content.classList.remove('fade-out');
-                content.classList.add('fade-in');
                 
-                // Haptic feedback on mobile
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-                
-                // Focus input if chat tab
                 if (tab === 'chat') {
                     setTimeout(() => {
                         const messageInput = document.getElementById('messageInput');
@@ -526,18 +609,13 @@
                         }
                     }, 350);
                 }
-                
-                setTimeout(() => {
-                    content.classList.remove('fade-in');
-                }, 300);
-                
             }, 150);
         }
-        
+
         function goHome() {
             switchTab('chat');
         }
-        
+
         function renderCurrentTab() {
             const content = document.getElementById('content');
             let tabContent = '';
@@ -562,52 +640,28 @@
             
             content.innerHTML = `<div class="page-content">${tabContent}</div>`;
             
-            // Load live feeds when switching to alerts tab
-            if (currentTab === 'alerts') {
-                setTimeout(() => {
-                    // Use cached data if available, otherwise load fresh
-                    if (window.cachedFeeds && window.cachedFeeds.length > 0) {
-                        liveAlerts = window.cachedFeeds;
-                        displayLiveAlerts();
-                        updateFeedStatus(`✅ ${liveAlerts.length} cached feeds loaded • Loading fresh data...`);
-                        
-                        // Load fresh data in background
-                        setTimeout(loadComprehensiveFeeds, 500);
-                    } else {
-                        loadComprehensiveFeeds();
-                    }
-                }, 500);
-            }
-            
-            // Scroll to bottom of messages if chat tab
             if (currentTab === 'chat') {
                 setTimeout(() => {
                     const messagesDiv = document.querySelector('.messages');
                     if (messagesDiv) {
                         messagesDiv.scrollTop = messagesDiv.scrollHeight;
                     }
-                    
-                    // Also scroll main content to bottom
-                    const contentDiv = document.getElementById('content');
-                    if (contentDiv) {
-                        contentDiv.scrollTop = contentDiv.scrollHeight;
-                    }
                 }, 100);
             }
         }
-        
-        // Render chat tab
+
+        // Render functions
         function renderChat() {
             return `
                 <div class="scrollable-content">
                     <div class="card">
                         <div class="options-banner">
                             <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <span style="font-size: 1.25rem;">📊</span>
-                                <strong>Live Market Intelligence System</strong>
+                                <span style="font-size: 1.25rem;">🤖</span>
+                                <strong>Real Claude AI Trading Assistant</strong>
                             </div>
                             <div style="font-size: 0.8rem;">
-                                Real Reddit sentiment • Live financial news • Actual stock data • No mock responses
+                                Professional options analysis • Live market data • No mock responses
                             </div>
                         </div>
                         
@@ -615,17 +669,16 @@
                             ${messages.map(msg => `
                                 <div class="message ${msg.type}">
                                     <div class="message-content">${msg.text}</div>
-                                    ${msg.type === 'assistant' ? '<div class="message-meta">🧠 Rolo AI • Options Expert</div>' : ''}
+                                    ${msg.type === 'assistant' ? '<div class="message-meta">🤖 Claude AI • Professional Trading Analysis</div>' : ''}
                                 </div>
                             `).join('')}
-                            ${isTyping ? '<div class="message assistant"><div class="message-content">🤔 Rolo is analyzing options strategies...</div></div>' : ''}
+                            ${isTyping ? '<div class="message assistant"><div class="message-content">🤖 Claude is analyzing your request...</div></div>' : ''}
                         </div>
                     </div>
                 </div>
             `;
         }
-        
-        // Render ticker tab with live data functionality
+
         function renderTicker() {
             return `
                 <div class="card">
@@ -636,7 +689,7 @@
                     
                     <h3>🔍 Live Stock Analysis</h3>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                        Get real-time data and options analysis for any stock
+                        Get real-time data and professional options analysis
                     </p>
                     
                     <div class="input-group">
@@ -644,7 +697,7 @@
                             type="text" 
                             class="input" 
                             id="tickerInput"
-                            placeholder="Enter ticker (HOOD, AAPL, TSLA...)"
+                            placeholder="Enter ticker (AAPL, TSLA, SPY...)"
                             onkeypress="if(event.key==='Enter') analyzeTicker()"
                             value="${ticker}"
                         />
@@ -653,17 +706,16 @@
                         </button>
                     </div>
                     
-                    ${stockData.error ? `
+                    ${stockData[ticker]?.error ? `
                         <div style="background: #fee2e2; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #fecaca; color: #dc2626;">
-                            <strong>⚠️ API Error:</strong> ${stockData.error}
-                            <br><small>Using demo data for demonstration</small>
+                            <strong>⚠️ Error:</strong> ${stockData[ticker].error}
                         </div>
                     ` : ''}
                 </div>
                 
-                ${ticker && stockData[ticker] ? `
+                ${ticker && stockData[ticker] && !stockData[ticker].error ? `
                     <div class="card">
-                        <h4 style="margin-bottom: 1rem;">${ticker} - Live Options Data ${stockData[ticker].isLive ? '🟢' : '🟡'}</h4>
+                        <h4 style="margin-bottom: 1rem;">${ticker} - Live Data 🟢</h4>
                         
                         <div class="stock-grid">
                             <div class="stat">
@@ -686,45 +738,24 @@
                             </div>
                         </div>
                         
-                        <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
-                                <span>⚡</span>
-                                <span>Options Analysis for ${ticker}</span>
-                            </div>
-                            <div style="font-size: 0.9rem; color: #374151; line-height: 1.4;">
-                                ${window.currentAnalysis && window.currentAnalysis.ticker === ticker ? 
-                                    `<div style="background: white; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem;">
-                                        <strong>🧠 Rolo's Analysis:</strong><br/>
-                                        <div style="margin-top: 0.5rem; white-space: pre-line; font-size: 0.85rem; line-height: 1.3;">
-                                            ${window.currentAnalysis.aiResponse.length > 300 ? 
-                                                window.currentAnalysis.aiResponse.substring(0, 300) + '...' : 
-                                                window.currentAnalysis.aiResponse
-                                            }
-                                        </div>
-                                    </div>` : 
-                                    `<strong>Quick ${ticker} Options Overview:</strong><br/>
-                                    ${stockData[ticker].change >= 0 ? 
-                                        `• Bullish momentum - consider call options or bull spreads<br/>• Current price: $${stockData[ticker].price} (up ${stockData[ticker].changePercent}%)<br/>• Volume: ${stockData[ticker].volume}M suggests ${parseFloat(stockData[ticker].volume) > 20 ? 'strong' : 'normal'} interest` : 
-                                        `• Bearish pressure - consider put options or protective strategies<br/>• Current price: $${stockData[ticker].price} (down ${stockData[ticker].changePercent}%)<br/>• Support may emerge around recent lows of $${stockData[ticker].low}`
-                                    }<br/>
-                                    • Day Range: $${stockData[ticker].low} - $${stockData[ticker].high}<br/>
-                                    • Previous Close: $${stockData[ticker].prevClose}<br/>`
-                                }
-                                <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                    <button class="btn btn-small" onclick="askRoloAbout('${ticker}')">Ask Rolo: "${ticker} strategies"</button>
-                                    ${window.currentAnalysis && window.currentAnalysis.ticker === ticker ? 
-                                        `<button class="btn btn-small" onclick="switchTab('analysis')" style="background: #22c55e;">View Full Analysis</button>` : ''
-                                    }
+                        ${window.currentAnalysis && window.currentAnalysis.ticker === ticker ? `
+                            <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
+                                    <span>🤖</span>
+                                    <span>Claude AI Analysis for ${ticker}</span>
+                                </div>
+                                <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.9rem; line-height: 1.4; white-space: pre-line;">
+                                    ${window.currentAnalysis.aiResponse}
                                 </div>
                             </div>
-                        </div>
+                        ` : ''}
                     </div>
                 ` : ''}
                 
                 <div class="card">
-                    <h4>📋 Popular Options Tickers</h4>
+                    <h4>📋 Popular Tickers</h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
-                        ${['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'HOOD', 'MSFT', 'AMZN'].map(symbol => `
+                        ${['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN', 'GOOGL'].map(symbol => `
                             <button 
                                 class="btn btn-small" 
                                 onclick="quickAnalyze('${symbol}')"
@@ -737,8 +768,7 @@
                 </div>
             `;
         }
-        
-        // Render analysis tab
+
         function renderAnalysis() {
             return `
                 <div class="card">
@@ -747,145 +777,28 @@
                         <span>Back to Chat</span>
                     </button>
                     
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                        <span style="font-size: 1.5rem;">📊</span>
-                        <h3>Technical Analysis Dashboard</h3>
-                    </div>
+                    <h3>📊 Professional Analysis</h3>
                     
-                    ${ticker && stockData[ticker] ? `
-                        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0;">
-                            <h4 style="margin-bottom: 0.75rem; color: #1f2937;">Deep Analysis: ${ticker} ${stockData[ticker].isLive ? '🟢 Live' : '🟡 Demo'}</h4>
-                            
-                            <div class="stock-grid">
-                                <div class="stat">
-                                    <div class="stat-label">Technical Score</div>
-                                    <div class="stat-value" style="color: #7c3aed;">
-                                        ${Math.floor(Math.random() * 30 + 65)}/100
-                                    </div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-label">Sentiment Score</div>
-                                    <div class="stat-value" style="color: #7c3aed;">
-                                        ${Math.floor(Math.random() * 35 + 60)}/100
-                                    </div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-label">Risk Level</div>
-                                    <div class="stat-value" style="color: #eab308;">
-                                        Medium
-                                    </div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-label">Options IV</div>
-                                    <div class="stat-value" style="color: #22c55e;">
-                                        ${Math.floor(Math.random() * 20 + 25)}%
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
-                                    <span>🎯</span>
-                                    <span>Key Levels for ${ticker}</span>
-                                </div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
-                                    <div>
-                                        <strong>Support Level:</strong><br/>
-                                        <span style="font-size: 1.1rem; color: #ef4444;">
-                                            ${(parseFloat(stockData[ticker].price) * 0.95).toFixed(2)}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <strong>Resistance Level:</strong><br/>
-                                        <span style="font-size: 1.1rem; color: #22c55e;">
-                                            ${(parseFloat(stockData[ticker].price) * 1.05).toFixed(2)}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div style="font-size: 0.9rem; color: #6d28d9; line-height: 1.4;">
-                                    <strong>Options Strategy Recommendation:</strong><br/>
-                                    ${stockData[ticker].change >= 0 ? 
-                                        `Bullish momentum detected. Consider call options or bull spreads. Current IV environment favors ${Math.random() > 0.5 ? 'buying options' : 'selling premium'} strategies.` : 
-                                        `Bearish pressure observed. Put options or bear spreads may be optimal. High IV suggests ${Math.random() > 0.5 ? 'premium selling' : 'protective strategies'} could be profitable.`
-                                    }
-                                </div>
+                    ${window.currentAnalysis ? `
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 0.75rem;">${window.currentAnalysis.ticker} - Claude AI Analysis</h4>
+                            <div style="background: white; padding: 1rem; border-radius: 0.5rem; line-height: 1.4; white-space: pre-line;">
+                                ${window.currentAnalysis.aiResponse}
                             </div>
                         </div>
                     ` : `
                         <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
                             <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
-                            <h4 style="margin-bottom: 0.5rem; color: #374151;">No Stock Analyzed Yet</h4>
-                            <p style="margin-bottom: 1.5rem; line-height: 1.4;">
-                                Go to the Ticker tab and analyze a stock to see detailed analysis here.
-                            </p>
-                            <button class="btn" onclick="switchTab('ticker')" style="margin-right: 0.5rem;">
-                                🔍 Analyze Stock
-                            </button>
+                            <h4 style="margin-bottom: 0.5rem;">No Analysis Available</h4>
+                            <p style="margin-bottom: 1.5rem;">Go to the Ticker tab and analyze a stock to see Claude's professional analysis here.</p>
+                            <button class="btn" onclick="switchTab('ticker')">🔍 Analyze Stock</button>
                         </div>
                     `}
                 </div>
             `;
         }
-        
+
         function renderPlays() {
-            // Dynamic top 10 plays generator
-            const allStocks = ['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'HOOD', 'AMD', 'COIN', 'PLTR', 'SOFI', 'F', 'BAC', 'JPM', 'XOM', 'CVX', 'DIS', 'NFLX', 'META', 'UBER', 'LYFT', 'SQ', 'PYPL', 'CRM', 'SNOW', 'ZM', 'SHOP', 'ROKU'];
-            const strategies = ['Call', 'Put', 'Bull Spread', 'Bear Spread', 'Iron Condor', 'Covered Call', 'Cash Secured Put', 'Straddle'];
-            
-            // Generate dynamic plays
-            const generatePlay = (symbol, index) => {
-                const strategy = strategies[Math.floor(Math.random() * strategies.length)];
-                const basePrice = 50 + Math.random() * 400; // Random base price
-                const strike = Math.round(basePrice * (0.95 + Math.random() * 0.1));
-                const confidence = Math.floor(75 + Math.random() * 20); // 75-95% confidence
-                const isCall = strategy.includes('Call') || strategy === 'Bull Spread' || strategy === 'Straddle';
-                const isPut = strategy.includes('Put') || strategy === 'Bear Spread';
-                
-                // Dynamic entry/exit points
-                const entryPrice = (1 + Math.random() * 5).toFixed(2);
-                const exitPrice = (parseFloat(entryPrice) * (1.5 + Math.random())).toFixed(2);
-                const stopLoss = (parseFloat(entryPrice) * 0.5).toFixed(2);
-                
-                // Dynamic reasons based on strategy
-                const reasons = {
-                    'Call': `Bullish momentum detected. Entry: ${entryPrice}, Target: ${exitPrice}, Stop: ${stopLoss}`,
-                    'Put': `Bearish signals emerging. Entry: ${entryPrice}, Target: ${exitPrice}, Stop: ${stopLoss}`,
-                    'Bull Spread': `Defined risk bullish play. Max profit: ${exitPrice}, Max loss: ${stopLoss}`,
-                    'Bear Spread': `Limited risk bearish setup. Max profit: ${exitPrice}, Max loss: ${stopLoss}`,
-                    'Iron Condor': `Range-bound income play. Credit: ${entryPrice}, 50% profit target: ${stopLoss}`,
-                    'Covered Call': `Income generation on shares. Premium: ${entryPrice}, Strike: ${strike}`,
-                    'Cash Secured Put': `Get paid to own at lower price. Premium: ${entryPrice}, Assignment: ${strike}`,
-                    'Straddle': `Volatility expansion play. Cost: ${entryPrice}, Breakevens: ±${stopLoss}`
-                };
-                
-                return {
-                    symbol: symbol,
-                    type: strategy,
-                    strike: strike,
-                    confidence: confidence,
-                    reason: reasons[strategy] || `Options opportunity identified. Entry: ${entryPrice}, Target: ${exitPrice}`,
-                    entryPrice: entryPrice,
-                    exitPrice: exitPrice,
-                    stopLoss: stopLoss,
-                    expiration: Math.random() > 0.5 ? 'Weekly' : '30 DTE'
-                };
-            };
-            
-            // Generate 10 random plays
-            const topPlays = [];
-            const usedStocks = new Set();
-            
-            while (topPlays.length < 10) {
-                const randomStock = allStocks[Math.floor(Math.random() * allStocks.length)];
-                if (!usedStocks.has(randomStock)) {
-                    usedStocks.add(randomStock);
-                    topPlays.push(generatePlay(randomStock, topPlays.length));
-                }
-            }
-            
-            // Sort by confidence
-            topPlays.sort((a, b) => b.confidence - a.confidence);
-            
             return `
                 <div class="card">
                     <button class="home-btn" onclick="goHome()">
@@ -893,75 +806,40 @@
                         <span>Back to Chat</span>
                     </button>
                     
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                        <span style="font-size: 1.5rem;">🧠</span>
-                        <h3>Top 10 AI Options Plays</h3>
-                        <button class="btn btn-small" onclick="refreshPlays()" style="background: #22c55e; margin-left: auto;">
-                            🔄 Refresh
-                        </button>
-                    </div>
+                    <h3>🧠 AI Options Strategies</h3>
                     
-                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #0ea5e9;">
-                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">⚡ Live Market Analysis</div>
+                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
+                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">🤖 Claude AI Powered</div>
                         <div style="font-size: 0.9rem; color: #0c4a6e;">
-                            These plays are dynamically generated based on current market conditions, volatility patterns, and technical analysis. Each includes specific entry/exit points and risk management levels.
+                            Get personalized options strategies from Claude AI. Ask for specific tickers, market conditions, or risk preferences.
                         </div>
                     </div>
                     
-                    ${topPlays.map((play, index) => `
-                        <div class="play-card">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                                <div>
-                                    <span style="background: ${index < 3 ? '#fef3c7' : '#f3f4f6'}; color: ${index < 3 ? '#92400e' : '#6b7280'}; padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700; margin-right: 0.5rem;">
-                                        #${index + 1}
-                                    </span>
-                                    <span style="font-size: 1.1rem; font-weight: 700;">${play.symbol}</span>
-                                    <span style="padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; background: ${play.type.includes('Call') || play.type.includes('Bull') ? '#dcfce7' : play.type.includes('Put') || play.type.includes('Bear') ? '#fee2e2' : '#fef3c7'}; color: ${play.type.includes('Call') || play.type.includes('Bull') ? '#166534' : play.type.includes('Put') || play.type.includes('Bear') ? '#dc2626' : '#92400e'};">
-                                        ${play.type}
-                                    </span>
-                                    <div style="margin-top: 0.25rem;">
-                                        <strong>${play.strike ? `${play.strike} Strike` : play.type}</strong> • ${play.expiration}
-                                    </div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-size: 1.3rem; font-weight: 700; color: #22c55e;">
-                                        ${play.confidence}%
-                                    </div>
-                                    <div style="font-size: 0.7rem; color: #6b7280;">confidence</div>
-                                </div>
-                            </div>
-                            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; line-height: 1.3;">
-                                ${play.reason}
-                            </p>
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                                <div style="font-size: 0.8rem; color: #6b7280;">
-                                    🧠 Rolo AI • Entry: ${play.entryPrice} • Target: ${play.exitPrice}
-                                </div>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button class="btn btn-small" onclick="askRoloAbout('${play.symbol}')" style="background: #7c3aed;">
-                                        Analyze ${play.symbol}
-                                    </button>
-                                    <button class="btn btn-small" onclick="askSpecificStrategy('${play.symbol}', '${play.type}')" style="background: #22c55e;">
-                                        Get Details
-                                    </button>
-                                </div>
-                            </div>
+                    <div style="text-align: center; padding: 2rem 1rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
+                        <h4 style="margin-bottom: 1rem;">Ask Claude for Custom Strategies</h4>
+                        <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
+                            <button class="btn" onclick="askClaude('Give me 3 high probability options plays for this week with specific entry and exit points')">
+                                📈 This Week's Best Plays
+                            </button>
+                            <button class="btn" onclick="askClaude('SPY iron condor strategy with current market conditions')" style="background: #059669;">
+                                🎯 SPY Iron Condor Setup  
+                            </button>
+                            <button class="btn" onclick="askClaude('AAPL earnings options strategy with risk management')" style="background: #dc2626;">
+                                📅 AAPL Earnings Play
+                            </button>
+                            <button class="btn" onclick="askClaude('Conservative income options strategy for stable returns')" style="background: #7c3aed;">
+                                💰 Income Strategy
+                            </button>
                         </div>
-                    `).join('')}
-                    
-                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; border: 1px solid #0ea5e9; margin-top: 1rem;">
-                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">💡 Want Personalized Plays?</div>
-                        <div style="font-size: 0.9rem; color: #0c4a6e; margin-bottom: 0.75rem;">
-                            Ask Rolo: "Give me tomorrow's best options play with entry and exit points" or specify your favorite ticker!
-                        </div>
-                        <button class="btn btn-small" onclick="askTomorrowPlay()" style="background: #0ea5e9;">
-                            Get Tomorrow's Play
+                        <button class="btn" onclick="switchTab('chat')" style="background: #22c55e;">
+                            💬 Ask Claude Custom Question
                         </button>
                     </div>
                 </div>
             `;
         }
-        
+
         function renderAlerts() {
             return `
                 <div class="card">
@@ -970,1432 +848,36 @@
                         <span>Back to Chat</span>
                     </button>
                     
-                    <h3>🔔 Live Trading Intelligence Hub</h3>
-                    <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                        Real-time market signals from Reddit, financial news, earnings, and sentiment analysis
-                    </p>
+                    <h3>🔔 Live Market Data</h3>
                     
-                    <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #f87171;">
-                        <div style="font-weight: 700; color: #dc2626; margin-bottom: 0.5rem;">⚠️ SECURITY NOTICE</div>
-                        <div style="font-size: 0.9rem; color: #991b1b; line-height: 1.4;">
-                            <strong>Reddit API credentials were shared publicly!</strong><br/>
-                            Please regenerate your Reddit API credentials at <a href="https://reddit.com/prefs/apps" target="_blank" style="color: #dc2626; text-decoration: underline;">reddit.com/prefs/apps</a> for security.
+                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
+                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">📡 Real Market Intelligence</div>
+                        <div style="font-size: 0.9rem; color: #0c4a6e;">
+                            Live stock data from Alpha Vantage API. For comprehensive market analysis, ask Claude AI in the chat.
                         </div>
                     </div>
                     
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #0ea5e9;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <div style="font-weight: 700; color: #0ea5e9;">📡 Live Intelligence Status</div>
-                            <button class="btn btn-small" onclick="loadAllTradingFeeds()" style="background: #22c55e;">
-                                🔄 Refresh All
+                    <div style="text-align: center; padding: 2rem 1rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
+                        <h4 style="margin-bottom: 1rem;">Ask Claude for Market Analysis</h4>
+                        <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
+                            <button class="btn" onclick="askClaude('What are the current market conditions and how should I position options trades?')">
+                                📊 Market Analysis
+                            </button>
+                            <button class="btn" onclick="askClaude('VIX analysis and volatility trading strategies')" style="background: #dc2626;">
+                                📈 Volatility Analysis
+                            </button>
+                            <button class="btn" onclick="askClaude('Sector rotation and options opportunities')" style="background: #059669;">
+                                🔄 Sector Analysis
                             </button>
                         </div>
-                        <div style="font-size: 0.9rem; color: #0c4a6e;" id="feedStatus">
-                            Loading comprehensive market intelligence...
-                        </div>
-                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #0369a1;" id="feedStats">
-                            Sources: Reddit • Financial News • Earnings • Economic Data • Sentiment Analysis
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">
-                        <button class="btn btn-small" onclick="loadSpecificFeed('reddit-auth')" style="background: #ff4500; font-size: 0.75rem;">
-                            🟠 Reddit Pro
+                        <button class="btn" onclick="switchTab('chat')" style="background: #22c55e;">
+                            💬 Ask Claude Any Question
                         </button>
-                        <button class="btn btn-small" onclick="loadSpecificFeed('market-sentiment')" style="background: #7c3aed; font-size: 0.75rem;">
-                            📊 Sentiment
-                        </button>
-                        <button class="btn btn-small" onclick="loadSpecificFeed('earnings-calendar')" style="background: #1d4ed8; font-size: 0.75rem;">
-                            📅 Earnings
-                        </button>
-                        <button class="btn btn-small" onclick="loadSpecificFeed('fear-greed')" style="background: #dc2626; font-size: 0.75rem;">
-                            😱 Fear/Greed
-                        </button>
-                        <button class="btn btn-small" onclick="loadSpecificFeed('options-flow')" style="background: #059669; font-size: 0.75rem;">
-                            ⚡ Options Flow
-                        </button>
-                        <button class="btn btn-small" onclick="loadSpecificFeed('unusual-activity')" style="background: #ea580c; font-size: 0.75rem;">
-                            🚨 Unusual
-                        </button>
-                    </div>
-                    
-                    <div id="liveAlerts">
-                        <!-- Live alerts will load here -->
-                    </div>
-                    
-                    <div class="card">
-                        <h4>📡 Live Feed Sources</h4>
-                        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.85rem;">
-                                <div>
-                                    <strong>🟠 Reddit Sources:</strong><br/>
-                                    • r/wallstreetbets<br/>
-                                    • r/options<br/>
-                                    • r/investing<br/>
-                                    • r/SecurityAnalysis<br/>
-                                    • r/thetagang<br/>
-                                    • r/Daytrading
-                                </div>
-                                <div>
-                                    <strong>📰 Market Data:</strong><br/>
-                                    • Alpha Vantage News<br/>
-                                    • Earnings Calendar<br/>
-                                    • CNN Fear & Greed Index<br/>
-                                    • Economic Calendar<br/>
-                                    • Options Flow Monitor<br/>
-                                    • Social Sentiment Analysis
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             `;
         }
-        
-        // Send message function with REAL API integration only
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
-            const message = input.value.trim();
-            
-            if (!message || isTyping) return;
-            
-            // Add user message
-            messages.push({
-                id: messages.length + 1,
-                type: 'user',
-                text: message
-            });
-            
-            input.value = '';
-            isTyping = true;
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '⏳';
-            renderCurrentTab();
-            
-            try {
-                // Call REAL Claude API - no fallbacks to fake responses
-                const response = await fetch('/.netlify/functions/claude-chat', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        message: message,
-                        context: 'options_trading_specialist',
-                        requestSpecific: true
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // Add REAL response - no fake fallbacks
-                messages.push({
-                    id: messages.length + 1,
-                    type: 'assistant',
-                    text: data.response || "I'm having technical difficulties. Please try asking about a specific ticker for real market data, or check the live feeds in the Alerts tab for actual market intelligence."
-                });
-                
-            } catch (error) {
-                console.error('API Error:', error);
-                
-                // Real error message - no fake responses
-                messages.push({
-                    id: messages.length + 1,
-                    type: 'assistant',
-                    text: `I'm experiencing connection issues with the trading analysis system. 
-
-**For real market data:**
-• Check the **Alerts tab** for live Reddit sentiment and financial news
-• Use the **Ticker tab** to get actual stock prices and data
-• The **Plays tab** shows data-driven opportunities from live feeds
-
-**For options strategies:**
-• I recommend consulting professional trading platforms with real-time options chains
-• Check current IV levels and Greeks before making trades
-• Consider speaking with a licensed financial advisor for personalized advice
-
-**Try asking about a specific ticker for real market data, or refresh the live feeds in the Alerts tab.**`
-                });
-            }
-            
-            isTyping = false;
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = '➤';
-            renderCurrentTab();
-            
-            // Scroll to bottom after message is added
-            setTimeout(() => {
-                const messagesDiv = document.querySelector('.messages');
-                if (messagesDiv) {
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                }
-            }, 100);
-        }
-        
-        // Enhanced response generator with REAL analysis instead of templates
-        function getEnhancedOptionsResponse(message) {
-            const query = message.toLowerCase();
-            const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
-            
-            // Check for specific requests
-            if (query.includes('tomorrow') || query.includes('strategy') || query.includes('play')) {
-                return generateRealTimeStrategy(tickerMatches[0] || null, query);
-            }
-            
-            if (tickerMatches.length > 0) {
-                const ticker = tickerMatches[0];
-                return generateRealTickerAnalysis(ticker, query);
-            }
-            
-            return generateConversationalResponse(query);
-        }
-        
-        // Generate real-time strategy based on current market conditions
-        function generateRealTimeStrategy(ticker, query) {
-            const currentHour = new Date().getHours();
-            const isMarketOpen = currentHour >= 9 && currentHour < 16;
-            const isPreMarket = currentHour >= 4 && currentHour < 9;
-            const isAfterHours = currentHour >= 16 || currentHour < 4;
-            
-            if (!ticker) {
-                return `**Tomorrow's Market Setup Analysis:**
-
-I'm analyzing current market conditions for tomorrow's options opportunities:
-
-**Market Environment:**
-${isMarketOpen ? 'Markets are currently open - monitoring real-time flows' : 
-  isPreMarket ? 'Pre-market activity showing early direction signals' : 
-  'After-hours analysis of today\'s moves sets up tomorrow'}
-
-**Tomorrow's Key Levels:**
-• **SPY**: Watch 580-585 range for direction
-• **QQQ**: Tech heavy, monitor 500 resistance  
-• **VIX**: Currently suggests ${Math.random() > 0.5 ? 'elevated' : 'compressed'} volatility
-
-**Specific Strategy Recommendation:**
-Based on current Fear & Greed at ${Math.floor(Math.random() * 40 + 30)}, I'd focus on:
-• **High Probability**: ${Math.random() > 0.5 ? 'Bull call spreads on SPY if we hold 580' : 'Cash-secured puts on quality names'}
-• **Entry Timing**: ${isMarketOpen ? 'Wait for 10:30 AM momentum confirmation' : 'First 30 minutes often volatile - consider 10 AM entry'}
-• **Risk Management**: No more than 2% per position, 50% profit targets
-
-**What specific ticker interests you for tomorrow? I can give you exact strikes and expiration.**`;
-            }
-            
-            // Real analysis for specific ticker
-            const currentPrice = stockData[ticker]?.price || (100 + Math.random() * 200);
-            const change = stockData[ticker]?.change || (Math.random() * 10 - 5);
-            const volume = stockData[ticker]?.volume || (Math.random() * 50 + 10);
-            
-            const strategy = change >= 0 ? 'bullish momentum' : 'bearish pressure';
-            const optionType = change >= 0 ? 'call options' : 'put options';
-            const strikes = change >= 0 ? 
-                `${Math.round(currentPrice * 1.02)} calls for momentum plays` :
-                `${Math.round(currentPrice * 0.98)} puts for downside protection`;
-            
-            return `**${ticker} Tomorrow Strategy Analysis:**
-
-**Current Setup:**
-• Price: ${currentPrice} (${change >= 0 ? '+' : ''}${change})
-• Volume: ${volume}M (${parseFloat(volume) > 20 ? 'above average' : 'normal'})
-• Trend: ${strategy}
-
-**Tomorrow's ${ticker} Play:**
-Based on today's ${change >= 0 ? 'strength' : 'weakness'}, here's my specific recommendation:
-
-**Strategy**: ${change >= 0 ? 'Bull Call Spread' : 'Bear Put Spread'}
-• **Entry**: Buy ${strikes}
-• **Exit**: Target 50-75% profit, stop at -50%
-• **Timing**: ${isMarketOpen ? 'Wait for 10:30 momentum confirmation' : 'Enter after market digest overnight news'}
-• **Size**: 2-3% of portfolio max
-
-**Why This Works:**
-${change >= 0 ? 
-`${ticker} showing bullish momentum with ${change}% gain. Volume at ${volume}M suggests institutional interest. Tomorrow's play capitalizes on continued strength while limiting risk through spreads.` :
-`${ticker} under pressure with ${change}% decline. High probability bounce play if it holds key support around ${(currentPrice * 0.97).toFixed(2)}. Put spreads limit risk while capturing potential reversal.`}
-
-**Risk Factors:**
-• Watch pre-market action for overnight news
-• ${ticker} earnings ${Math.random() > 0.7 ? 'coming soon - check calendar' : 'not immediate concern'}
-• Overall market direction affects individual names
-
-**Exact Entry Plan:**
-1. **Pre-market**: Monitor for gaps or news
-2. **9:30-10:30**: Let initial volatility settle  
-3. **Entry**: If ${ticker} ${change >= 0 ? `holds above ${(currentPrice * 0.99).toFixed(2)}` : `bounces from ${(currentPrice * 0.97).toFixed(2)}`}
-4. **Exit**: 50% profit target or end of day
-
-**Ready to execute this ${ticker} strategy tomorrow?**`;
-        }
-        
-        // Generate real ticker analysis with current context
-        function generateRealTickerAnalysis(ticker, query) {
-            const hasStockData = stockData[ticker];
-            const currentPrice = hasStockData ? parseFloat(stockData[ticker].price) : null;
-            const change = hasStockData ? parseFloat(stockData[ticker].change) : null;
-            const volume = hasStockData ? parseFloat(stockData[ticker].volume) : null;
-            
-            // Check recent alerts for this ticker
-            const recentAlerts = liveAlerts.filter(alert => 
-                alert.tickers && alert.tickers.includes(ticker)
-            ).slice(0, 3);
-            
-            const socialMentions = recentAlerts.length;
-            const recentSentiment = recentAlerts.length > 0 ? 
-                recentAlerts[0].sentiment || 'Mixed' : 'Unknown';
-            
-            if (hasStockData) {
-                return `**${ticker} Live Options Analysis:**
-
-**Current Market Data:**
-• **Price**: ${currentPrice} (${change >= 0 ? '+' : ''}${change} / ${stockData[ticker].changePercent}%)
-• **Volume**: ${volume}M shares
-• **Day Range**: ${stockData[ticker].low} - ${stockData[ticker].high}
-
-**Social Intelligence:**
-• **Reddit Mentions**: ${socialMentions} recent posts
-• **Community Sentiment**: ${recentSentiment}
-• **Social Volume**: ${socialMentions > 5 ? 'High - trending' : socialMentions > 2 ? 'Moderate' : 'Low'}
-
-**${ticker} Options Strategy:**
-${change >= 0 ? 
-`**Bullish Momentum Play:**
-${ticker} showing strength with ${stockData[ticker].changePercent}% gain. Here's how to play it:
-
-• **Strategy**: Bull call spread
-• **Strikes**: Buy ${Math.round(currentPrice * 1.01)} calls, sell ${Math.round(currentPrice * 1.05)} calls
-• **Expiration**: ${Math.random() > 0.5 ? 'This Friday for momentum' : 'Next Friday for more time'}
-• **Entry**: Around ${(currentPrice * 0.02).toFixed(2)} debit
-• **Target**: 50% profit (≈${(currentPrice * 0.01).toFixed(2)} per spread)` :
-
-`**Bearish Pressure Response:**
-${ticker} down ${stockData[ticker].changePercent}% - here's the defensive play:
-
-• **Strategy**: ${Math.random() > 0.5 ? 'Bear put spread' : 'Cash-secured puts'}
-• **Strikes**: ${Math.random() > 0.5 ? 
-    `Buy ${Math.round(currentPrice * 0.98)} puts, sell ${Math.round(currentPrice * 0.93)} puts` :
-    `Sell ${Math.round(currentPrice * 0.95)} puts for premium`}
-• **Rationale**: ${Math.random() > 0.5 ? 'Profit from continued decline' : 'Get paid to own ${ticker} at discount'}
-• **Risk**: Limited to spread width`}
-
-**Technical Setup:**
-• **Support**: ${(currentPrice * 0.95).toFixed(2)}
-• **Resistance**: ${(currentPrice * 1.05).toFixed(2)}  
-• **Key Level**: ${change >= 0 ? `Hold above ${(currentPrice * 0.98).toFixed(2)} for continuation` : `Bounce from ${(currentPrice * 0.97).toFixed(2)} for reversal`}
-
-**Risk Considerations:**
-• **Volume**: ${volume}M is ${parseFloat(volume) > 20 ? 'above average - good liquidity' : 'normal - check bid-ask spreads'}
-• **Social Buzz**: ${socialMentions > 5 ? 'High social volume can increase volatility' : 'Limited social attention - rely on technicals'}
-• **Earnings**: ${Math.random() > 0.8 ? '⚠️ Earnings coming soon - high IV environment' : 'No immediate earnings catalyst'}
-
-**What's your ${ticker} outlook? Bullish, bearish, or just want income?**`;
-            } else {
-                return `**${ticker} Options Analysis Request:**
-
-I don't have current live price data for ${ticker}, but I can help you analyze this ticker based on general market conditions.
-
-**Market Context Analysis:**
-• **Overall Market**: ${Math.random() > 0.5 ? 'Bullish trend' : 'Mixed signals'} 
-• **VIX Environment**: ${Math.random() > 0.5 ? 'Elevated - good for selling premium' : 'Compressed - consider buying volatility'}
-• **Social Mentions**: ${socialMentions} recent Reddit posts about ${ticker}
-
-**${ticker} Strategy Framework:**
-Without current pricing, here's how to approach ${ticker}:
-
-**1. Check Current Setup:**
-• Look up ${ticker}'s current price and recent range
-• Identify key support/resistance levels
-• Check upcoming earnings date
-• Review recent news/catalysts
-
-**2. Options Strategy Selection:**
-• **If Bullish**: Consider call options or bull spreads
-• **If Bearish**: Look at put options or bear spreads  
-• **If Neutral**: Iron condors or covered calls (if you own shares)
-• **If Uncertain**: Straddles for volatility plays
-
-**3. Risk Management:**
-• Position size: 2-5% of account
-• Time frame: 30-45 DTE for sellers, 60+ DTE for buyers
-• Profit targets: 50% for credit spreads, 100% for debit spreads
-
-**Get me ${ticker}'s current price and I'll give you specific strikes and entry points! What's your market outlook on ${ticker}?**`;
-            }
-        }
-        
-        // Generate conversational responses instead of templates
-        function generateConversationalResponse(query) {
-            if (query.includes('help') || query.includes('how')) {
-                return `**I'm here to help with your options trading!**
-
-I specialize in real-time options analysis, not generic templates. Here's what I can do:
-
-**🎯 Specific Analysis:**
-• **"AAPL strategy for tomorrow"** - Get exact strikes, timing, risk management
-• **"TSLA earnings play"** - Pre/post earnings strategies with real data
-• **"SPY iron condor setup"** - Current market conditions analysis
-
-**📊 Live Market Intelligence:**
-• I analyze current price action, volume, and social sentiment
-• I provide specific entry/exit points, not generic advice
-• I consider real market conditions and volatility environment
-
-**💡 Smart Questions to Ask:**
-• "What's the best high-probability play for tomorrow?"
-• "[TICKER] options strategy with current market conditions"
-• "Income generation strategy for this week"
-• "How to play [TICKER] earnings with limited risk"
-
-**I avoid generic responses and focus on actionable, specific strategies based on real market data.**
-
-**What specific ticker or strategy interests you? I'll give you a real analysis with exact details.**`;
-            }
-            
-            return `**Ready for Real Options Analysis!**
-
-I provide specific, actionable options strategies based on:
-• Live market data and price action
-• Current volatility environment  
-• Social sentiment from Reddit trading communities
-• Real-time news and market conditions
-
-**Try asking:**
-• "Best options play for tomorrow"
-• "[Any ticker] options strategy"  
-• "High probability income trade this week"
-• "How to trade [event/earnings] with options"
-
-**I'll give you exact strikes, entry timing, risk management, and profit targets - no generic templates!**
-
-**What specific ticker or options strategy can I analyze for you?**`;
-        }
-        
-        // Generate specific tomorrow play with entry/exit points
-        function generateTomorrowPlay(ticker = null) {
-            const symbols = ticker ? [ticker] : ['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT'];
-            const selectedTicker = symbols[Math.floor(Math.random() * symbols.length)];
-            const strategies = ['Call Options', 'Put Options', 'Bull Call Spread', 'Iron Condor', 'Covered Call'];
-            const strategy = strategies[Math.floor(Math.random() * strategies.length)];
-            
-            const basePrice = 100 + Math.random() * 300;
-            const strike = Math.round(basePrice * (0.98 + Math.random() * 0.04));
-            const entryPrice = (0.5 + Math.random() * 4).toFixed(2);
-            const exitTarget = (parseFloat(entryPrice) * (1.5 + Math.random() * 1.5)).toFixed(2);
-            const stopLoss = (parseFloat(entryPrice) * 0.5).toFixed(2);
-            const probability = Math.floor(65 + Math.random() * 25);
-            
-            return `⚡ **TOMORROW'S HIGH-PROBABILITY PLAY: ${selectedTicker}**
-
-🎯 **${strategy} Strategy for ${selectedTicker}**
-
-**📋 Trade Setup:**
-• **Ticker**: ${selectedTicker}
-• **Strategy**: ${strategy}
-• **Strike**: ${strike} ${strategy.includes('Call') ? 'Calls' : strategy.includes('Put') ? 'Puts' : 'Strike'}
-• **Expiration**: ${Math.random() > 0.5 ? 'This Friday' : 'Next Friday'}
-
-**💰 Precise Entry/Exit Plan:**
-• **Entry Price**: ${entryPrice} per contract
-• **Target Exit**: ${exitTarget} per contract (${Math.round((parseFloat(exitTarget)/parseFloat(entryPrice) - 1) * 100)}% gain)
-• **Stop Loss**: ${stopLoss} per contract (-50% max loss)
-• **Win Probability**: ${probability}%
-
-**⚡ Risk Management:**
-• **Position Size**: 2-5% of portfolio
-• **Max Contracts**: Based on ${stopLoss} risk per contract
-• **Time Stop**: Close by ${Math.random() > 0.5 ? '3:00 PM tomorrow' : 'end of day tomorrow'}
-
-**🎯 Why This Trade:**
-• Technical setup shows ${strategy.includes('Call') || strategy.includes('Bull') ? 'bullish momentum' : strategy.includes('Put') ? 'bearish pressure' : 'range-bound action'} 
-• IV environment favors this strategy
-• Strong support/resistance levels confirm entry
-• Options flow shows institutional interest
-
-**📊 Execution Plan:**
-1. **Morning**: Watch for ${selectedTicker} to ${Math.random() > 0.5 ? 'hold above' : 'bounce from'} key level
-2. **Entry**: Buy at ${entryPrice} or better
-3. **Monitor**: Set alerts at 50% profit (${(parseFloat(entryPrice) * 1.5).toFixed(2)})
-4. **Exit**: Take profits at ${exitTarget} or stop at ${stopLoss}
-
-**Ready to execute? This is a high-probability setup with defined risk!** 🚀`;
-        }
-        
-        // Generate specific ticker strategy  
-        function generateSpecificTickerStrategy(ticker, query) {
-            const isCallBias = query.includes('call') || query.includes('bull') || query.includes('up');
-            const isPutBias = query.includes('put') || query.includes('bear') || query.includes('down');
-            
-            const basePrice = 50 + Math.random() * 400;
-            const strategy = isCallBias ? 'Call Options' : isPutBias ? 'Put Options' : 
-                           ['Call Options', 'Put Options', 'Iron Condor', 'Bull Call Spread', 'Bear Put Spread'][Math.floor(Math.random() * 5)];
-                           
-            const strike = Math.round(basePrice * (0.95 + Math.random() * 0.1));
-            const entryPrice = (0.8 + Math.random() * 6).toFixed(2);
-            const exitTarget = (parseFloat(entryPrice) * (1.3 + Math.random() * 1.7)).toFixed(2);
-            const stopLoss = (parseFloat(entryPrice) * 0.5).toFixed(2);
-            
-            return `⚡ **${ticker} OPTIONS STRATEGY WITH ENTRY/EXIT POINTS:**
-
-🎯 **${strategy} Setup for ${ticker}**
-
-**📊 Current ${ticker} Analysis:**
-• **Recommended Strategy**: ${strategy}
-• **Target Strike**: ${strike}
-• **Optimal Expiration**: ${Math.random() > 0.5 ? '30-45 DTE' : 'Weekly options'}
-
-**💰 Specific Trade Plan:**
-• **Entry Price**: ${entryPrice} per contract
-• **Profit Target**: ${exitTarget} per contract (${Math.round((parseFloat(exitTarget)/parseFloat(entryPrice) - 1) * 100)}% gain)
-• **Stop Loss**: ${stopLoss} per contract (-50% risk)
-• **Break-Even**: ${(strike + parseFloat(entryPrice)).toFixed(2)} ${strategy.includes('Call') ? '(stock above)' : strategy.includes('Put') ? '(stock below)' : ''}
-
-**⚡ Why ${ticker} ${strategy}:**
-• Technical indicators show ${strategy.includes('Call') ? 'bullish momentum building' : strategy.includes('Put') ? 'bearish pressure mounting' : 'sideways consolidation perfect for income'}
-• IV levels at ${Math.floor(20 + Math.random() * 40)}% - ${Math.random() > 0.5 ? 'favorable for buying' : 'good for selling premium'}
-• Volume profile supports this directional bias
-• Key support/resistance levels align with strike selection
-
-**🎯 Execution Checklist:**
-✅ **Entry Trigger**: ${ticker} ${Math.random() > 0.5 ? 'breaks above' : 'holds support at'} key level
-✅ **Position Size**: Risk only ${(parseFloat(stopLoss) * 100).toFixed(0)} per contract
-✅ **Time Management**: Close at 50% profit or by expiration week
-✅ **Adjustment Plan**: Roll if ${Math.random() > 0.5 ? 'goes against us early' : 'profit target hit quickly'}
-
-**📈 Expected Outcome:**
-• **Win Rate**: ${Math.floor(60 + Math.random() * 25)}%
-• **Risk/Reward**: 1:${(parseFloat(exitTarget)/parseFloat(stopLoss)).toFixed(1)}
-• **Max Profit**: ${exitTarget} per contract
-• **Max Loss**: ${stopLoss} per contract
-
-This is an actionable ${ticker} trade with specific entry/exit levels! Ready to execute?** 🚀`;
-        }
-        
-        // New helper functions for enhanced plays section
-        function refreshPlays() {
-            renderCurrentTab(); // This will regenerate the plays
-        }
-        
-        function askSpecificStrategy(ticker, strategy) {
-            switchTab('chat');
-            setTimeout(() => {
-                const input = document.getElementById('messageInput');
-                if (input) {
-                    input.value = `${ticker} ${strategy} strategy with entry and exit points`;
-                    sendMessage();
-                }
-            }, 300);
-        }
-        
-        // ===========================================
-        // ENHANCED LIVE FEEDS - ALL FREE SOURCES
-        // ===========================================
-        
-        let liveAlerts = [];
-        let feedStats = {
-            reddit_auth: 0,
-            reddit_public: 0,
-            financial_news: 0,
-            market_sentiment: 0,
-            earnings: 0,
-            economic: 0,
-            options_flow: 0,
-            unusual_activity: 0,
-            fear_greed: 0,
-            social_sentiment: 0
-        };
-        
-        // Load ALL trading feeds from enhanced API
-        async function loadAllTradingFeeds() {
-            updateFeedStatus('🔄 Loading comprehensive trading intelligence...');
-            
-            try {
-                const response = await fetch('/.netlify/functions/enhanced-feeds');
-                const data = await response.json();
-                
-                if (data && data.feeds) {
-                    liveAlerts = data.feeds;
-                    feedStats = data.by_source || feedStats;
-                    
-                    displayLiveAlerts();
-                    updateFeedStatus(`✅ ${data.total_count || data.feeds.length} live feeds loaded • Last refresh: ${new Date().toLocaleTimeString()}`);
-                    updateFeedStats(data.by_source);
-                } else {
-                    throw new Error('No feeds data received');
-                }
-                
-            } catch (error) {
-                console.error('Error loading all trading feeds:', error);
-                updateFeedStatus('⚠️ Some feeds unavailable • Retrying...');
-                
-                // Fallback to individual feed loading
-                await loadFallbackFeeds();
-            }
-        }
-        
-        // Load specific feed type
-        async function loadSpecificFeed(feedType) {
-            updateFeedStatus(`🔄 Loading ${feedType.replace('-', ' ')} data...`);
-            
-            try {
-                const response = await fetch(`/.netlify/functions/enhanced-feeds?source=${feedType}`);
-                const data = await response.json();
-                
-                if (data && data.feeds) {
-                    // Replace feeds of this type
-                    liveAlerts = liveAlerts.filter(alert => alert.type !== feedType.replace('-', '_'));
-                    liveAlerts = [...liveAlerts, ...data.feeds];
-                    
-                    displayLiveAlerts();
-                    updateFeedStatus(`✅ ${data.feeds.length} ${feedType} feeds loaded • ${new Date().toLocaleTimeString()}`);
-                } else {
-                    updateFeedStatus(`⚠️ ${feedType} temporarily unavailable`);
-                }
-                
-            } catch (error) {
-                console.error(`Error loading ${feedType}:`, error);
-                updateFeedStatus(`❌ Failed to load ${feedType}`);
-            }
-        }
-        
-        // Fallback feed loading (individual sources)
-        async function loadFallbackFeeds() {
-            updateFeedStatus('🔄 Loading individual feed sources...');
-            
-            try {
-                await Promise.all([
-                    loadRedditPublic(),
-                    loadFinancialNews(),
-                    loadMarketSentiment(),
-                    loadEarningsCalendar(),
-                    loadFearGreedIndex()
-                ]);
-                
-                displayLiveAlerts();
-                updateFeedStatus(`✅ Fallback feeds loaded • ${liveAlerts.length} total alerts`);
-                
-            } catch (error) {
-                console.error('Fallback feeds error:', error);
-                updateFeedStatus('⚠️ Limited feeds available • Check connection');
-            }
-        }
-        
-        // Enhanced Reddit loading (public fallback)
-        async function loadRedditPublic() {
-            const subreddits = [
-                'wallstreetbets', 'options', 'SecurityAnalysis', 'investing', 'stocks',
-                'StockMarket', 'ValueInvesting', 'pennystocks', 'Daytrading', 'thetagang',
-                'smallstreetbets', 'EducatedInvesting'
-            ];
-            
-            for (const subreddit of subreddits) {
-                try {
-                    const response = await fetch(`https://www.reddit.com/r/${subreddit}/hot.json?limit=25`);
-                    const data = await response.json();
-                    
-                    if (data && data.data && data.data.children) {
-                        data.data.children.forEach(post => {
-                            const postData = post.data;
-                            const tickers = extractTickers(postData.title + ' ' + postData.selftext);
-                            
-                            if (tickers.length > 0 || isTradeRelevant(postData.title + ' ' + postData.selftext)) {
-                                liveAlerts.push({
-                                    id: postData.id,
-                                    source: `r/${subreddit}`,
-                                    title: postData.title,
-                                    content: postData.selftext || '',
-                                    tickers: tickers,
-                                    score: postData.score,
-                                    comments: postData.num_comments,
-                                    url: `https://reddit.com${postData.permalink}`,
-                                    timestamp: new Date(postData.created_utc * 1000),
-                                    author: postData.author,
-                                    type: 'reddit_public',
-                                    flair: postData.link_flair_text,
-                                    awards: postData.total_awards_received || 0
-                                });
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error(`Error loading r/${subreddit}:`, error);
-                }
-                
-                // Rate limiting - wait between requests
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-        }
-        
-        // Enhanced financial news loading
-        async function loadFinancialNews() {
-            try {
-                const API_KEY = 'MAQEUTLGYYXC1HF1';
-                const response = await fetch(`https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics=technology,finance,economy&limit=50&apikey=${API_KEY}`);
-                const data = await response.json();
-                
-                if (data && data.feed) {
-                    data.feed.forEach(article => {
-                        const tickers = article.ticker_sentiment ? 
-                                      article.ticker_sentiment.map(t => t.ticker) : 
-                                      extractTickers(article.title + ' ' + article.summary);
-                        
-                        if (tickers.length > 0 || isTradeRelevant(article.title + ' ' + article.summary)) {
-                            liveAlerts.push({
-                                id: article.url,
-                                source: article.source,
-                                title: article.title,
-                                content: article.summary,
-                                tickers: tickers,
-                                sentiment: article.overall_sentiment_label,
-                                sentimentScore: parseFloat(article.overall_sentiment_score),
-                                url: article.url,
-                                timestamp: new Date(article.time_published),
-                                type: 'financial_news',
-                                category: article.category_within_source,
-                                authors: article.authors
-                            });
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading financial news:', error);
-            }
-        }
-        
-        // Load earnings calendar
-        async function loadEarningsCalendar() {
-            try {
-                const API_KEY = 'MAQEUTLGYYXC1HF1';
-                const response = await fetch(`https://www.alphavantage.co/query?function=EARNINGS_CALENDAR&horizon=3month&apikey=${API_KEY}`);
-                const csvData = await response.text();
-                
-                const lines = csvData.split('\n').slice(1, 31); // First 30 earnings
-                
-                lines.forEach(line => {
-                    const [symbol, name, reportDate, fiscalDateEnding, estimate, currency] = line.split(',');
-                    
-                    if (symbol && reportDate && symbol.length <= 5) {
-                        liveAlerts.push({
-                            id: 'earnings_' + symbol + '_' + reportDate,
-                            source: 'Earnings Calendar',
-                            title: `📅 ${symbol} Earnings: ${reportDate}`,
-                            content: `${name || symbol} reports earnings on ${reportDate}. Analyst estimate: ${estimate || 'N/A'}`,
-                            tickers: [symbol],
-                            type: 'earnings',
-                            reportDate: reportDate,
-                            estimate: estimate,
-                            timestamp: new Date(reportDate + 'T09:30:00'),
-                            priority: 'high'
-                        });
-                    }
-                });
-            } catch (error) {
-                console.error('Error loading earnings calendar:', error);
-            }
-        }
-        
-        // Load Fear & Greed Index
-        async function loadFearGreedIndex() {
-            try {
-                const response = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata');
-                const data = await response.json();
-                
-                if (data && data.fear_and_greed) {
-                    liveAlerts.push({
-                        id: 'fear_greed_' + Date.now(),
-                        source: 'CNN Fear & Greed Index',
-                        title: `😱 Market Fear & Greed: ${data.fear_and_greed.score} (${data.fear_and_greed.rating})`,
-                        content: `Current market sentiment indicator shows ${data.fear_and_greed.rating} with a score of ${data.fear_and_greed.score}/100. This impacts options volatility and market direction.`,
-                        sentiment: data.fear_and_greed.rating,
-                        sentimentScore: data.fear_and_greed.score,
-                        type: 'fear_greed',
-                        timestamp: new Date(),
-                        priority: 'high'
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading Fear & Greed Index:', error);
-            }
-        }
-        
-        // Enhanced market sentiment analysis
-        async function loadMarketSentiment() {
-            try {
-                // Analyze collected data for comprehensive sentiment
-                const tickerMentions = {};
-                const sentimentData = {};
-                const sourceCount = {};
-                
-                liveAlerts.forEach(alert => {
-                    alert.tickers.forEach(ticker => {
-                        if (!tickerMentions[ticker]) {
-                            tickerMentions[ticker] = 0;
-                            sentimentData[ticker] = { total: 0, count: 0, sources: new Set() };
-                        }
-                        
-                        tickerMentions[ticker] += 1;
-                        sentimentData[ticker].sources.add(alert.source);
-                        
-                        // Enhanced sentiment analysis
-                        const text = (alert.title + ' ' + alert.content).toLowerCase();
-                        let sentiment = 0;
-                        
-                        // Positive sentiment indicators
-                        const bullishWords = /\b(bullish|moon|rocket|calls|buy|long|up|green|gain|profit|rally|surge|breakout|diamond|hold|yolo|tendies|bull|pump)\b/g;
-                        const bullishMatches = (text.match(bullishWords) || []).length;
-                        sentiment += bullishMatches * 0.5;
-                        
-                        // Negative sentiment indicators
-                        const bearishWords = /\b(bearish|crash|puts|sell|short|down|red|loss|drop|fall|dump|correction|bear|puts|recession|fear)\b/g;
-                        const bearishMatches = (text.match(bearishWords) || []).length;
-                        sentiment -= bearishMatches * 0.5;
-                        
-                        // Use existing sentiment score if available
-                        if (alert.sentimentScore !== undefined) {
-                            sentiment += alert.sentimentScore;
-                        }
-                        
-                        sentimentData[ticker].total += sentiment;
-                        sentimentData[ticker].count += 1;
-                    });
-                });
-                
-                // Create enhanced sentiment alerts for top tickers
-                Object.keys(tickerMentions)
-                    .sort((a, b) => tickerMentions[b] - tickerMentions[a])
-                    .slice(0, 10)
-                    .forEach(ticker => {
-                        const mentions = tickerMentions[ticker];
-                        const avgSentiment = sentimentData[ticker].total / sentimentData[ticker].count;
-                        const sources = Array.from(sentimentData[ticker].sources);
-                        
-                        let sentimentLabel = 'Neutral';
-                        let sentimentEmoji = '😐';
-                        
-                        if (avgSentiment > 0.5) {
-                            sentimentLabel = 'Very Bullish';
-                            sentimentEmoji = '🚀';
-                        } else if (avgSentiment > 0.2) {
-                            sentimentLabel = 'Bullish';
-                            sentimentEmoji = '📈';
-                        } else if (avgSentiment < -0.5) {
-                            sentimentLabel = 'Very Bearish';
-                            sentimentEmoji = '📉';
-                        } else if (avgSentiment < -0.2) {
-                            sentimentLabel = 'Bearish';
-                            sentimentEmoji = '🔻';
-                        }
-                        
-                        liveAlerts.push({
-                            id: `sentiment-${ticker}-${Date.now()}`,
-                            source: 'Social Sentiment Analysis',
-                            title: `${sentimentEmoji} ${ticker} Sentiment: ${sentimentLabel}`,
-                            content: `${mentions} mentions across ${sources.length} sources (${sources.join(', ')}). Sentiment score: ${avgSentiment.toFixed(2)}. High social volume indicates potential volatility.`,
-                            tickers: [ticker],
-                            mentions: mentions,
-                            sentiment: sentimentLabel,
-                            sentimentScore: avgSentiment,
-                            sources: sources,
-                            timestamp: new Date(),
-                            type: 'market_sentiment',
-                            priority: mentions >= 10 ? 'high' : 'medium'
-                        });
-                    });
-                    
-            } catch (error) {
-                console.error('Error analyzing market sentiment:', error);
-            }
-        }
-        
-        // Enhanced alert display with all feed types
-        function displayLiveAlerts() {
-            const alertsContainer = document.getElementById('liveAlerts');
-            if (!alertsContainer) return;
-            
-            // Remove duplicates and sort
-            const uniqueAlerts = liveAlerts.filter((alert, index, self) => 
-                index === self.findIndex(a => a.id === alert.id)
-            );
-            
-            const sortedAlerts = uniqueAlerts
-                .sort((a, b) => {
-                    // Prioritize by type and score/mentions
-                    const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-                    const aPriority = priorityOrder[a.priority] || 1;
-                    const bPriority = priorityOrder[b.priority] || 1;
-                    
-                    if (aPriority !== bPriority) return bPriority - aPriority;
-                    
-                    // Then by timestamp
-                    return new Date(b.timestamp) - new Date(a.timestamp);
-                })
-                .slice(0, 50); // Top 50 alerts
-            
-            const alertsHTML = sortedAlerts.map(alert => {
-                const timeAgo = getTimeAgo(alert.timestamp);
-                const alertClass = getAlertClass(alert.type);
-                const sourceColor = getSourceColor(alert.type);
-                const priorityIndicator = alert.priority === 'high' ? '🔥' : '';
-                
-                return `
-                    <div class="alert-item ${alertClass}" style="margin-bottom: 0.75rem; position: relative;">
-                        ${alert.priority === 'high' ? '<div style="position: absolute; top: 0.5rem; right: 0.5rem; font-size: 1.2rem;">🔥</div>' : ''}
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                            <div style="font-weight: 700; color: ${sourceColor};">
-                                ${getAlertIcon(alert.type)} ${alert.source}
-                                ${alert.tickers && alert.tickers.length > 0 ? `• ${alert.tickers.slice(0, 3).join(', ')}${alert.tickers.length > 3 ? '...' : ''}` : ''}
-                            </div>
-                            <div style="font-size: 0.7rem; color: #6b7280; text-align: right;">
-                                ${timeAgo}
-                                ${alert.type === 'reddit_public' || alert.type === 'reddit_auth' ? `<br/>↗️ ${alert.score}` : ''}
-                            </div>
-                        </div>
-                        <div style="font-weight: 600; margin-bottom: 0.5rem; line-height: 1.3; font-size: 0.95rem;">
-                            ${alert.title.length > 120 ? alert.title.substring(0, 120) + '...' : alert.title}
-                        </div>
-                        <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; line-height: 1.3;">
-                            ${alert.content ? (alert.content.length > 200 ? alert.content.substring(0, 200) + '...' : alert.content) : ''}
-                        </div>
-                        ${alert.sentiment || alert.sentimentScore ? `
-                            <div style="background: ${getSentimentBg(alert.sentiment)}; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.75rem; font-size: 0.8rem;">
-                                <strong>Sentiment:</strong> ${alert.sentiment} 
-                                ${alert.sentimentScore ? `(${alert.sentimentScore.toFixed(2)})` : ''}
-                            </div>
-                        ` : ''}
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                            <div style="font-size: 0.8rem; color: #6b7280;">
-                                ${getAlertStats(alert)}
-                            </div>
-                            <div style="display: flex; gap: 0.5rem;">
-                                ${alert.url ? `<button class="btn btn-small" onclick="window.open('${alert.url}', '_blank')" style="background: #6b7280; font-size: 0.7rem;">View Source</button>` : ''}
-                                ${alert.tickers && alert.tickers.length > 0 ? `<button class="btn btn-small" onclick="askRoloAbout('${alert.tickers[0]}')" style="background: #7c3aed; font-size: 0.7rem;">Analyze ${alert.tickers[0]}</button>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            alertsContainer.innerHTML = alertsHTML || '<div style="text-align: center; padding: 2rem; color: #6b7280;">No live alerts available. Try refreshing feeds.</div>';
-        }
-        
-        // Enhanced helper functions
-        function getAlertClass(type) {
-            switch (type) {
-                case 'reddit_auth':
-                case 'reddit_public':
-                    return 'alert-info';
-                case 'financial_news':
-                case 'earnings':
-                    return 'alert-warning';
-                case 'market_sentiment':
-                case 'fear_greed':
-                    return 'alert-success';
-                default:
-                    return 'alert-info';
-            }
-        }
-        
-        function getSourceColor(type) {
-            switch (type) {
-                case 'reddit_auth':
-                case 'reddit_public':
-                    return '#ff4500';
-                case 'financial_news':
-                    return '#1d4ed8';
-                case 'earnings':
-                    return '#059669';
-                case 'market_sentiment':
-                    return '#7c3aed';
-                case 'fear_greed':
-                    return '#dc2626';
-                case 'options_flow':
-                    return '#ea580c';
-                case 'unusual_activity':
-                    return '#f59e0b';
-                default:
-                    return '#6b7280';
-            }
-        }
-        
-        function getSentimentBg(sentiment) {
-            if (!sentiment) return '#f3f4f6';
-            
-            const s = sentiment.toLowerCase();
-            if (s.includes('bull') || s.includes('positive')) return '#dcfce7';
-            if (s.includes('bear') || s.includes('negative')) return '#fee2e2';
-            if (s.includes('neutral')) return '#f3f4f6';
-            return '#fef3c7';
-        }
-        
-        function getAlertIcon(type) {
-            switch (type) {
-                case 'reddit_auth':
-                case 'reddit_public':
-                    return '🟠';
-                case 'financial_news':
-                    return '📰';
-                case 'market_sentiment':
-                    return '📊';
-                case 'earnings':
-                    return '📅';
-                case 'fear_greed':
-                    return '😱';
-                case 'options_flow':
-                    return '⚡';
-                case 'unusual_activity':
-                    return '🚨';
-                case 'economic':
-                    return '🏛️';
-                default:
-                    return '🔔';
-            }
-        }
-        
-        function getAlertStats(alert) {
-            switch (alert.type) {
-                case 'reddit_auth':
-                case 'reddit_public':
-                    return `↗️ ${alert.score} upvotes • 💬 ${alert.comments} comments${alert.awards ? ` • 🏆 ${alert.awards} awards` : ''}`;
-                case 'market_sentiment':
-                    return `📊 ${alert.mentions} mentions • Sources: ${alert.sources ? alert.sources.length : 1}`;
-                case 'financial_news':
-                    return `📰 ${alert.source}${alert.sentiment ? ` • Sentiment: ${alert.sentiment}` : ''}`;
-                case 'earnings':
-                    return `📅 Report Date: ${alert.reportDate}${alert.estimate ? ` • Est: ${alert.estimate}` : ''}`;
-                case 'fear_greed':
-                    return `😱 Score: ${alert.sentimentScore}/100 • Level: ${alert.sentiment}`;
-                default:
-                    return `🔔 ${alert.source}`;
-            }
-        }
-        
-        function updateFeedStats(stats) {
-            const statsElement = document.getElementById('feedStats');
-            if (statsElement && stats) {
-                const totalFeeds = Object.values(stats).reduce((sum, count) => sum + count, 0);
-                statsElement.textContent = `📊 Total: ${totalFeeds} • Reddit: ${stats.reddit_auth || 0} • News: ${stats.financial_news || 0} • Earnings: ${stats.earnings || 0} • Sentiment: ${stats.market_sentiment || 0}`;
-            }
-        }
-        
-        // Helper function to check if content is trade-relevant
-        function isTradeRelevant(text) {
-            if (!text) return false;
-            
-            const tradingKeywords = [
-                'options', 'calls', 'puts', 'trading', 'investment', 'portfolio', 'stock',
-                'market', 'bull', 'bear', 'earnings', 'dividend', 'buy', 'sell', 'hold',
-                'volatility', 'theta', 'delta', 'gamma', 'vega', 'strike', 'expiration',
-                'iron condor', 'covered call', 'cash secured put', 'wheel strategy',
-                'day trading', 'swing trading', 'long term', 'dd', 'due diligence',
-                'yolo', 'moon', 'rocket', 'diamond hands', 'paper hands', 'stonks',
-                'tendies', 'gains', 'losses', 'profit', 'loss', 'roi', 'return',
-                'analyst', 'upgrade', 'downgrade', 'price target', 'guidance',
-                'revenue', 'eps', 'pe ratio', 'market cap', 'volume', 'chart',
-                'technical analysis', 'support', 'resistance', 'breakout', 'trend'
-            ];
-            
-            const lowerText = text.toLowerCase();
-            return tradingKeywords.some(keyword => lowerText.includes(keyword));
-        }
-        
-        // Replace old function names with new enhanced versions
-        const loadLiveFeeds = loadAllTradingFeeds;
-        
-        // ===========================================
-        // LIVE PLAYS GENERATION - REAL DATA BASED
-        // ===========================================
-        
-        async function loadLivePlays() {
-            updatePlaysStatus('🔄 Analyzing live market data...');
-            
-            try {
-                // First, get the most mentioned tickers from our live feeds
-                const topTickers = getTopTickers();
-                
-                if (topTickers.length === 0) {
-                    // If no live data yet, load it first
-                    await loadLiveFeeds();
-                    const newTopTickers = getTopTickers();
-                    
-                    if (newTopTickers.length === 0) {
-                        updatePlaysStatus('⚠️ No market data available • Try refreshing');
-                        return;
-                    }
-                }
-                
-                // Generate plays based on real market data
-                const plays = await generateDataDrivenPlays(topTickers.slice(0, 10));
-                displayLivePlays(plays);
-                updatePlaysStatus(`✅ ${plays.length} live plays generated • Based on real market data`);
-                
-            } catch (error) {
-                console.error('Error generating live plays:', error);
-                updatePlaysStatus('⚠️ Error generating plays • Retrying...');
-            }
-        }
-        
-        function getTopTickers() {
-            const tickerCounts = {};
-            
-            // Count mentions across all live alerts
-            liveAlerts.forEach(alert => {
-                alert.tickers.forEach(ticker => {
-                    if (!tickerCounts[ticker]) {
-                        tickerCounts[ticker] = {
-                            count: 0,
-                            sentiment: 0,
-                            sources: new Set()
-                        };
-                    }
-                    tickerCounts[ticker].count += 1;
-                    tickerCounts[ticker].sources.add(alert.source);
-                    
-                    // Add sentiment if available
-                    if (alert.sentimentScore) {
-                        tickerCounts[ticker].sentiment += alert.sentimentScore;
-                    }
-                });
-            });
-            
-            // Sort by mention count and return top tickers
-            return Object.keys(tickerCounts)
-                .sort((a, b) => tickerCounts[b].count - tickerCounts[a].count)
-                .map(ticker => ({
-                    symbol: ticker,
-                    mentions: tickerCounts[ticker].count,
-                    avgSentiment: tickerCounts[ticker].sentiment / tickerCounts[ticker].count,
-                    sources: Array.from(tickerCounts[ticker].sources)
-                }));
-        }
-        
-        async function generateDataDrivenPlays(topTickers) {
-            const plays = [];
-            
-            for (const tickerData of topTickers) {
-                try {
-                    // Get current stock price if available
-                    let currentPrice = null;
-                    if (stockData[tickerData.symbol]) {
-                        currentPrice = parseFloat(stockData[tickerData.symbol].price);
-                    }
-                    
-                    // Determine strategy based on sentiment and mentions
-                    const strategy = determineOptimalStrategy(tickerData, currentPrice);
-                    const confidence = calculateConfidence(tickerData);
-                    
-                    plays.push({
-                        symbol: tickerData.symbol,
-                        strategy: strategy.name,
-                        strike: strategy.strike,
-                        entryPrice: strategy.entryPrice,
-                        exitPrice: strategy.exitPrice,
-                        stopLoss: strategy.stopLoss,
-                        confidence: confidence,
-                        reasoning: strategy.reasoning,
-                        mentions: tickerData.mentions,
-                        sentiment: tickerData.avgSentiment,
-                        sources: tickerData.sources,
-                        expiration: strategy.expiration,
-                        riskReward: strategy.riskReward
-                    });
-                    
-                } catch (error) {
-                    console.error(`Error generating play for ${tickerData.symbol}:`, error);
-                }
-            }
-            
-            return plays.sort((a, b) => b.confidence - a.confidence);
-        }
-        
-        function determineOptimalStrategy(tickerData, currentPrice) {
-            const { symbol, avgSentiment, mentions } = tickerData;
-            
-            // Base price estimation if we don't have real data
-            const estimatedPrice = currentPrice || (50 + Math.random() * 300);
-            
-            // Determine strategy based on sentiment and momentum
-            let strategy = {};
-            
-            if (avgSentiment > 0.3 && mentions >= 5) {
-                // Strong bullish sentiment
-                strategy = {
-                    name: 'Bull Call Spread',
-                    strike: Math.round(estimatedPrice * 1.02),
-                    entryPrice: (estimatedPrice * 0.02).toFixed(2),
-                    exitPrice: (estimatedPrice * 0.04).toFixed(2),
-                    stopLoss: (estimatedPrice * 0.01).toFixed(2),
-                    reasoning: `Strong bullish sentiment (${avgSentiment.toFixed(2)}) with ${mentions} mentions across social platforms`,
-                    expiration: 'Weekly',
-                    riskReward: 2.0
-                };
-            } else if (avgSentiment < -0.3 && mentions >= 5) {
-                // Strong bearish sentiment
-                strategy = {
-                    name: 'Bear Put Spread',
-                    strike: Math.round(estimatedPrice * 0.98),
-                    entryPrice: (estimatedPrice * 0.025).toFixed(2),
-                    exitPrice: (estimatedPrice * 0.05).toFixed(2),
-                    stopLoss: (estimatedPrice * 0.0125).toFixed(2),
-                    reasoning: `Bearish sentiment (${avgSentiment.toFixed(2)}) with ${mentions} mentions suggesting downward pressure`,
-                    expiration: 'Weekly',
-                    riskReward: 2.0
-                };
-            } else if (mentions >= 10) {
-                // High volume, neutral sentiment - volatility play
-                strategy = {
-                    name: 'Long Straddle',
-                    strike: Math.round(estimatedPrice),
-                    entryPrice: (estimatedPrice * 0.04).toFixed(2),
-                    exitPrice: (estimatedPrice * 0.08).toFixed(2),
-                    stopLoss: (estimatedPrice * 0.02).toFixed(2),
-                    reasoning: `High social volume (${mentions} mentions) suggests volatility expansion opportunity`,
-                    expiration: '30 DTE',
-                    riskReward: 2.0
-                };
-            } else {
-                // Moderate activity - covered call strategy
-                strategy = {
-                    name: 'Covered Call',
-                    strike: Math.round(estimatedPrice * 1.05),
-                    entryPrice: (estimatedPrice * 0.015).toFixed(2),
-                    exitPrice: (estimatedPrice * 0.015).toFixed(2), // Premium collected
-                    stopLoss: 'Assignment Risk',
-                    reasoning: `Moderate social interest (${mentions} mentions) suitable for income generation`,
-                    expiration: '30 DTE',
-                    riskReward: 1.0
-                };
-            }
-            
-            return strategy;
-        }
-        
-        function calculateConfidence(tickerData) {
-            let confidence = 50; // Base confidence
-            
-            // Add confidence based on mentions
-            confidence += Math.min(tickerData.mentions * 3, 25);
-            
-            // Add confidence based on sentiment strength
-            confidence += Math.abs(tickerData.avgSentiment) * 15;
-            
-            // Add confidence based on source diversity
-            confidence += tickerData.sources.length * 5;
-            
-            // Cap at 95%
-            return Math.min(Math.round(confidence), 95);
-        }
-        
-        function displayLivePlays(plays) {
-            const playsContainer = document.getElementById('livePlays');
-            if (!playsContainer || plays.length === 0) return;
-            
-            const playsHTML = plays.map((play, index) => `
-                <div class="play-card">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                        <div>
-                            <span style="background: ${index < 3 ? '#fef3c7' : '#f3f4f6'}; color: ${index < 3 ? '#92400e' : '#6b7280'}; padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700; margin-right: 0.5rem;">
-                                #${index + 1}
-                            </span>
-                            <span style="font-size: 1.1rem; font-weight: 700;">${play.symbol}</span>
-                            <span style="padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; background: ${getStrategyColor(play.strategy)}; color: white;">
-                                ${play.strategy}
-                            </span>
-                            <div style="margin-top: 0.25rem;">
-                                <strong>${play.strike} Strike</strong> • ${play.expiration}
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 1.3rem; font-weight: 700; color: #22c55e;">
-                                ${play.confidence}%
-                            </div>
-                            <div style="font-size: 0.7rem; color: #6b7280;">confidence</div>
-                        </div>
-                    </div>
-                    <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; line-height: 1.3;">
-                        ${play.reasoning}
-                    </p>
-                    <div style="background: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; font-size: 0.8rem;">
-                            <div><strong>Entry:</strong> ${play.entryPrice}</div>
-                            <div><strong>Target:</strong> ${play.exitPrice}</div>
-                            <div><strong>Stop:</strong> ${play.stopLoss}</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                        <div style="font-size: 0.8rem; color: #6b7280;">
-                            📊 ${play.mentions} mentions • ${play.sources.join(', ')} • R/R: ${play.riskReward}:1
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-small" onclick="askRoloAbout('${play.symbol}')" style="background: #7c3aed;">
-                                Analyze ${play.symbol}
-                            </button>
-                            <button class="btn btn-small" onclick="askSpecificStrategy('${play.symbol}', '${play.strategy}')" style="background: #22c55e;">
-                                Get Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            playsContainer.innerHTML = playsHTML;
-        }
-        
-        function getStrategyColor(strategy) {
-            if (strategy.includes('Call') || strategy.includes('Bull')) return '#22c55e';
-            if (strategy.includes('Put') || strategy.includes('Bear')) return '#ef4444';
-            if (strategy.includes('Straddle') || strategy.includes('Condor')) return '#7c3aed';
-            return '#6b7280';
-        }
-        
-        function updatePlaysStatus(message) {
-            const statusElement = document.getElementById('playsStatus');
-            if (statusElement) {
-                statusElement.textContent = message;
-            }
-        }
-        
-        // Removed old mock functions and replaced with live data functions
-        function refreshPlays() {
-            loadLivePlays();
-        }
-        
-        function askTomorrowPlay() {
-            switchTab('chat');
-            setTimeout(() => {
-                const input = document.getElementById('messageInput');
-                if (input) {
-                    input.value = "Give me tomorrow's best options play with specific entry and exit points";
-                    sendMessage();
-                }
-            }, 300);
-        }
-        
-        // Enhanced analyze ticker with proper error handling
-        async function analyzeTicker() {
-            const input = document.getElementById('tickerInput');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const symbol = input.value.trim().toUpperCase();
-            
-            if (!symbol) return;
-            
-            ticker = symbol;
-            
-            // Show loading state
-            const originalText = analyzeBtn.innerHTML;
-            analyzeBtn.innerHTML = '⏳ Loading...';
-            analyzeBtn.disabled = true;
-            
-            try {
-                // First get stock data
-                const stockResponse = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
-                const stockResult = await stockResponse.json();
-                
-                if (stockResult.error && !stockResult.fallback) {
-                    // API error, use fallback data
-                    stockData[symbol] = {
-                        price: (Math.random() * 200 + 50).toFixed(2),
-                        change: (Math.random() * 20 - 10).toFixed(2),
-                        changePercent: (Math.random() * 8 - 4).toFixed(2),
-                        volume: (Math.random() * 100 + 10).toFixed(1),
-                        high: (Math.random() * 220 + 60).toFixed(2),
-                        low: (Math.random() * 180 + 40).toFixed(2),
-                        open: (Math.random() * 200 + 50).toFixed(2),
-                        prevClose: (Math.random() * 200 + 50).toFixed(2),
-                        isLive: false
-                    };
-                    stockData.error = stockResult.error;
-                } else {
-                    // Real data or API fallback
-                    stockData[symbol] = {
-                        price: stockResult.price,
-                        change: stockResult.change,
-                        changePercent: stockResult.changePercent,
-                        volume: stockResult.volume,
-                        high: stockResult.high,
-                        low: stockResult.low,
-                        open: stockResult.open,
-                        prevClose: stockResult.prevClose,
-                        isLive: stockResult.isLive !== false
-                    };
-                    delete stockData.error;
-                }
-                
-                // Get AI analysis
-                try {
-                    const analysisResponse = await fetch('/.netlify/functions/claude-chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            message: `${symbol} options analysis with current data: Price ${stockData[symbol].price}, Change ${stockData[symbol].change} (${stockData[symbol].changePercent}%), Volume ${stockData[symbol].volume}M. Provide specific options strategies.`
-                        })
-                    });
-                    
-                    const analysisData = await analysisResponse.json();
-                    
-                    // Store analysis
-                    window.currentAnalysis = {
-                        ticker: symbol,
-                        aiResponse: analysisData.response,
-                        stockData: stockData[symbol],
-                        timestamp: new Date()
-                    };
-                } catch (analysisError) {
-                    console.error('Analysis error:', analysisError);
-                    window.currentAnalysis = {
-                        ticker: symbol,
-                        aiResponse: `${symbol} analysis shows ${stockData[symbol].change >= 0 ? 'bullish' : 'bearish'} momentum. Consider ${stockData[symbol].change >= 0 ? 'call options or bull spreads' : 'put options or protective strategies'}.`,
-                        stockData: stockData[symbol],
-                        timestamp: new Date()
-                    };
-                }
-                
-            } catch (error) {
-                console.error('Error analyzing ticker:', error);
-                
-                // Complete fallback
-                stockData[symbol] = {
-                    price: (Math.random() * 200 + 50).toFixed(2),
-                    change: (Math.random() * 20 - 10).toFixed(2),
-                    changePercent: (Math.random() * 8 - 4).toFixed(2),
-                    volume: (Math.random() * 100 + 10).toFixed(1),
-                    high: (Math.random() * 220 + 60).toFixed(2),
-                    low: (Math.random() * 180 + 40).toFixed(2),
-                    open: (Math.random() * 200 + 50).toFixed(2),
-                    prevClose: (Math.random() * 200 + 50).toFixed(2),
-                    isLive: false
-                };
-                stockData.error = 'API temporarily unavailable - using demo data';
-            } finally {
-                // Reset button
-                analyzeBtn.innerHTML = originalText;
-                analyzeBtn.disabled = false;
-                renderCurrentTab();
-            }
-        }
-        
-        // Quick analyze
-        async function quickAnalyze(symbol) {
-            document.getElementById('tickerInput').value = symbol;
-            await analyzeTicker();
-        }
-        
-        // Ask Rolo about ticker
-        function askRoloAbout(ticker) {
-            switchTab('chat');
-            setTimeout(() => {
-                const input = document.getElementById('messageInput');
-                if (input) {
-                    input.value = `${ticker} options strategies`;
-                    sendMessage();
-                }
-            }, 300);
-        }
-        
-        // Smart fallback responses - removed old generic version
     </script>
 </body>
 </html>
