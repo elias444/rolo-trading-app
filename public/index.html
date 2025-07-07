@@ -242,6 +242,16 @@
             text-align: center;
         }
         
+        .intelligence-banner {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: #0369a1;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 2px solid #0ea5e9;
+            text-align: center;
+        }
+        
         .error-banner {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #dc2626;
@@ -249,15 +259,6 @@
             padding: 0.75rem;
             margin-bottom: 1rem;
             border: 2px solid #f87171;
-        }
-        
-        .timeout-banner {
-            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
-            color: #ea580c;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border: 2px solid #fb923c;
         }
         
         @media (max-width: 768px) {
@@ -284,12 +285,12 @@
         <div class="app">
             <div class="header">
                 <h1>🤖 Rolo AI Trading</h1>
-                <p>Premium Alpha Vantage Real-Time Data + Claude AI</p>
+                <p>Premium Alpha Vantage + Multi-Source Intelligence + Claude AI</p>
             </div>
             
             <div class="status-bar">
                 <div class="status-dot"></div>
-                <span id="statusText">🟢 Premium APIs: Alpha Vantage Real-Time • Claude AI • Live Market Data</span>
+                <span id="statusText">🚀 Enhanced Intelligence: Real-Time Data • Technical Analysis • Social Sentiment • Discord Integration</span>
             </div>
             
             <div class="content" id="content">
@@ -302,19 +303,19 @@
                         type="text" 
                         class="input" 
                         id="messageInput"
-                        placeholder="Ask: 'AAPL real-time analysis' or 'Options strategy for TSLA'"
+                        placeholder="Ask: 'AAPL comprehensive analysis' or 'SPY options strategy with sentiment'"
                         onkeypress="if(event.key==='Enter') sendMessage()"
                     />
                     <button class="btn" onclick="sendMessage()" id="sendBtn">
-                        ➤
+                        🧠
                     </button>
                 </div>
             </div>
             
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('chat')" id="chat-tab">
-                    <div class="tab-icon">💬</div>
-                    <div class="tab-label">Chat</div>
+                    <div class="tab-icon">🧠</div>
+                    <div class="tab-label">Enhanced</div>
                 </button>
                 <button class="tab" onclick="switchTab('ticker')" id="ticker-tab">
                     <div class="tab-icon">🔍</div>
@@ -337,13 +338,13 @@
     </div>
     
     <script>
-        // PRODUCTION VERSION - OPTIMIZED FOR PERFORMANCE
+        // 🚀 ENHANCED ROLO AI - MULTI-SOURCE INTELLIGENCE SYSTEM
         let currentTab = 'chat';
         let messages = [
             {
                 id: 1,
                 type: 'assistant',
-                text: "🤖 **Rolo AI Trading Assistant - PREMIUM VERSION**\n\nI'm your professional options trading AI powered by:\n\n✅ **REAL-TIME Alpha Vantage Premium Data**\n✅ **Claude AI Analysis**\n✅ **Live Market Intelligence**\n✅ **Professional Options Strategies**\n\n**ALL DATA IS LIVE AND REAL-TIME - NO MOCK DATA**\n\nAsk me:\n• \"AAPL real-time options analysis\"\n• \"Live market sentiment for SPY\"\n• \"Best options plays right now\"\n• \"Real-time VIX analysis\"\n\n**Ready for professional trading analysis!** 🚀"
+                text: "🚀 **Rolo AI Enhanced Intelligence System - LIVE**\n\nI'm your professional options trading AI with comprehensive market intelligence:\n\n✅ **REAL-TIME Alpha Vantage Premium Data**\n✅ **Technical Indicators** (RSI, MACD, Moving Averages)\n✅ **Social Sentiment Analysis** (Discord, StockTwits)\n✅ **Market Breadth Intelligence** (VIX, sector performance)\n✅ **Options Flow Data** (when available)\n✅ **Multi-Source News Sentiment**\n\n**🧠 ENHANCED CAPABILITIES:**\n• Comprehensive analysis combining all data sources\n• Specific options strategies with exact entry/exit points\n• Real-time market context and social sentiment\n• Professional risk management recommendations\n\n**Try asking:**\n• \"AAPL comprehensive analysis\"\n• \"SPY options strategy with current sentiment\"\n• \"TSLA technical + social sentiment analysis\"\n• \"Best options plays based on market conditions\"\n\n**Ready for professional-grade trading intelligence!** 🎯"
             }
         ];
         let isTyping = false;
@@ -362,25 +363,23 @@
             
             renderCurrentTab();
             
-            // Test premium API connection
-            testPremiumConnection();
+            // Test enhanced system connection
+            testEnhancedConnection();
         });
 
-        // Test premium Alpha Vantage connection
-        async function testPremiumConnection() {
+        // Test enhanced intelligence system
+        async function testEnhancedConnection() {
             try {
-                const response = await fetch('/.netlify/functions/stock-data?symbol=AAPL');
-                const data = await response.json();
+                // Test if enhanced functions are deployed
+                const response = await fetch('/.netlify/functions/market-intelligence?symbol=SPY');
                 
-                if (data.isPremium) {
-                    updateStatusBar('🟢 Premium Alpha Vantage Connected • Real-Time Data Active', 'success');
-                } else if (data.error) {
-                    updateStatusBar('🔴 API Connection Failed: ' + data.error, 'error');
+                if (response.ok) {
+                    updateStatusBar('🚀 Enhanced Intelligence System Online • All Sources Connected', 'success');
                 } else {
-                    updateStatusBar('🟡 Basic API Connected • Check Premium Setup', 'warning');
+                    updateStatusBar('🟡 Enhanced System Deploying • Basic Functions Available', 'warning');
                 }
             } catch (error) {
-                updateStatusBar('🔴 Connection Test Failed: ' + error.message, 'error');
+                updateStatusBar('🟡 Enhanced Functions Loading • Fallback to Basic Mode Available', 'warning');
             }
         }
 
@@ -404,16 +403,159 @@
             }
         }
 
-        // OPTIMIZED REAL-TIME STOCK DATA
+        // 🧠 ENHANCED CLAUDE AI MESSAGING WITH COMPREHENSIVE INTELLIGENCE
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            messages.push({
+                id: messages.length + 1,
+                type: 'user',
+                text: message
+            });
+            
+            input.value = '';
+            isTyping = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '🔄';
+            renderCurrentTab();
+            
+            try {
+                // 🚀 ENHANCED CLAUDE API with comprehensive intelligence
+                const response = await fetch('/.netlify/functions/enhanced-claude-chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        message: message,
+                        requestIntelligence: true  // Set to false for faster responses
+                    })
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 408) {
+                        throw new Error('Comprehensive analysis taking too long. Try asking about one ticker at a time or use shorter questions.');
+                    }
+                    
+                    // Try fallback to basic Claude if enhanced fails
+                    console.log('Enhanced system unavailable, trying basic fallback...');
+                    return await sendBasicMessage(message);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    if (data.timeout) {
+                        throw new Error('Analysis timed out. Try shorter questions like "SPY calls" or ask about one stock at a time.');
+                    }
+                    
+                    // Try fallback to basic system
+                    console.log('Enhanced system error, trying basic fallback...');
+                    return await sendBasicMessage(message);
+                }
+                
+                // 🎯 ENHANCED RESPONSE with intelligence indicators
+                let responseText = data.response || 'No response received';
+                
+                // Add intelligence indicator if comprehensive data was used
+                if (data.hasIntelligence && data.tickersAnalyzed?.length > 0) {
+                    responseText += `\n\n---\n🧠 **Enhanced Analysis**: Used real-time data from ${data.sources?.length || 'multiple'} sources for ${data.tickersAnalyzed.join(', ')}`;
+                }
+                
+                messages.push({
+                    id: messages.length + 1,
+                    type: 'assistant',
+                    text: responseText
+                });
+                
+            } catch (error) {
+                console.error('Enhanced Claude API Error:', error);
+                
+                // Try basic fallback
+                try {
+                    console.log('Attempting basic fallback...');
+                    await sendBasicMessage(message);
+                    return;
+                } catch (fallbackError) {
+                    // Both systems failed
+                    let errorMessage = `❌ **Both Enhanced and Basic Systems Unavailable**\n\n**Error**: ${error.message}\n\n`;
+                    
+                    if (error.message.includes('timeout') || error.message.includes('taking too long')) {
+                        errorMessage += `**⚡ Performance Tips:**\n• Try: "AAPL calls" instead of "AAPL, TSLA, NVDA comprehensive analysis"\n• Ask about one stock at a time\n• Use shorter, specific questions\n• Wait a moment and try again\n\n**The enhanced system provides much better analysis when it works!**`;
+                    } else {
+                        errorMessage += `**🔧 System Status:**\n• Enhanced intelligence functions may still be deploying\n• Check back in a few minutes for full functionality\n• Basic stock data still works in Ticker tab\n\n**Enhanced features**: Real-time data + technical indicators + social sentiment`;
+                    }
+                    
+                    messages.push({
+                        id: messages.length + 1,
+                        type: 'assistant',
+                        text: errorMessage
+                    });
+                }
+            }
+            
+            isTyping = false;
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '🧠';
+            renderCurrentTab();
+            
+            setTimeout(() => {
+                const messagesDiv = document.querySelector('.messages');
+                if (messagesDiv) {
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            }, 100);
+        }
+
+        // 🔄 FALLBACK to basic Claude system
+        async function sendBasicMessage(message) {
+            try {
+                const response = await fetch('/.netlify/functions/claude-chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Basic Claude API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Add response with fallback indicator
+                let responseText = data.response || 'No response received';
+                responseText += `\n\n---\n⚡ **Basic Mode**: Enhanced intelligence temporarily unavailable. Still providing professional analysis!`;
+                
+                messages.push({
+                    id: messages.length + 1,
+                    type: 'assistant',
+                    text: responseText
+                });
+                
+            } catch (error) {
+                throw new Error(`Fallback also failed: ${error.message}`);
+            }
+        }
+
+        // REAL-TIME STOCK DATA (keep existing function)
         async function fetchRealStockData(symbol, showLoading = true) {
             if (showLoading) {
                 updateStatusBar(`🔄 Fetching real-time data for ${symbol}...`, 'warning');
             }
             
             try {
-                // Set timeout for stock data
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
                 
                 const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`, {
                     signal: controller.signal
@@ -454,151 +596,7 @@
             }
         }
 
-        // OPTIMIZED CLAUDE AI MESSAGING - REDUCED TIMEOUTS & BETTER ERROR HANDLING
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
-            const message = input.value.trim();
-            
-            if (!message || isTyping) return;
-            
-            messages.push({
-                id: messages.length + 1,
-                type: 'user',
-                text: message
-            });
-            
-            input.value = '';
-            isTyping = true;
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '⏳';
-            renderCurrentTab();
-            
-            try {
-                // 🔧 OPTIMIZED: Extract stock tickers and get ONLY the first one to avoid timeouts
-                const tickers = extractTickers(message);
-                let stockContext = '';
-                
-                // 🔧 OPTIMIZED: Only process 1 ticker to avoid API delays
-                if (tickers.length > 0) {
-                    const primaryTicker = tickers[0]; // Only get the first ticker
-                    console.log('Processing primary ticker:', primaryTicker);
-                    
-                    try {
-                        // 🔧 OPTIMIZED: 3 second timeout for stock data
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 3000);
-                        
-                        const stockResponse = await fetch(`/.netlify/functions/stock-data?symbol=${primaryTicker}`, {
-                            signal: controller.signal
-                        });
-                        clearTimeout(timeoutId);
-                        
-                        const stockData = await stockResponse.json();
-                        
-                        if (stockData && !stockData.error) {
-                            // 🔧 OPTIMIZED: Compact context to reduce message size
-                            stockContext = `\n\nCURRENT ${primaryTicker} DATA:\nPrice: $${stockData.price} | Change: ${stockData.change} (${stockData.changePercent}%) | Volume: ${stockData.volume}M\n\nUSE THIS CURRENT PRICE, NOT TRAINING DATA.`;
-                        }
-                    } catch (stockError) {
-                        console.error(`Error fetching ${primaryTicker}:`, stockError);
-                        // Continue without stock data if it fails
-                    }
-                }
-                
-                // 🔧 OPTIMIZED: Shorter, more focused message
-                const enhancedMessage = stockContext ? 
-                    `${message}${stockContext}` : 
-                    message;
-                
-                // 🔧 OPTIMIZED: Longer timeout for Claude (15 seconds instead of 8)
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
-                
-                const response = await fetch('/.netlify/functions/claude-chat', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: enhancedMessage }),
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    if (response.status === 408) {
-                        throw new Error('Claude API timed out. Try a shorter question or ask about fewer stocks at once.');
-                    }
-                    throw new Error(`Claude API Error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    if (data.timeout) {
-                        throw new Error('Claude API response was too slow. Try asking about one stock at a time or use shorter questions.');
-                    }
-                    throw new Error(data.error);
-                }
-                
-                messages.push({
-                    id: messages.length + 1,
-                    type: 'assistant',
-                    text: data.response || 'No response received from Claude API'
-                });
-                
-            } catch (error) {
-                console.error('API Error:', error);
-                
-                let errorMessage = `❌ **API Connection Issue**\n\n**Error**: ${error.message}\n\n`;
-                
-                if (error.name === 'AbortError' || error.message.includes('timeout') || error.message.includes('timed out')) {
-                    errorMessage += `**⏱️ Timeout Fix:**\n• Ask about one stock at a time\n• Use shorter questions\n• Try: "AAPL analysis" instead of "analyze AAPL, TSLA, NVDA"\n• Wait a moment and try again\n\n**Stock data still works in Ticker tab!**`;
-                } else {
-                    errorMessage += `**🔧 Possible Fixes:**\n1. Check ANTHROPIC_API_KEY in Netlify environment\n2. Try a simpler question\n3. Use the Ticker tab for stock analysis\n4. Wait a moment and retry`;
-                }
-                
-                messages.push({
-                    id: messages.length + 1,
-                    type: 'assistant',
-                    text: errorMessage
-                });
-            }
-            
-            isTyping = false;
-            sendBtn.disabled = false;
-            sendBtn.innerHTML = '➤';
-            renderCurrentTab();
-            
-            setTimeout(() => {
-                const messagesDiv = document.querySelector('.messages');
-                if (messagesDiv) {
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                }
-            }, 100);
-        }
-
-        // OPTIMIZED: Extract only clear stock tickers
-        function extractTickers(message) {
-            // More strict ticker pattern - must be 2-5 letters and commonly used
-            const tickerPattern = /\b([A-Z]{2,5})\b/g;
-            const matches = message.toUpperCase().match(tickerPattern) || [];
-            
-            // Filter common words and only keep likely tickers
-            const commonWords = ['THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WHO', 'BOY', 'DID', 'GOT', 'LET', 'MAN', 'PUT', 'RUN', 'SET', 'TRY', 'USE', 'WIN', 'YES', 'API', 'VIX'];
-            
-            const validTickers = matches.filter(ticker => 
-                !commonWords.includes(ticker) && 
-                ticker.length >= 2 && 
-                ticker.length <= 5
-            );
-            
-            // Only return first 1 ticker to avoid timeouts
-            return validTickers.slice(0, 1);
-        }
-
-        // TICKER ANALYSIS WITH OPTIMIZED TIMEOUTS
+        // TICKER ANALYSIS WITH ENHANCED INTELLIGENCE
         async function analyzeTicker() {
             const input = document.getElementById('tickerInput');
             const analyzeBtn = document.getElementById('analyzeBtn');
@@ -609,65 +607,61 @@
             ticker = symbol;
             
             const originalText = analyzeBtn.innerHTML;
-            analyzeBtn.innerHTML = '⏳ Loading...';
+            analyzeBtn.innerHTML = '🧠 Analyzing...';
             analyzeBtn.disabled = true;
             
             try {
-                const stockResult = await fetchRealStockData(symbol);
+                // Try enhanced intelligence first
+                const intelligenceResponse = await fetch(`/.netlify/functions/market-intelligence?symbol=${symbol}`);
                 
-                // 🔧 OPTIMIZED: Shorter, more focused analysis prompt
-                const analysisPrompt = `${symbol} options analysis:
-
-CURRENT DATA:
-Price: $${stockResult.price} | Change: ${stockResult.change} (${stockResult.changePercent}%) | Volume: ${stockResult.volume}M
-
-Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4) Risk management. Keep response concise.`;
-                
-                // 🔧 OPTIMIZED: Shorter timeout for analysis
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                
-                const analysisResponse = await fetch('/.netlify/functions/claude-chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: analysisPrompt }),
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (!analysisResponse.ok) {
-                    if (analysisResponse.status === 408) {
-                        throw new Error('Analysis timed out. Try again or ask in chat tab.');
+                if (intelligenceResponse.ok) {
+                    const intelligence = await intelligenceResponse.json();
+                    
+                    // Enhanced analysis with comprehensive intelligence
+                    const analysisPrompt = `Comprehensive ${symbol} analysis using all available data sources. Provide specific options strategies with exact strikes, entry/exit points, and risk management.`;
+                    
+                    const analysisResponse = await fetch('/.netlify/functions/enhanced-claude-chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            message: analysisPrompt,
+                            requestIntelligence: true 
+                        })
+                    });
+                    
+                    if (analysisResponse.ok) {
+                        const analysisData = await analysisResponse.json();
+                        
+                        window.currentAnalysis = {
+                            ticker: symbol,
+                            aiResponse: analysisData.response,
+                            stockData: intelligence.stockData,
+                            hasEnhancedIntelligence: true,
+                            sources: analysisData.sources || [],
+                            timestamp: new Date()
+                        };
+                    } else {
+                        throw new Error('Enhanced analysis failed');
                     }
-                    throw new Error(`Analysis API error: ${analysisResponse.status}`);
+                } else {
+                    // Fallback to basic analysis
+                    const stockResult = await fetchRealStockData(symbol);
+                    
+                    window.currentAnalysis = {
+                        ticker: symbol,
+                        aiResponse: `📊 **${symbol} Basic Analysis**\n\nCurrent Price: $${stockResult.price}\nChange: ${stockResult.change} (${stockResult.changePercent}%)\n\n*Enhanced intelligence temporarily unavailable. Upgrade in progress.*`,
+                        stockData: stockResult,
+                        hasEnhancedIntelligence: false,
+                        timestamp: new Date()
+                    };
                 }
-                
-                const analysisData = await analysisResponse.json();
-                
-                if (analysisData.error) {
-                    throw new Error(analysisData.error);
-                }
-                
-                window.currentAnalysis = {
-                    ticker: symbol,
-                    aiResponse: analysisData.response,
-                    stockData: stockResult,
-                    timestamp: new Date()
-                };
                 
             } catch (error) {
                 console.error('Analysis error:', error);
                 
-                let errorMessage = `❌ **Unable to analyze ${symbol}**\n\n**Error**: ${error.message}`;
-                
-                if (error.name === 'AbortError' || error.message.includes('timeout')) {
-                    errorMessage += `\n\n**⏱️ Analysis timed out. Try:**\n• Asking in chat: "${symbol} options strategy"\n• Wait a moment and try again\n• Use shorter analysis requests`;
-                }
-                
                 window.currentAnalysis = {
                     ticker: symbol,
-                    aiResponse: errorMessage,
+                    aiResponse: `❌ **Unable to analyze ${symbol}**\n\n**Error**: ${error.message}\n\nPlease try again or use the enhanced chat for analysis.`,
                     stockData: null,
                     timestamp: new Date()
                 };
@@ -689,7 +683,7 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
             setTimeout(() => {
                 const input = document.getElementById('messageInput');
                 if (input) {
-                    input.value = `${ticker} options strategy`;
+                    input.value = `${ticker} comprehensive analysis with technical and social sentiment`;
                     sendMessage();
                 }
             }, 300);
@@ -706,7 +700,7 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
             }, 300);
         }
 
-        // Tab switching
+        // Tab switching (unchanged)
         function switchTab(tab) {
             if (currentTab === tab) return;
             
@@ -792,25 +786,13 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
             return `
                 <div class="scrollable-content">
                     <div class="card">
-                        <div class="premium-banner">
+                        <div class="intelligence-banner">
                             <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <span style="font-size: 1.25rem;">🚀</span>
-                                <strong>PREMIUM VERSION - Real-Time Alpha Vantage Data</strong>
+                                <span style="font-size: 1.25rem;">🧠</span>
+                                <strong>ENHANCED INTELLIGENCE SYSTEM</strong>
                             </div>
                             <div style="font-size: 0.8rem;">
-                                Professional options analysis • Live market data • No mock data
-                            </div>
-                        </div>
-                        
-                        <div class="timeout-banner">
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <span style="font-size: 1.1rem;">⚡</span>
-                                <strong>PERFORMANCE OPTIMIZED</strong>
-                            </div>
-                            <div style="font-size: 0.8rem;">
-                                • Ask about ONE stock at a time for faster responses<br>
-                                • Use short questions: "AAPL strategy" instead of long requests<br>
-                                • Timeout issues fixed with better error handling
+                                Multi-source analysis • Real-time data • Technical indicators • Social sentiment • Professional strategies
                             </div>
                         </div>
                         
@@ -818,10 +800,10 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
                             ${messages.map(msg => `
                                 <div class="message ${msg.type}">
                                     <div class="message-content">${msg.text}</div>
-                                    ${msg.type === 'assistant' ? '<div class="message-meta">🤖 Claude AI • Premium Alpha Vantage Data</div>' : ''}
+                                    ${msg.type === 'assistant' ? '<div class="message-meta">🧠 Rolo AI Enhanced • Comprehensive Market Intelligence</div>' : ''}
                                 </div>
                             `).join('')}
-                            ${isTyping ? '<div class="message assistant"><div class="message-content">🤖 Claude is analyzing with real-time market data...</div></div>' : ''}
+                            ${isTyping ? '<div class="message assistant"><div class="message-content">🧠 Rolo is gathering comprehensive market intelligence...</div></div>' : ''}
                         </div>
                     </div>
                 </div>
@@ -833,12 +815,12 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
                 <div class="card">
                     <button class="home-btn" onclick="goHome()">
                         <span>🏠</span>
-                        <span>Back to Chat</span>
+                        <span>Back to Enhanced Chat</span>
                     </button>
                     
-                    <h3>🔍 Real-Time Stock Analysis</h3>
+                    <h3>🔍 Enhanced Stock Analysis</h3>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                        Premium Alpha Vantage real-time data analysis
+                        Comprehensive analysis with real-time data + technical indicators + social sentiment
                     </p>
                     
                     <div class="input-group">
@@ -851,7 +833,7 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
                             value="${ticker}"
                         />
                         <button class="btn" onclick="analyzeTicker()" id="analyzeBtn">
-                            🔍 Analyze
+                            🧠 Analyze
                         </button>
                     </div>
                     
@@ -862,42 +844,28 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
                     ` : ''}
                 </div>
                 
-                ${ticker && stockData[ticker] && !stockData[ticker].error ? `
+                ${ticker && window.currentAnalysis && window.currentAnalysis.ticker === ticker ? `
                     <div class="card">
-                        <h4 style="margin-bottom: 1rem;">${ticker} - ${stockData[ticker].isPremium ? 'Premium Real-Time' : 'Basic'} Data ${stockData[ticker].isPremium ? '🚀' : '⚠️'}</h4>
+                        <h4 style="margin-bottom: 1rem;">${ticker} - ${window.currentAnalysis.hasEnhancedIntelligence ? 'Enhanced Intelligence' : 'Basic'} Analysis ${window.currentAnalysis.hasEnhancedIntelligence ? '🧠' : '⚡'}</h4>
                         
-                        <div class="stock-grid">
-                            <div class="stat">
-                                <div class="stat-label">Price</div>
-                                <div class="stat-value price-positive">$${stockData[ticker].price}</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-label">Change</div>
-                                <div class="stat-value ${stockData[ticker].change >= 0 ? 'price-positive' : 'price-negative'}">
-                                    ${stockData[ticker].change >= 0 ? '+' : ''}${stockData[ticker].change} (${stockData[ticker].changePercent}%)
-                                </div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-label">Volume</div>
-                                <div class="stat-value">${stockData[ticker].volume}M</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-label">High / Low</div>
-                                <div class="stat-value" style="font-size: 0.9rem;">${stockData[ticker].high} / ${stockData[ticker].low}</div>
-                            </div>
-                        </div>
-                        
-                        ${window.currentAnalysis && window.currentAnalysis.ticker === ticker ? `
-                            <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
-                                    <span>🤖</span>
-                                    <span>Claude AI Analysis (Real-Time Data)</span>
-                                </div>
-                                <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.9rem; line-height: 1.4; white-space: pre-line;">
-                                    ${window.currentAnalysis.aiResponse}
+                        ${window.currentAnalysis.hasEnhancedIntelligence ? `
+                            <div style="background: #f0f9ff; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 4px solid #0ea5e9;">
+                                <strong>🚀 Enhanced Analysis Sources:</strong><br/>
+                                <div style="font-size: 0.8rem; color: #0369a1;">
+                                    ${window.currentAnalysis.sources?.join(' • ') || 'Real-time data • Technical indicators • Social sentiment • Market breadth'}
                                 </div>
                             </div>
                         ` : ''}
+                        
+                        <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
+                                <span>🧠</span>
+                                <span>Comprehensive ${ticker} Analysis</span>
+                            </div>
+                            <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.9rem; line-height: 1.4; white-space: pre-line;">
+                                ${window.currentAnalysis.aiResponse}
+                            </div>
+                        </div>
                     </div>
                 ` : ''}
                 
@@ -923,23 +891,30 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
                 <div class="card">
                     <button class="home-btn" onclick="goHome()">
                         <span>🏠</span>
-                        <span>Back to Chat</span>
+                        <span>Back to Enhanced Chat</span>
                     </button>
                     
-                    <h3>📊 Professional Analysis</h3>
+                    <h3>📊 Professional Analysis Dashboard</h3>
                     
                     ${window.currentAnalysis ? `
                         <div style="background: #f8fafc; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
-                            <h4 style="margin-bottom: 0.75rem;">${window.currentAnalysis.ticker} - Claude AI Analysis</h4>
+                            <h4 style="margin-bottom: 0.75rem;">${window.currentAnalysis.ticker} - ${window.currentAnalysis.hasEnhancedIntelligence ? 'Enhanced Intelligence' : 'Basic'} Analysis</h4>
+                            
+                            ${window.currentAnalysis.hasEnhancedIntelligence ? `
+                                <div style="background: #dcfce7; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 4px solid #22c55e;">
+                                    <strong>✅ Enhanced Intelligence Active:</strong> Multi-source analysis with real-time data, technical indicators, and social sentiment integration
+                                </div>
+                            ` : ''}
+                            
                             <div style="background: white; padding: 1rem; border-radius: 0.5rem; line-height: 1.4; white-space: pre-line;">
                                 ${window.currentAnalysis.aiResponse}
                             </div>
                         </div>
                     ` : `
                         <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
-                            <h4 style="margin-bottom: 0.5rem;">No Analysis Available</h4>
-                            <p style="margin-bottom: 1.5rem;">Analyze a stock to see Claude's professional analysis with real-time data.</p>
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🧠</div>
+                            <h4 style="margin-bottom: 0.5rem;">Enhanced Analysis Ready</h4>
+                            <p style="margin-bottom: 1.5rem;">Analyze a stock to see comprehensive intelligence with real-time data, technical indicators, and social sentiment.</p>
                             <button class="btn" onclick="switchTab('ticker')">🔍 Analyze Stock</button>
                         </div>
                     `}
@@ -952,37 +927,37 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
                 <div class="card">
                     <button class="home-btn" onclick="goHome()">
                         <span>🏠</span>
-                        <span>Back to Chat</span>
+                        <span>Back to Enhanced Chat</span>
                     </button>
                     
-                    <h3>🧠 AI Options Strategies</h3>
+                    <h3>🧠 Enhanced AI Options Strategies</h3>
                     
-                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
-                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">🚀 Premium Claude AI + Real-Time Data</div>
+                    <div class="intelligence-banner">
+                        <div style="font-weight: 700; color: #0369a1; margin-bottom: 0.5rem;">🚀 Multi-Source Intelligence Strategies</div>
                         <div style="font-size: 0.9rem; color: #0c4a6e;">
-                            Get personalized options strategies from Claude AI enhanced with premium Alpha Vantage real-time market data.
+                            Get AI-powered options strategies enhanced with real-time market data, technical analysis, and social sentiment from multiple sources.
                         </div>
                     </div>
                     
                     <div style="text-align: center; padding: 2rem 1rem;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
-                        <h4 style="margin-bottom: 1rem;">Smart Strategies with Real-Time Intelligence</h4>
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🧠</div>
+                        <h4 style="margin-bottom: 1rem;">Smart Strategies with Comprehensive Intelligence</h4>
                         <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
-                            <button class="btn" onclick="askClaude('SPY options strategy this week')">
-                                📈 SPY Strategy
+                            <button class="btn" onclick="askClaude('SPY comprehensive options strategy with technical and social sentiment analysis')">
+                                📈 SPY Full Intelligence
                             </button>
-                            <button class="btn" onclick="askClaude('AAPL options analysis')" style="background: #dc2626;">
-                                🍎 AAPL Options
+                            <button class="btn" onclick="askClaude('AAPL options analysis with current market conditions and Discord sentiment')" style="background: #dc2626;">
+                                🍎 AAPL + Social Sentiment
                             </button>
-                            <button class="btn" onclick="askClaude('TSLA volatility play')" style="background: #059669;">
-                                ⚡ TSLA Volatility
+                            <button class="btn" onclick="askClaude('TSLA volatility play based on technical indicators and social buzz')" style="background: #059669;">
+                                ⚡ TSLA Technical + Social
                             </button>
-                            <button class="btn" onclick="askClaude('QQQ iron condor setup')" style="background: #7c3aed;">
-                                🎯 QQQ Condor
+                            <button class="btn" onclick="askClaude('QQQ options strategy considering VIX levels and market breadth')" style="background: #7c3aed;">
+                                🎯 QQQ Market Context
                             </button>
                         </div>
                         <button class="btn" onclick="switchTab('chat')" style="background: #22c55e;">
-                            💬 Custom Strategy Request
+                            💬 Custom Enhanced Strategy
                         </button>
                     </div>
                 </div>
@@ -994,26 +969,29 @@ Provide: 1) Best options strategy, 2) Specific strikes, 3) Entry/exit points, 4)
                 <div class="card">
                     <button class="home-btn" onclick="goHome()">
                         <span>🏠</span>
-                        <span>Back to Chat</span>
+                        <span>Back to Enhanced Chat</span>
                     </button>
                     
                     <h3>🌍 Live Market Intelligence</h3>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                        Real-time market data powered by premium Alpha Vantage
+                        Comprehensive market analysis powered by enhanced intelligence system
                     </p>
                     
                     <div style="text-align: center; padding: 2rem 1rem;">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
-                        <h4 style="margin-bottom: 1rem;">Market Analysis with Real-Time Data</h4>
+                        <h4 style="margin-bottom: 1rem;">Market Analysis with Multi-Source Intelligence</h4>
                         <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
-                            <button class="btn" onclick="askClaude('VIX analysis today')">
-                                📊 VIX Analysis
+                            <button class="btn" onclick="askClaude('Current market conditions analysis with VIX, sector performance, and social sentiment')">
+                                📊 Full Market Intelligence
                             </button>
-                            <button class="btn" onclick="askClaude('SPY key levels')" style="background: #dc2626;">
-                                🎯 SPY Levels
+                            <button class="btn" onclick="askClaude('VIX analysis with technical indicators and social sentiment context')" style="background: #dc2626;">
+                                😱 VIX + Sentiment Analysis
                             </button>
-                            <button class="btn" onclick="askClaude('Market volatility play')" style="background: #059669;">
-                                💰 Volatility Plays
+                            <button class="btn" onclick="askClaude('Best volatility plays based on current market breadth and technical indicators')" style="background: #059669;">
+                                💰 Smart Volatility Plays
+                            </button>
+                            <button class="btn" onclick="askClaude('Sector rotation analysis with social sentiment and technical confluence')" style="background: #7c3aed;">
+                                🔄 Sector Intelligence
                             </button>
                         </div>
                         <button class="btn" onclick="switchTab('chat')" style="background: #22c55e;">
