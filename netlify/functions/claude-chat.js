@@ -1,4 +1,4 @@
-// netlify/functions/claude-chat.js - CURRENT CONTEXT VERSION
+// netlify/functions/claude-chat.js - EXTENDED TIMEOUT VERSION
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -82,9 +82,9 @@ NEVER reference dates from 2023 or earlier years. Always provide strategies with
 
 Focus on actionable strategies for TODAY'S market, not historical data.`;
 
-    // Set timeout for API call
+    // 🔧 FIXED: Extended timeout from 8 to 20 seconds
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -140,12 +140,12 @@ Focus on actionable strategies for TODAY'S market, not historical data.`;
       clearTimeout(timeoutId);
       
       if (fetchError.name === 'AbortError') {
-        console.log('Claude API call timed out after 8 seconds');
+        console.log('Claude API call timed out after 20 seconds');
         return {
           statusCode: 408,
           headers,
           body: JSON.stringify({ 
-            error: 'Claude API response too slow. Try a shorter question or try again.',
+            error: 'Claude API response too slow after 20 seconds. The question may be too complex. Try a shorter question or try again.',
             timeout: true
           })
         };
