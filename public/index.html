@@ -437,7 +437,7 @@
             }
         }
 
-        // CLAUDE AI MESSAGING - REAL ONLY
+        // CLAUDE AI MESSAGING WITH REAL-TIME STOCK DATA
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -458,12 +458,45 @@
             renderCurrentTab();
             
             try {
+                // Extract stock tickers from the message
+                const tickers = extractTickers(message);
+                let stockContext = '';
+                
+                // If user mentions stock tickers, get real-time data first
+                if (tickers.length > 0) {
+                    console.log('Detected tickers:', tickers);
+                    
+                    for (const ticker of tickers.slice(0, 3)) { // Max 3 stocks to avoid delays
+                        try {
+                            const stockResponse = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
+                            const stockData = await stockResponse.json();
+                            
+                            if (stockData && !stockData.error) {
+                                stockContext += `\n\nREAL-TIME DATA FOR ${ticker} (${stockData.timestamp}):\n`;
+                                stockContext += `- Current Price: ${stockData.price}\n`;
+                                stockContext += `- Change: ${stockData.change} (${stockData.changePercent}%)\n`;
+                                stockContext += `- Volume: ${stockData.volume}M shares\n`;
+                                stockContext += `- Day Range: ${stockData.low} - ${stockData.high}\n`;
+                                stockContext += `- Previous Close: ${stockData.prevClose}\n`;
+                                stockContext += `- Data Source: ${stockData.dataSource}\n`;
+                            }
+                        } catch (stockError) {
+                            console.error(`Error fetching ${ticker} data:`, stockError);
+                        }
+                    }
+                }
+                
+                // Enhance message with real-time stock context
+                const enhancedMessage = stockContext ? 
+                    `${message}\n\n--- CURRENT REAL-TIME MARKET DATA ---${stockContext}\n\nPlease use the REAL-TIME prices above, not any older training data. Base your analysis on these current prices.` : 
+                    message;
+                
                 const response = await fetch('/.netlify/functions/claude-chat', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ message: enhancedMessage })
                 });
                 
                 if (!response.ok) {
@@ -503,6 +536,22 @@
                     messagesDiv.scrollTop = messagesDiv.scrollHeight;
                 }
             }, 100);
+        }
+
+        // Extract stock tickers from message
+        function extractTickers(message) {
+            // Look for 1-5 letter combinations that could be stock tickers
+            const tickerPattern = /\b[A-Z]{1,5}\b/g;
+            const matches = message.toUpperCase().match(tickerPattern) || [];
+            
+            // Filter common words that aren't tickers
+            const commonWords = ['THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'GET', 'HAS', 'HIM', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WHO', 'BOY', 'DID', 'DOT', 'GOT', 'LET', 'MAN', 'PUT', 'RUN', 'SET', 'TRY', 'USE', 'WIN', 'YES'];
+            
+            return matches.filter(ticker => 
+                !commonWords.includes(ticker) && 
+                ticker.length >= 1 && 
+                ticker.length <= 5
+            );
         }
 
         // TICKER ANALYSIS WITH REAL DATA
