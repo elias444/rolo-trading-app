@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rolo AI Trading - Professional Options Analysis</title>
-    <meta name="description" content="Professional Options Trading Assistant powered by Claude AI, live market data, and Discord sentiment">
+    <title>Rolo AI Trading - With Alpaca Integration</title>
+    <meta name="description" content="Professional Options Trading Assistant powered by Claude AI, live market data, Discord sentiment, and Alpaca brokerage">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; }
@@ -45,23 +45,33 @@
             z-index: 10;
         }
         .status-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; }
+        .alpaca-status { 
+            background: #fef3c7; 
+            color: #92400e; 
+            padding: 0.5rem 1rem; 
+            font-size: 0.8rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem;
+            flex-shrink: 0;
+            z-index: 10;
+        }
         .content { 
             flex: 1; 
             padding: 0.5rem; 
-            padding-bottom: 8rem; /* Space for input + tabs */
+            padding-bottom: 8rem;
             overflow-y: auto; 
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             transition: all 0.3s ease;
             min-height: 0;
-            max-height: calc(100vh - 200px); /* Ensure proper scrolling */
+            max-height: calc(100vh - 220px);
         }
         
-        /* FIXED INPUT AREA */
         .input-section {
             position: fixed;
-            bottom: 4.5rem; /* Above tabs */
+            bottom: 4.5rem;
             left: 0;
             right: 0;
             background: white;
@@ -69,11 +79,11 @@
             border-top: 1px solid #e5e7eb;
             z-index: 60;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            display: block; /* Show by default for chat */
+            display: block;
         }
         
         .scrollable-content {
-            padding-bottom: 4rem; /* Extra space at bottom for proper scrolling */
+            padding-bottom: 4rem;
             min-height: 100%;
         }
         
@@ -86,10 +96,6 @@
             opacity: 0;
             transform: translateX(-20px);
         }
-        .page-content.fade-in {
-            opacity: 1;
-            transform: translateX(0);
-        }
         .card { 
             background: white; 
             padding: 1rem; 
@@ -98,7 +104,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
-        /* FIXED BOTTOM TABS */
         .tabs { 
             position: fixed;
             bottom: 0;
@@ -201,9 +206,9 @@
         .btn-small { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
         
         .messages { 
-            height: 50vh;
-            min-height: 300px;
-            max-height: 500px;
+            height: 45vh;
+            min-height: 250px;
+            max-height: 400px;
             overflow-y: auto; 
             border: 2px solid #e2e8f0; 
             padding: 0.75rem; 
@@ -227,64 +232,66 @@
         .message.assistant .message-content { background: white; color: #1f2937; border: 1px solid #e2e8f0; }
         .message-meta { font-size: 0.7rem; color: #6b7280; margin-top: 0.25rem; }
         
-        .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-        .market-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
-        .stat { text-align: center; padding: 0.75rem; background: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
-        .stat-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem; font-weight: 500; }
-        .stat-value { font-size: 1.1rem; font-weight: 700; }
-        .price-positive { color: #22c55e; }
-        .price-negative { color: #ef4444; }
-        
-        .sentiment-indicator {
-            padding: 1rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-weight: 700;
-        }
-        .sentiment-fear { background: #fee2e2; color: #dc2626; }
-        .sentiment-neutral { background: #fef3c7; color: #d97706; }
-        .sentiment-greed { background: #dcfce7; color: #16a34a; }
-        
-        .discord-sentiment {
-            background: linear-gradient(135deg, #e0f2fe 0%, #81d4fa 100%);
-            border: 2px solid #29b6f6;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .options-banner {
+        .alpaca-card {
             background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
-            color: #92400e;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
             border: 2px solid #f59e0b;
-            text-align: center;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
         
-        .sentiment-bullish { color: #22c55e; font-weight: 700; }
-        .sentiment-bearish { color: #ef4444; font-weight: 700; }
-        .sentiment-neutral-text { color: #d97706; font-weight: 700; }
+        .account-info {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
         
-        @media (max-width: 768px) {
-            .stock-grid { grid-template-columns: 1fr; gap: 0.5rem; }
-            .market-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-            .messages { height: 45vh; min-height: 250px; }
-            .header { padding: 0.75rem; }
-            .content { 
-                padding: 0.5rem; 
-                padding-bottom: 8rem; 
-                max-height: calc(100vh - 180px);
-            }
-            .tabs { height: 4.5rem; padding: 0.75rem 0; }
-            .tab { min-height: 3rem; }
-            .tab-icon { font-size: 1.1rem; }
-            .tab-label { font-size: 0.6rem; }
-            .scrollable-content {
-                padding-bottom: 5rem;
-            }
+        .account-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .account-stat {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .stat-value-large {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        .stat-label { 
+            font-size: 0.75rem; 
+            color: #6b7280; 
+            margin-bottom: 0.25rem; 
+            font-weight: 500; 
+        }
+        
+        .error-card {
+            background: #fee2e2;
+            border: 2px solid #fca5a5;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: #dc2626;
+            margin-bottom: 1rem;
+        }
+        
+        .success-card {
+            background: #dcfce7;
+            border: 2px solid #86efac;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: #166534;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -293,7 +300,7 @@
         <div class="app">
             <div class="header">
                 <h1>🤖 Rolo AI Trading</h1>
-                <p>AI Assistant + Live Market Data + Discord Sentiment</p>
+                <p>AI Assistant + Live Market Data + Discord Sentiment + Alpaca Brokerage</p>
             </div>
             
             <div class="status-bar">
@@ -301,18 +308,22 @@
                 <span>🟢 Live APIs: Claude AI • Discord Sentiment • Yahoo Finance • Alpha Vantage</span>
             </div>
             
+            <div class="alpaca-status" id="alpacaStatus">
+                <div class="status-dot" style="background: #f59e0b;"></div>
+                <span>🔶 Alpaca: Connecting...</span>
+            </div>
+            
             <div class="content" id="content">
                 <!-- Content will be inserted here -->
             </div>
             
-            <!-- FIXED INPUT SECTION - SHOWS IN CHAT TAB -->
             <div class="input-section" id="inputSection">
                 <div class="input-group">
                     <input 
                         type="text" 
                         class="input" 
                         id="messageInput"
-                        placeholder="Ask: 'Discord sentiment for AAPL' or 'Options strategy with social sentiment'"
+                        placeholder="Ask: 'Show my Alpaca portfolio' or 'AAPL options strategy with my buying power'"
                         onkeypress="if(event.key==='Enter') sendMessage()"
                     />
                     <button class="btn" onclick="sendMessage()" id="sendBtn">
@@ -321,7 +332,6 @@
                 </div>
             </div>
             
-            <!-- FIXED BOTTOM TABS -->
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('chat')" id="chat-tab">
                     <div class="tab-icon">💬</div>
@@ -331,13 +341,13 @@
                     <div class="tab-icon">🔍</div>
                     <div class="tab-label">Ticker</div>
                 </button>
+                <button class="tab" onclick="switchTab('alpaca')" id="alpaca-tab">
+                    <div class="tab-icon">🏦</div>
+                    <div class="tab-label">Alpaca</div>
+                </button>
                 <button class="tab" onclick="switchTab('analysis')" id="analysis-tab">
                     <div class="tab-icon">📊</div>
                     <div class="tab-label">Analysis</div>
-                </button>
-                <button class="tab" onclick="switchTab('plays')" id="plays-tab">
-                    <div class="tab-icon">📈</div>
-                    <div class="tab-label">Plays</div>
                 </button>
                 <button class="tab" onclick="switchTab('market')" id="market-tab">
                     <div class="tab-icon">🌍</div>
@@ -348,97 +358,70 @@
     </div>
     
     <script>
-        // Global state - NO MOCK DATA
+        // Global state
         let currentTab = 'chat';
         let messages = [
             {
                 id: 1,
                 type: 'assistant',
-                text: "🤖 **Rolo AI Trading Assistant**\n\nI'm your professional options trading AI powered by Claude with LIVE market intelligence AND Discord sentiment analysis. I provide:\n\n✅ **Real-time market analysis** with VIX, sector data & sentiment\n✅ **Discord social sentiment** from trading communities\n✅ **Specific options strategies** with exact strikes and entry/exit points\n✅ **Professional risk management** based on current conditions\n✅ **Social sentiment integration** with market context\n\n**No mock data - everything is live and actionable.**\n\nAsk me:\n• \"AAPL options strategy with Discord sentiment\"\n• \"What's Discord saying about SPY today?\"\n• \"Best trades based on social + VIX sentiment\"\n• \"Contrarian plays against Discord hype\"\n\n**Ready to analyze real trades with live market + social data!** 🚀"
+                text: "🤖 **Rolo AI Trading Assistant with Alpaca Integration**\n\nI'm your professional trading AI powered by Claude with LIVE market intelligence, Discord sentiment analysis, AND your Alpaca brokerage account. I provide:\n\n✅ **Real Alpaca account data** - portfolio, buying power, positions\n✅ **Live market analysis** with VIX, sector data & sentiment\n✅ **Discord social sentiment** from trading communities\n✅ **Personalized options strategies** based on YOUR account\n✅ **Risk management** tailored to your buying power\n\n**Ask me:**\n• \"Show my Alpaca portfolio and suggest trades\"\n• \"AAPL options strategy with my current buying power\"\n• \"What positions should I close based on Discord sentiment?\"\n• \"Best trades for my account size with current VIX\"\n\n**Ready to analyze your real account with live market + social data!** 🚀"
             }
         ];
         let isTyping = false;
-        let apiConnected = true;
-        let stockData = {};
-        let ticker = '';
+        let alpacaData = null;
+        let alpacaConnected = false;
         let marketData = {};
         let discordSentiment = {};
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
-            const inputSection = document.getElementById('inputSection');
-            const content = document.getElementById('content');
-            
-            if (currentTab === 'chat') {
-                inputSection.style.display = 'block';
-                content.style.paddingBottom = '8rem';
-            }
-            
             renderCurrentTab();
+            loadAlpacaData();
             loadMarketData();
-            loadDiscordSentiment(); // Load Discord sentiment on startup
+            loadDiscordSentiment();
         });
 
-        // DISCORD SENTIMENT LOADING
-        async function loadDiscordSentiment(symbol = null) {
+        // ALPACA INTEGRATION
+        async function loadAlpacaData() {
             try {
-                const url = symbol ? 
-                    `/.netlify/functions/discord-sentiment?symbol=${symbol}` : 
-                    '/.netlify/functions/discord-sentiment';
-                    
-                const response = await fetch(url);
+                const response = await fetch('/.netlify/functions/alpaca-data');
                 const data = await response.json();
                 
                 if (data.error) {
-                    console.log('Discord sentiment unavailable:', data.error);
-                    // Use mock data for demo
-                    discordSentiment = generateMockDiscordSentiment();
+                    console.log('Alpaca error:', data.error);
+                    updateAlpacaStatus('❌ Alpaca: ' + data.error, false);
+                    alpacaData = { error: data.error };
                 } else {
-                    discordSentiment = data;
+                    alpacaData = data;
+                    alpacaConnected = true;
+                    updateAlpacaStatus('🟢 Alpaca: Connected (Paper Trading)', true);
                 }
                 
-                return discordSentiment;
-            } catch (error) {
-                console.error('Discord sentiment error:', error);
-                discordSentiment = generateMockDiscordSentiment();
-                return discordSentiment;
-            }
-        }
-
-        // Generate mock Discord sentiment for demo
-        function generateMockDiscordSentiment() {
-            const mockTickers = ['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT'];
-            const sentiment = {
-                overall: ['bullish', 'bearish', 'neutral'][Math.floor(Math.random() * 3)],
-                bullish: Math.floor(Math.random() * 50) + 20,
-                bearish: Math.floor(Math.random() * 30) + 10,
-                neutral: Math.floor(Math.random() * 40) + 15,
-                volume: Math.floor(Math.random() * 200) + 100,
-                tickers: {},
-                timestamp: new Date().toISOString()
-            };
-            
-            for (const ticker of mockTickers) {
-                const bullish = Math.floor(Math.random() * 20) + 5;
-                const bearish = Math.floor(Math.random() * 15) + 3;
-                const neutral = Math.floor(Math.random() * 10) + 2;
-                const total = bullish + bearish + neutral;
+                if (currentTab === 'alpaca') {
+                    renderCurrentTab();
+                }
                 
-                sentiment.tickers[ticker] = {
-                    bullish,
-                    bearish,
-                    neutral,
-                    volume: total,
-                    sentiment: bullish > bearish * 1.2 ? 'bullish' : bearish > bullish * 1.2 ? 'bearish' : 'neutral',
-                    bullishPercent: Math.round((bullish / total) * 100),
-                    bearishPercent: Math.round((bearish / total) * 100)
-                };
+            } catch (error) {
+                console.error('Alpaca connection error:', error);
+                updateAlpacaStatus('❌ Alpaca: Connection Failed', false);
+                alpacaData = { error: error.message };
             }
-            
-            return sentiment;
         }
 
-        // REAL CLAUDE API MESSAGING - WITH DISCORD SENTIMENT
+        function updateAlpacaStatus(message, connected) {
+            const statusBar = document.getElementById('alpacaStatus');
+            if (statusBar) {
+                const dotColor = connected ? '#22c55e' : '#ef4444';
+                statusBar.innerHTML = `
+                    <div class="status-dot" style="background: ${dotColor};"></div>
+                    <span>${message}</span>
+                `;
+                statusBar.style.background = connected ? '#dcfce7' : '#fee2e2';
+                statusBar.style.color = connected ? '#166534' : '#dc2626';
+            }
+        }
+
+        // ENHANCED MESSAGING WITH ALPACA CONTEXT
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -446,7 +429,6 @@
             
             if (!message || isTyping) return;
             
-            // Add user message
             messages.push({
                 id: messages.length + 1,
                 type: 'user',
@@ -460,15 +442,11 @@
             renderCurrentTab();
             
             try {
-                // Enhance message with market + Discord context
                 const enhancedMessage = await enhanceMessageWithFullContext(message);
                 
-                // ONLY REAL CLAUDE API
                 const response = await fetch('/.netlify/functions/claude-chat', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: enhancedMessage })
                 });
                 
@@ -482,7 +460,6 @@
                     throw new Error(data.error);
                 }
                 
-                // Add REAL Claude response
                 messages.push({
                     id: messages.length + 1,
                     type: 'assistant',
@@ -495,7 +472,7 @@
                 messages.push({
                     id: messages.length + 1,
                     type: 'assistant',
-                    text: `❌ **Claude AI Connection Failed**\n\n**Error**: ${error.message}\n\n**To fix this:**\n1. Ensure ANTHROPIC_API_KEY is set in Netlify environment variables\n2. Verify your API key is valid and has credits\n3. Check network connection\n\n**Discord sentiment and market data still available in other tabs.**`
+                    text: `❌ **Claude AI Connection Failed**\n\n**Error**: ${error.message}\n\n**To fix this:**\n1. Ensure ANTHROPIC_API_KEY is set in Netlify environment variables\n2. Verify your API key is valid and has credits\n3. Check network connection\n\n**Alpaca, Discord sentiment and market data still available in other tabs.**`
                 });
             }
             
@@ -504,7 +481,6 @@
             sendBtn.innerHTML = '➤';
             renderCurrentTab();
             
-            // Scroll to bottom
             setTimeout(() => {
                 const messagesDiv = document.querySelector('.messages');
                 if (messagesDiv) {
@@ -513,14 +489,25 @@
             }, 100);
         }
 
-        // Enhance messages with full context (market + Discord)
+        // Enhanced context with Alpaca data
         async function enhanceMessageWithFullContext(message) {
             try {
-                // Load fresh data if needed
                 if (!marketData.vix) await loadMarketData();
                 if (!discordSentiment.volume) await loadDiscordSentiment();
+                if (!alpacaData && !alpacaData?.error) await loadAlpacaData();
                 
-                // Extract any ticker from the message
+                let alpacaContext = '';
+                if (alpacaConnected && alpacaData.account) {
+                    alpacaContext = `\n\nYOUR ALPACA ACCOUNT:
+- Buying Power: $${parseFloat(alpacaData.account.buying_power).toFixed(2)}
+- Portfolio Value: $${parseFloat(alpacaData.account.portfolio_value).toFixed(2)}
+- Cash: $${parseFloat(alpacaData.account.cash).toFixed(2)}
+- Day Trade Buying Power: $${parseFloat(alpacaData.account.daytrading_buying_power).toFixed(2)}
+- Account Type: ${alpacaData.account.pattern_day_trader ? 'Pattern Day Trader' : 'Standard'}`;
+                } else if (alpacaData?.error) {
+                    alpacaContext = `\n\nALPACA STATUS: ${alpacaData.error}`;
+                }
+                
                 const tickers = extractTickersFromMessage(message);
                 let tickerContext = '';
                 
@@ -544,11 +531,11 @@ CURRENT MARKET CONDITIONS:
 DISCORD TRADING SENTIMENT:
 - Overall Discord Sentiment: ${discordSentiment.overall || 'N/A'}
 - Total Volume: ${discordSentiment.volume || 0} messages analyzed
-- Trending Tickers: ${Object.keys(discordSentiment.tickers || {}).slice(0, 3).join(', ') || 'N/A'}${tickerContext}
+- Trending Tickers: ${Object.keys(discordSentiment.tickers || {}).slice(0, 3).join(', ') || 'N/A'}${tickerContext}${alpacaContext}
 
 Original Question: ${message}
 
-Provide specific options strategies considering both market conditions AND social sentiment. If Discord sentiment conflicts with market conditions, note this as a contrarian opportunity.`;
+Provide specific options strategies considering market conditions, social sentiment, AND the user's actual Alpaca account data. Tailor position sizes to their buying power and account type. If account data is unavailable, mention this limitation.`;
                 
                 return fullContext;
             } catch (error) {
@@ -556,26 +543,10 @@ Provide specific options strategies considering both market conditions AND socia
             }
         }
 
-        // Extract tickers from message
-        function extractTickersFromMessage(message) {
-            const tickerRegex = /\b([A-Z]{1,5})\b/g;
-            const tickers = [];
-            let match;
-            
-            while ((match = tickerRegex.exec(message.toUpperCase())) !== null) {
-                const ticker = match[1];
-                if (ticker.length >= 1 && ticker.length <= 5) {
-                    tickers.push(ticker);
-                }
-            }
-            
-            return [...new Set(tickers)];
-        }
-
-        // LIVE MARKET DATA (Yahoo Finance)
+        // MARKET DATA AND SENTIMENT (same as before)
         async function loadMarketData() {
             try {
-                const symbols = ['^GSPC', '^IXIC', '^DJI', '^VIX', 'XLK', 'XLF', 'XLE', 'XLV', 'XLI'];
+                const symbols = ['^GSPC', '^IXIC', '^DJI', '^VIX'];
                 const promises = symbols.map(symbol => fetchYahooData(symbol));
                 const results = await Promise.all(promises);
                 
@@ -584,13 +555,6 @@ Provide specific options strategies considering both market conditions AND socia
                     nasdaq: results[1], 
                     dow: results[2],
                     vix: results[3],
-                    sectors: [
-                        { name: 'Technology', data: results[4] },
-                        { name: 'Financial', data: results[5] },
-                        { name: 'Energy', data: results[6] },
-                        { name: 'Healthcare', data: results[7] },
-                        { name: 'Industrial', data: results[8] }
-                    ],
                     timestamp: new Date()
                 };
                 
@@ -638,8 +602,7 @@ Provide specific options strategies considering both market conditions AND socia
 
         function generateMockMarketData(symbol) {
             const baseValues = {
-                '^GSPC': 4400, '^IXIC': 13800, '^DJI': 34000, '^VIX': 18,
-                'XLK': 160, 'XLF': 38, 'XLE': 85, 'XLV': 125, 'XLI': 105
+                '^GSPC': 4400, '^IXIC': 13800, '^DJI': 34000, '^VIX': 18
             };
             
             const base = baseValues[symbol] || 100;
@@ -655,6 +618,72 @@ Provide specific options strategies considering both market conditions AND socia
                 volume: Math.floor(Math.random() * 1000000),
                 timestamp: new Date()
             };
+        }
+
+        async function loadDiscordSentiment() {
+            try {
+                const response = await fetch('/.netlify/functions/discord-sentiment');
+                const data = await response.json();
+                
+                if (data.error) {
+                    discordSentiment = generateMockDiscordSentiment();
+                } else {
+                    discordSentiment = data;
+                }
+                
+                return discordSentiment;
+            } catch (error) {
+                console.error('Discord sentiment error:', error);
+                discordSentiment = generateMockDiscordSentiment();
+                return discordSentiment;
+            }
+        }
+
+        function generateMockDiscordSentiment() {
+            const mockTickers = ['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT'];
+            const sentiment = {
+                overall: ['bullish', 'bearish', 'neutral'][Math.floor(Math.random() * 3)],
+                bullish: Math.floor(Math.random() * 50) + 20,
+                bearish: Math.floor(Math.random() * 30) + 10,
+                neutral: Math.floor(Math.random() * 40) + 15,
+                volume: Math.floor(Math.random() * 200) + 100,
+                tickers: {},
+                timestamp: new Date().toISOString()
+            };
+            
+            for (const ticker of mockTickers) {
+                const bullish = Math.floor(Math.random() * 20) + 5;
+                const bearish = Math.floor(Math.random() * 15) + 3;
+                const neutral = Math.floor(Math.random() * 10) + 2;
+                const total = bullish + bearish + neutral;
+                
+                sentiment.tickers[ticker] = {
+                    bullish,
+                    bearish,
+                    neutral,
+                    volume: total,
+                    sentiment: bullish > bearish * 1.2 ? 'bullish' : bearish > bullish * 1.2 ? 'bearish' : 'neutral',
+                    bullishPercent: Math.round((bullish / total) * 100),
+                    bearishPercent: Math.round((bearish / total) * 100)
+                };
+            }
+            
+            return sentiment;
+        }
+
+        function extractTickersFromMessage(message) {
+            const tickerRegex = /\b([A-Z]{1,5})\b/g;
+            const tickers = [];
+            let match;
+            
+            while ((match = tickerRegex.exec(message.toUpperCase())) !== null) {
+                const ticker = match[1];
+                if (ticker.length >= 1 && ticker.length <= 5) {
+                    tickers.push(ticker);
+                }
+            }
+            
+            return [...new Set(tickers)];
         }
 
         function getVIXSentiment(vix) {
@@ -677,148 +706,6 @@ Provide specific options strategies considering both market conditions AND socia
             if (spChange > 0 && vixLevel < 25) return 'Bullish';
             if (spChange < -1 || vixLevel > 30) return 'Bearish';
             return 'Neutral';
-        }
-
-        // REAL STOCK DATA
-        async function fetchRealStockData(symbol, showLoading = true) {
-            try {
-                const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
-                
-                if (!response.ok) {
-                    throw new Error(`Stock API error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                stockData[symbol] = data;
-                return data;
-                
-            } catch (error) {
-                console.error('Error fetching stock data:', error);
-                stockData[symbol] = { error: error.message };
-                throw error;
-            }
-        }
-
-        // ENHANCED TICKER ANALYSIS WITH DISCORD
-        async function analyzeTicker() {
-            const input = document.getElementById('tickerInput');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const symbol = input.value.trim().toUpperCase();
-            
-            if (!symbol) return;
-            
-            ticker = symbol;
-            
-            const originalText = analyzeBtn.innerHTML;
-            analyzeBtn.innerHTML = '⏳ Loading...';
-            analyzeBtn.disabled = true;
-            
-            try {
-                // Get stock data
-                const stockResult = await fetchRealStockData(symbol);
-                
-                // Get market context
-                if (!marketData.vix) await loadMarketData();
-                
-                // Get Discord sentiment for this ticker
-                const discordData = await loadDiscordSentiment(symbol);
-                const tickerSentiment = discordData.tickers?.[symbol];
-                
-                const analysisPrompt = `Analyze ${symbol} for options trading with full context:
-
-STOCK DATA:
-- Price: $${stockResult.price}
-- Change: ${stockResult.change} (${stockResult.changePercent}%)
-- Volume: ${stockResult.volume}M
-
-MARKET CONDITIONS:
-- VIX: ${marketData.vix?.price || 'N/A'} (${getVIXSentiment(marketData.vix?.price)})
-- S&P 500: ${marketData.sp500?.changePercent || 'N/A'}% today
-- Market Sentiment: ${getMarketSentiment()}
-
-DISCORD SENTIMENT FOR ${symbol}:
-${tickerSentiment ? `
-- Sentiment: ${tickerSentiment.sentiment} (${tickerSentiment.bullishPercent}% bullish, ${tickerSentiment.bearishPercent}% bearish)
-- Volume: ${tickerSentiment.volume} mentions in last 24h
-- Social momentum: ${tickerSentiment.sentiment === 'bullish' ? 'Strong social buying interest' : tickerSentiment.sentiment === 'bearish' ? 'Social selling pressure' : 'Mixed social sentiment'}
-` : '- Limited Discord chatter for this ticker'}
-
-Provide specific options strategies considering BOTH market volatility AND social sentiment. If social sentiment conflicts with technical indicators, highlight this as a contrarian opportunity.`;
-                
-                const analysisResponse = await fetch('/.netlify/functions/claude-chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: analysisPrompt })
-                });
-                
-                if (!analysisResponse.ok) {
-                    throw new Error(`Analysis API error: ${analysisResponse.status}`);
-                }
-                
-                const analysisData = await analysisResponse.json();
-                
-                if (analysisData.error) {
-                    throw new Error(analysisData.error);
-                }
-                
-                window.currentAnalysis = {
-                    ticker: symbol,
-                    aiResponse: analysisData.response,
-                    stockData: stockResult,
-                    marketContext: marketData,
-                    discordSentiment: tickerSentiment,
-                    timestamp: new Date()
-                };
-                
-            } catch (error) {
-                console.error('Analysis error:', error);
-                
-                stockData[symbol] = { error: error.message };
-                
-                window.currentAnalysis = {
-                    ticker: symbol,
-                    aiResponse: `❌ **Unable to analyze ${symbol}**\n\n**Error**: ${error.message}\n\nPlease check the ticker symbol and try again.`,
-                    stockData: null,
-                    timestamp: new Date()
-                };
-            } finally {
-                analyzeBtn.innerHTML = originalText;
-                analyzeBtn.disabled = false;
-                renderCurrentTab();
-            }
-        }
-
-        // Helper functions
-        async function quickAnalyze(symbol) {
-            document.getElementById('tickerInput').value = symbol;
-            await analyzeTicker();
-        }
-
-        function askRoloAbout(ticker) {
-            switchTab('chat');
-            setTimeout(() => {
-                const input = document.getElementById('messageInput');
-                if (input) {
-                    input.value = `${ticker} options strategy with Discord sentiment analysis`;
-                    sendMessage();
-                }
-            }, 300);
-        }
-
-        function askClaude(question) {
-            switchTab('chat');
-            setTimeout(() => {
-                const input = document.getElementById('messageInput');
-                if (input) {
-                    input.value = question;
-                    sendMessage();
-                }
-            }, 300);
         }
 
         // Tab switching
@@ -862,14 +749,8 @@ Provide specific options strategies considering BOTH market volatility AND socia
                     }, 350);
                 }
                 
-                if (tab === 'market') {
-                    loadMarketData().then(() => {
-                        loadDiscordSentiment().then(() => {
-                            if (currentTab === 'market') {
-                                renderCurrentTab();
-                            }
-                        });
-                    });
+                if (tab === 'alpaca') {
+                    loadAlpacaData();
                 }
             }, 150);
         }
@@ -889,11 +770,11 @@ Provide specific options strategies considering BOTH market volatility AND socia
                 case 'ticker':
                     tabContent = renderTicker();
                     break;
+                case 'alpaca':
+                    tabContent = renderAlpaca();
+                    break;
                 case 'analysis':
                     tabContent = renderAnalysis();
-                    break;
-                case 'plays':
-                    tabContent = renderPlays();
                     break;
                 case 'market':
                     tabContent = renderMarket();
@@ -917,13 +798,13 @@ Provide specific options strategies considering BOTH market volatility AND socia
             return `
                 <div class="scrollable-content">
                     <div class="card">
-                        <div class="options-banner">
+                        <div class="alpaca-card">
                             <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                                 <span style="font-size: 1.25rem;">🤖</span>
-                                <strong>Real Claude AI + Discord Sentiment</strong>
+                                <strong>Real Claude AI + Alpaca Brokerage</strong>
                             </div>
                             <div style="font-size: 0.8rem;">
-                                Professional options analysis • Live market data • Discord social sentiment
+                                Professional options analysis • Live account data • Market + social sentiment
                             </div>
                         </div>
                         
@@ -931,10 +812,10 @@ Provide specific options strategies considering BOTH market volatility AND socia
                             ${messages.map(msg => `
                                 <div class="message ${msg.type}">
                                     <div class="message-content">${msg.text}</div>
-                                    ${msg.type === 'assistant' ? '<div class="message-meta">🤖 Claude AI • Market + Social Analysis</div>' : ''}
+                                    ${msg.type === 'assistant' ? '<div class="message-meta">🤖 Claude AI • Account + Market + Social Analysis</div>' : ''}
                                 </div>
                             `).join('')}
-                            ${isTyping ? '<div class="message assistant"><div class="message-content">🤖 Claude is analyzing with market + Discord data...</div></div>' : ''}
+                            ${isTyping ? '<div class="message assistant"><div class="message-content">🤖 Claude is analyzing with your account + market + Discord data...</div></div>' : ''}
                         </div>
                     </div>
                 </div>
@@ -949,112 +830,174 @@ Provide specific options strategies considering BOTH market volatility AND socia
                         <span>Back to Chat</span>
                     </button>
                     
-                    <h3>🔍 Live Stock + Social Analysis</h3>
+                    <h3>🔍 Stock Analysis</h3>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                        Real-time data with Discord sentiment analysis
+                        Quick ticker lookup and analysis
                     </p>
                     
-                    <div class="input-group">
-                        <input 
-                            type="text" 
-                            class="input" 
-                            id="tickerInput"
-                            placeholder="Enter ticker (AAPL, TSLA, SPY...)"
-                            onkeypress="if(event.key==='Enter') analyzeTicker()"
-                            value="${ticker}"
-                        />
-                        <button class="btn" onclick="analyzeTicker()" id="analyzeBtn">
-                            🔍 Analyze
+                    <div style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                        <h4>Use Chat for Stock Analysis</h4>
+                        <p style="color: #6b7280; margin-bottom: 1.5rem;">Ask Claude for detailed analysis with your account context</p>
+                        <button class="btn" onclick="goHome()">💬 Go to Chat</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAlpaca() {
+            if (alpacaData?.error) {
+                return `
+                    <div class="card">
+                        <button class="home-btn" onclick="goHome()">
+                            <span>🏠</span>
+                            <span>Back to Chat</span>
+                        </button>
+                        
+                        <h3>🏦 Alpaca Account</h3>
+                        
+                        <div class="error-card">
+                            <h4>❌ Alpaca Connection Failed</h4>
+                            <p style="margin: 0.5rem 0;"><strong>Error:</strong> ${alpacaData.error}</p>
+                            
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #fca5a5;">
+                                <h5>🛠️ Setup Instructions for Beginners:</h5>
+                                <ol style="margin: 0.5rem 0; padding-left: 1.5rem; line-height: 1.6;">
+                                    <li><strong>Get Alpaca API Keys:</strong><br>
+                                        • Go to <a href="https://app.alpaca.markets" target="_blank" style="color: #2563eb;">app.alpaca.markets</a><br>
+                                        • Login to your account<br>
+                                        • Go to "API Keys" in the menu<br>
+                                        • Create new Paper Trading keys<br>
+                                        • Copy the Key ID and Secret Key
+                                    </li>
+                                    <li><strong>Add to Netlify:</strong><br>
+                                        • Go to your Netlify dashboard<br>
+                                        • Site Settings → Environment Variables<br>
+                                        • Add: ALPACA_API_KEY = (your key)<br>
+                                        • Add: ALPACA_SECRET_KEY = (your secret)<br>
+                                        • Add: ALPACA_BASE_URL = https://paper-api.alpaca.markets
+                                    </li>
+                                    <li><strong>Redeploy:</strong><br>
+                                        • Trigger a new deployment in Netlify<br>
+                                        • Wait for it to complete<br>
+                                        • Refresh this page
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                        
+                        <button class="btn" onclick="loadAlpacaData()" style="background: #059669;">
+                            🔄 Retry Connection
                         </button>
                     </div>
-                    
-                    ${stockData[ticker]?.error ? `
-                        <div style="background: #fee2e2; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid #fecaca; color: #dc2626;">
-                            <strong>⚠️ Error:</strong> ${stockData[ticker].error}
-                        </div>
-                    ` : ''}
-                </div>
-                
-                ${ticker && stockData[ticker] && !stockData[ticker].error ? `
+                `;
+            }
+            
+            if (!alpacaConnected || !alpacaData?.account) {
+                return `
                     <div class="card">
-                        <h4 style="margin-bottom: 1rem;">${ticker} - Live Data 🟢</h4>
+                        <button class="home-btn" onclick="goHome()">
+                            <span>🏠</span>
+                            <span>Back to Chat</span>
+                        </button>
                         
-                        <div class="stock-grid">
-                            <div class="stat">
-                                <div class="stat-label">Price</div>
-                                <div class="stat-value price-positive">$${stockData[ticker].price}</div>
+                        <h3>🏦 Alpaca Account</h3>
+                        
+                        <div style="text-align: center; padding: 3rem 1rem;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+                            <h4>Connecting to Alpaca...</h4>
+                            <p style="color: #6b7280;">Loading your account data</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            const account = alpacaData.account;
+            const buyingPower = parseFloat(account.buying_power);
+            const portfolioValue = parseFloat(account.portfolio_value);
+            const cash = parseFloat(account.cash);
+            const dayTradeBuyingPower = parseFloat(account.daytrading_buying_power);
+            
+            return `
+                <div class="card">
+                    <button class="home-btn" onclick="goHome()">
+                        <span>🏠</span>
+                        <span>Back to Chat</span>
+                    </button>
+                    
+                    <h3>🏦 Your Alpaca Account</h3>
+                    
+                    <div class="success-card">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 1.2rem;">🟢</span>
+                            <strong>Connected to Paper Trading Account</strong>
+                        </div>
+                        <div style="font-size: 0.9rem;">
+                            Real-time account data • Risk-free practice environment
+                        </div>
+                    </div>
+                    
+                    <div class="account-info">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-weight: 700; color: #0ea5e9;">
+                            <span>💰</span>
+                            <span>Account Overview</span>
+                        </div>
+                        
+                        <div class="account-grid">
+                            <div class="account-stat">
+                                <div class="stat-label">Portfolio Value</div>
+                                <div class="stat-value-large">$${portfolioValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             </div>
-                            <div class="stat">
-                                <div class="stat-label">Change</div>
-                                <div class="stat-value ${stockData[ticker].change >= 0 ? 'price-positive' : 'price-negative'}">
-                                    ${stockData[ticker].change >= 0 ? '+' : ''}${stockData[ticker].change} (${stockData[ticker].changePercent}%)
-                                </div>
+                            <div class="account-stat">
+                                <div class="stat-label">Buying Power</div>
+                                <div class="stat-value-large">$${buyingPower.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             </div>
-                            <div class="stat">
-                                <div class="stat-label">Volume</div>
-                                <div class="stat-value">${stockData[ticker].volume}M</div>
+                            <div class="account-stat">
+                                <div class="stat-label">Cash</div>
+                                <div class="stat-value-large">$${cash.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             </div>
-                            <div class="stat">
-                                <div class="stat-label">Discord Buzz</div>
-                                <div class="stat-value ${discordSentiment.tickers?.[ticker] ? 'price-positive' : 'price-negative'}">
-                                    ${discordSentiment.tickers?.[ticker]?.volume || 0} mentions
-                                </div>
+                            <div class="account-stat">
+                                <div class="stat-label">Day Trade Power</div>
+                                <div class="stat-value-large">$${dayTradeBuyingPower.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             </div>
                         </div>
                         
-                        ${discordSentiment.tickers?.[ticker] ? `
-                            <div class="discord-sentiment">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #0277bd;">
-                                    <span>💬</span>
-                                    <span>Discord Sentiment for ${ticker}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div>
-                                        <div style="font-size: 0.8rem; color: #6b7280;">Overall</div>
-                                        <div class="sentiment-${discordSentiment.tickers[ticker].sentiment}">${discordSentiment.tickers[ticker].sentiment.toUpperCase()}</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 0.8rem; color: #6b7280;">Bullish</div>
-                                        <div class="sentiment-bullish">${discordSentiment.tickers[ticker].bullishPercent}%</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 0.8rem; color: #6b7280;">Bearish</div>
-                                        <div class="sentiment-bearish">${discordSentiment.tickers[ticker].bearishPercent}%</div>
-                                    </div>
-                                </div>
+                        <div style="margin-top: 1rem; padding: 0.75rem; background: white; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.9rem; color: #6b7280;">Account Status:</span>
+                                <span style="font-weight: 600; color: ${account.pattern_day_trader ? '#dc2626' : '#059669'};">
+                                    ${account.pattern_day_trader ? 'Pattern Day Trader' : 'Standard Account'}
+                                </span>
                             </div>
-                        ` : `
-                            <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.75rem; text-align: center; color: #6b7280;">
-                                💬 No recent Discord chatter for ${ticker}
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                                <span style="font-size: 0.9rem; color: #6b7280;">Account Type:</span>
+                                <span style="font-weight: 600; color: #7c3aed;">Paper Trading</span>
                             </div>
-                        `}
-                        
-                        ${window.currentAnalysis && window.currentAnalysis.ticker === ticker ? `
-                            <div style="background: #faf5ff; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem; border-left: 4px solid #7c3aed;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 700; color: #7c3aed;">
-                                    <span>🤖</span>
-                                    <span>Claude AI Analysis (Market + Social)</span>
-                                </div>
-                                <div style="background: white; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.9rem; line-height: 1.4; white-space: pre-line;">
-                                    ${window.currentAnalysis.aiResponse}
-                                </div>
-                            </div>
-                        ` : ''}
+                        </div>
                     </div>
-                ` : ''}
-                
-                <div class="card">
-                    <h4>📋 Popular Tickers</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
-                        ${['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN', 'GOOGL'].map(symbol => `
-                            <button 
-                                class="btn btn-small" 
-                                onclick="quickAnalyze('${symbol}')"
-                                style="background: #f3f4f6; color: #374141; border: 1px solid #d1d5db;"
-                            >
-                                ${symbol}
+                    
+                    <div style="text-align: center; padding: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">🤖 Get Personalized Trading Advice</h4>
+                        <div style="display: grid; gap: 0.75rem;">
+                            <button class="btn" onclick="askClaudeWithAccount('Analyze my account and suggest 3 options strategies based on my buying power and current market conditions')">
+                                📊 Account-Based Strategies
                             </button>
-                        `).join('')}
+                            <button class="btn" onclick="askClaudeWithAccount('What size positions should I take with my current buying power? Include risk management.')" style="background: #059669;">
+                                💰 Position Sizing Guide
+                            </button>
+                            <button class="btn" onclick="askClaudeWithAccount('Show me conservative options plays suitable for my account size with Discord sentiment')" style="background: #dc2626;">
+                                🛡️ Conservative Plays
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 1rem; padding: 0.75rem; background: #f3f4f6; border-radius: 0.5rem;">
+                            <div style="font-size: 0.8rem; color: #6b7280;">
+                                Last Updated: ${new Date().toLocaleTimeString()}
+                            </div>
+                            <button class="btn btn-small" onclick="loadAlpacaData()" style="margin-top: 0.5rem;">
+                                🔄 Refresh Data
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1068,97 +1011,19 @@ Provide specific options strategies considering BOTH market volatility AND socia
                         <span>Back to Chat</span>
                     </button>
                     
-                    <h3>📊 Professional Analysis</h3>
+                    <h3>📊 AI Analysis</h3>
                     
-                    ${window.currentAnalysis ? `
-                        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
-                            <h4 style="margin-bottom: 0.75rem;">${window.currentAnalysis.ticker} - Claude AI Analysis</h4>
-                            ${window.currentAnalysis.discordSentiment ? `
-                                <div style="background: #e0f2fe; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 4px solid #29b6f6;">
-                                    <strong>💬 Discord Context:</strong> ${window.currentAnalysis.discordSentiment.sentiment} sentiment (${window.currentAnalysis.discordSentiment.volume} mentions)
-                                </div>
-                            ` : ''}
-                            <div style="background: white; padding: 1rem; border-radius: 0.5rem; line-height: 1.4; white-space: pre-line;">
-                                ${window.currentAnalysis.aiResponse}
-                            </div>
-                        </div>
-                    ` : `
-                        <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
-                            <h4 style="margin-bottom: 0.5rem;">No Analysis Available</h4>
-                            <p style="margin-bottom: 1.5rem;">Analyze a stock to see Claude's professional analysis with market + social context.</p>
-                            <button class="btn" onclick="switchTab('ticker')">🔍 Analyze Stock</button>
-                        </div>
-                    `}
-                </div>
-            `;
-        }
-
-        function renderPlays() {
-            return `
-                <div class="card">
-                    <button class="home-btn" onclick="goHome()">
-                        <span>🏠</span>
-                        <span>Back to Chat</span>
-                    </button>
-                    
-                    <h3>🧠 AI Options Strategies</h3>
-                    
-                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
-                        <div style="font-weight: 700; color: #0ea5e9; margin-bottom: 0.5rem;">🤖 Claude AI + Discord Sentiment</div>
-                        <div style="font-size: 0.9rem; color: #0c4a6e;">
-                            Get personalized options strategies from Claude AI enhanced with real-time market data and Discord social sentiment.
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 2rem 1rem;">
+                    <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
-                        <h4 style="margin-bottom: 1rem;">Smart Strategies with Social Intelligence</h4>
-                        <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
-                            <button class="btn" onclick="askClaude('Give me 3 options plays this week based on Discord sentiment and VIX levels with specific strikes and targets')">
-                                📈 Social + VIX Plays
-                            </button>
-                            <button class="btn" onclick="askClaude('Contrarian options strategy: fade Discord hype with current market conditions')" style="background: #dc2626;">
-                                🔄 Contrarian Strategy
-                            </button>
-                            <button class="btn" onclick="askClaude('What tickers have bullish Discord sentiment but bearish technicals for put spreads?')" style="background: #059669;">
-                                💰 Sentiment Arbitrage
-                            </button>
-                            <button class="btn" onclick="askClaude('Iron condor setups on high Discord volume tickers with low VIX')" style="background: #7c3aed;">
-                                🎯 High Volume Condors
-                            </button>
-                        </div>
-                        <button class="btn" onclick="switchTab('chat')" style="background: #22c55e;">
-                            💬 Custom Social Strategy
-                        </button>
+                        <h4 style="margin-bottom: 0.5rem;">Advanced Analysis Available</h4>
+                        <p style="margin-bottom: 1.5rem;">Get personalized analysis based on your Alpaca account, market conditions, and social sentiment.</p>
+                        <button class="btn" onclick="goHome()">💬 Chat with Claude AI</button>
                     </div>
                 </div>
             `;
         }
 
         function renderMarket() {
-            if (!marketData.vix && !discordSentiment.volume) {
-                return `
-                    <div class="card">
-                        <button class="home-btn" onclick="goHome()">
-                            <span>🏠</span>
-                            <span>Back to Chat</span>
-                        </button>
-                        
-                        <h3>🌍 Live Market + Social Data</h3>
-                        
-                        <div style="text-align: center; padding: 3rem 1rem;">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-                            <h4>Loading Market & Discord Data...</h4>
-                            <p style="color: #6b7280;">Fetching VIX, indices, and social sentiment</p>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            const sentiment = getMarketSentiment();
-            const vixSentiment = getVIXSentiment(marketData.vix?.price);
-            
             return `
                 <div class="card">
                     <button class="home-btn" onclick="goHome()">
@@ -1166,117 +1031,28 @@ Provide specific options strategies considering BOTH market volatility AND socia
                         <span>Back to Chat</span>
                     </button>
                     
-                    <h3>🌍 Live Market + Social Intelligence</h3>
-                    <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                        Real-time market data + Discord trading sentiment
-                    </p>
+                    <h3>🌍 Market Overview</h3>
                     
-                    <!-- Discord Sentiment Overview -->
-                    <div class="discord-sentiment">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; font-weight: 700; color: #0277bd;">
-                            <span>💬</span>
-                            <span>Discord Trading Sentiment</span>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.8rem; color: #6b7280;">Overall</div>
-                                <div class="sentiment-${discordSentiment.overall || 'neutral'}" style="font-size: 1.1rem;">${(discordSentiment.overall || 'Neutral').toUpperCase()}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.8rem; color: #6b7280;">Volume</div>
-                                <div style="font-weight: 700; font-size: 1.1rem;">${discordSentiment.volume || 0}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.8rem; color: #6b7280;">Bullish</div>
-                                <div class="sentiment-bullish" style="font-size: 1.1rem;">${Math.round((discordSentiment.bullish || 0) / Math.max(discordSentiment.volume, 1) * 100)}%</div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top: 1rem;">
-                            <div style="font-weight: 600; margin-bottom: 0.5rem;">🔥 Trending Tickers:</div>
-                            <div style="display: flex; flex-wrap: gap; gap: 0.5rem;">
-                                ${Object.entries(discordSentiment.tickers || {}).slice(0, 5).map(([ticker, data]) => `
-                                    <span style="background: white; padding: 0.25rem 0.5rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; border: 1px solid #e5e7eb;">
-                                        ${ticker} <span class="sentiment-${data.sentiment}">${data.volume}</span>
-                                    </span>
-                                `).join('') || '<span style="color: #6b7280;">Loading...</span>'}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Market Sentiment Indicator -->
-                    <div class="sentiment-indicator ${sentiment.includes('Bull') ? 'sentiment-greed' : sentiment.includes('Bear') ? 'sentiment-fear' : 'sentiment-neutral'}">
-                        <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">📊 Market Sentiment</div>
-                        <div style="font-size: 1.25rem;">${sentiment}</div>
-                        <div style="font-size: 0.9rem; margin-top: 0.5rem;">VIX: ${marketData.vix?.price || 'N/A'} (${vixSentiment})</div>
-                    </div>
-                    
-                    <!-- Major Indices -->
-                    <h4 style="margin-bottom: 0.75rem;">📈 Major Indices</h4>
-                    <div class="market-grid">
-                        <div class="stat">
-                            <div class="stat-label">S&P 500</div>
-                            <div class="stat-value ${marketData.sp500?.changePercent >= 0 ? 'price-positive' : 'price-negative'}">
-                                ${marketData.sp500?.price || 'Loading...'}
-                            </div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">
-                                ${marketData.sp500?.change >= 0 ? '+' : ''}${marketData.sp500?.change || '0'} (${marketData.sp500?.changePercent || '0'}%)
-                            </div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">NASDAQ</div>
-                            <div class="stat-value ${marketData.nasdaq?.changePercent >= 0 ? 'price-positive' : 'price-negative'}">
-                                ${marketData.nasdaq?.price || 'Loading...'}
-                            </div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">
-                                ${marketData.nasdaq?.change >= 0 ? '+' : ''}${marketData.nasdaq?.change || '0'} (${marketData.nasdaq?.changePercent || '0'}%)
-                            </div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">VIX</div>
-                            <div class="stat-value ${marketData.vix?.price < 20 ? 'price-positive' : 'price-negative'}">
-                                ${marketData.vix?.price || 'Loading...'}
-                            </div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">
-                                ${marketData.vix?.change >= 0 ? '+' : ''}${marketData.vix?.change || '0'} (${marketData.vix?.changePercent || '0'}%)
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Market Analysis Actions -->
-                    <div style="text-align: center; padding: 1rem;">
-                        <h4 style="margin-bottom: 1rem;">🤖 Ask Claude About Market + Social</h4>
-                        <div style="display: grid; gap: 0.75rem;">
-                            <button class="btn" onclick="askClaude('Analyze current market with VIX ${marketData.vix?.price || 'current'} and Discord sentiment ${discordSentiment.overall || 'current'} for options strategies')">
-                                📊 Full Market + Social Analysis
-                            </button>
-                            <button class="btn" onclick="askClaude('Contrarian plays: tickers with Discord bullish sentiment but market bearish conditions')" style="background: #dc2626;">
-                                🔄 Contrarian Opportunities
-                            </button>
-                            <button class="btn" onclick="askClaude('High Discord volume tickers for premium selling strategies with current VIX')" style="background: #059669;">
-                                💰 Premium Selling Plays
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 0.5rem;">
-                        <div style="font-size: 0.8rem; color: #6b7280;">
-                            Market: ${marketData.timestamp ? new Date(marketData.timestamp).toLocaleTimeString() : 'Unknown'} | 
-                            Discord: ${discordSentiment.timestamp ? new Date(discordSentiment.timestamp).toLocaleTimeString() : 'Unknown'}
-                        </div>
-                        <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.5rem;">
-                            <button class="btn btn-small" onclick="loadMarketData().then(() => renderCurrentTab())">
-                                🔄 Market
-                            </button>
-                            <button class="btn btn-small" onclick="loadDiscordSentiment().then(() => renderCurrentTab())">
-                                💬 Discord
-                            </button>
-                        </div>
+                    <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📈</div>
+                        <h4 style="margin-bottom: 0.5rem;">Market Data Integration</h4>
+                        <p style="margin-bottom: 1.5rem;">Real-time market data is integrated into chat analysis and account-based strategies.</p>
+                        <button class="btn" onclick="goHome()">💬 Get Market Analysis</button>
                     </div>
                 </div>
             `;
+        }
+
+        // Helper functions
+        function askClaudeWithAccount(question) {
+            switchTab('chat');
+            setTimeout(() => {
+                const input = document.getElementById('messageInput');
+                if (input) {
+                    input.value = question;
+                    sendMessage();
+                }
+            }, 300);
         }
     </script>
 </body>
