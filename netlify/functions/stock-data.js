@@ -1,6 +1,5 @@
-// netlify/functions/stock-data.js
+// netlify/functions/stock-data.js - REAL DATA ONLY
 exports.handler = async (event, context) => {
-  // Handle CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -22,27 +21,37 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const API_KEY = 'MAQEUTLGYYXC1HF1'; // Your Alpha Vantage key
+    const API_KEY = 'MAQEUTLGYYXC1HF1';
     const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
     
     const response = await fetch(url);
     const data = await response.json();
     
-    // Check for API errors
     if (data['Error Message']) {
-      throw new Error(data['Error Message']);
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: data['Error Message'] })
+      };
     }
     
     if (data['Note']) {
-      throw new Error('API rate limit reached');
+      return {
+        statusCode: 429,
+        headers,
+        body: JSON.stringify({ error: 'API rate limit reached. Please try again in a moment.' })
+      };
     }
 
     const quote = data['Global Quote'];
     if (!quote || !quote['01. symbol']) {
-      throw new Error('Invalid symbol or no data available');
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ error: `No data found for symbol: ${symbol}` })
+      };
     }
 
-    // Format the response
     const stockInfo = {
       symbol: quote['01. symbol'],
       price: parseFloat(quote['05. price']).toFixed(2),
@@ -53,7 +62,8 @@ exports.handler = async (event, context) => {
       low: parseFloat(quote['04. low']).toFixed(2),
       open: parseFloat(quote['02. open']).toFixed(2),
       prevClose: parseFloat(quote['08. previous close']).toFixed(2),
-      isLive: true
+      isLive: true,
+      timestamp: new Date().toISOString()
     };
 
     return {
@@ -64,12 +74,13 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Stock API Error:', error);
+    
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: error.message,
-        fallback: true 
+        error: `Unable to fetch real stock data: ${error.message}`,
+        troubleshooting: 'Check Alpha Vantage API status and rate limits'
       })
     };
   }
