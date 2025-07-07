@@ -1,4 +1,4 @@
-// netlify/functions/stock-data.js - PRODUCTION VERSION WITH PREMIUM ALPHA VANTAGE
+// netlify/functions/stock-data.js - DEBUG VERSION
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -21,63 +21,79 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Get PREMIUM API key from environment variables
+    // Get API key from environment variables
     const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
+    
+    console.log('=== DEBUG INFO ===');
+    console.log('API Key exists:', !!API_KEY);
+    console.log('API Key length:', API_KEY ? API_KEY.length : 0);
+    console.log('API Key first 4 chars:', API_KEY ? API_KEY.substring(0, 4) : 'NONE');
+    console.log('Symbol requested:', symbol);
     
     if (!API_KEY) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
-          error: 'Alpha Vantage API key not configured. Please set ALPHA_VANTAGE_API_KEY environment variable.' 
+          error: 'ALPHA_VANTAGE_API_KEY environment variable not set in Netlify',
+          debug: 'Check Netlify Site Settings → Environment Variables',
+          variableName: 'ALPHA_VANTAGE_API_KEY'
         })
       };
     }
 
-    // Use PREMIUM Alpha Vantage endpoint for REAL-TIME data
+    // Use Alpha Vantage API
     const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
     
-    console.log(`Fetching real-time data for ${symbol} with premium API`);
+    console.log('Making API request to Alpha Vantage...');
     
     const response = await fetch(url);
     const data = await response.json();
     
-    // Handle API errors properly
+    console.log('API Response received:', Object.keys(data));
+    
+    // Debug: Log the response
     if (data['Error Message']) {
+      console.log('Alpha Vantage Error:', data['Error Message']);
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
           error: `Alpha Vantage Error: ${data['Error Message']}`,
+          debug: 'Invalid symbol or API issue',
           symbol: symbol
         })
       };
     }
     
     if (data['Note']) {
+      console.log('Alpha Vantage Note:', data['Note']);
       return {
         statusCode: 429,
         headers,
         body: JSON.stringify({ 
-          error: 'API rate limit reached. Your premium plan may need upgrading.',
-          details: data['Note']
+          error: 'API rate limit reached',
+          details: data['Note'],
+          debug: 'Your premium plan may have limits or key might be basic tier'
         })
       };
     }
 
     const quote = data['Global Quote'];
     if (!quote || !quote['01. symbol']) {
+      console.log('No quote data found:', data);
       return {
         statusCode: 404,
         headers,
         body: JSON.stringify({ 
-          error: `No real-time data available for symbol: ${symbol}. Verify symbol is correct.`,
-          symbol: symbol
+          error: `No data available for symbol: ${symbol}`,
+          debug: 'Verify symbol is correct',
+          rawResponse: data
         })
       };
     }
 
-    // Format real-time stock data
+    // Format stock data
     const stockInfo = {
       symbol: quote['01. symbol'],
       price: parseFloat(quote['05. price']).toFixed(2),
@@ -91,10 +107,11 @@ exports.handler = async (event, context) => {
       isLive: true,
       isPremium: true,
       timestamp: new Date().toISOString(),
-      lastRefreshed: quote['07. latest trading day']
+      lastRefreshed: quote['07. latest trading day'],
+      debug: 'SUCCESS - Premium Alpha Vantage data loaded'
     };
 
-    console.log(`Successfully fetched premium data for ${symbol}: $${stockInfo.price}`);
+    console.log('Success! Stock data formatted for:', symbol);
 
     return {
       statusCode: 200,
@@ -103,15 +120,15 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Premium Alpha Vantage API Error:', error);
+    console.error('Function Error:', error);
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: `Unable to fetch premium stock data: ${error.message}`,
-        troubleshooting: 'Check Alpha Vantage premium API status and your API key validity',
-        isPremium: true
+        error: `Function error: ${error.message}`,
+        debug: 'Check function logs in Netlify',
+        stack: error.stack
       })
     };
   }
