@@ -1,4 +1,3 @@
-// netlify/functions/alpaca-data.js - REAL ALPACA INTEGRATION
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -11,23 +10,32 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Get Alpaca credentials from environment variables
+    const { symbol } = event.queryStringParameters;
+    
+    if (!symbol) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Symbol parameter required' })
+      };
+    }
+
     const ALPACA_API_KEY = process.env.ALPACA_API_KEY;
     const ALPACA_SECRET_KEY = process.env.ALPACA_SECRET_KEY;
-    const ALPACA_BASE_URL = process.env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets';
 
     if (!ALPACA_API_KEY || !ALPACA_SECRET_KEY) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
-          error: 'Alpaca API credentials not configured. Please set ALPACA_API_KEY and ALPACA_SECRET_KEY environment variables.' 
+          error: 'Alpaca keys not found',
+          fallback: true
         })
       };
     }
 
-    // Example: Get account info
-    const response = await fetch(`${ALPACA_BASE_URL}/v2/account`, {
+    // Get stock data from Alpaca
+    const response = await fetch(`https://paper-api.alpaca.markets/v2/stocks/${symbol}/bars/latest`, {
       headers: {
         'APCA-API-KEY-ID': ALPACA_API_KEY,
         'APCA-API-SECRET-KEY': ALPACA_SECRET_KEY
@@ -35,30 +43,41 @@ exports.handler = async (event, context) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Alpaca API error: ${response.status}`);
+      throw new Error('Alpaca API failed');
     }
 
-    const accountData = await response.json();
+    const data = await response.json();
+    const bar = data.bar;
+    
+    // Format exactly like your existing app expects
+    const stockInfo = {
+      symbol: symbol,
+      price: bar.c.toFixed(2),
+      change: (bar.c - bar.pc).toFixed(2),
+      changePercent: (((bar.c - bar.pc) / bar.pc) * 100).toFixed(2),
+      volume: (bar.v / 1000000).toFixed(1),
+      high: bar.h.toFixed(2),
+      low: bar.l.toFixed(2),
+      open: bar.o.toFixed(2),
+      prevClose: bar.pc.toFixed(2),
+      isLive: true,
+      source: 'alpaca',
+      timestamp: new Date().toISOString()
+    };
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ 
-        account: accountData,
-        message: 'Alpaca integration working!',
-        isLive: true
-      })
+      body: JSON.stringify(stockInfo)
     };
 
   } catch (error) {
-    console.error('Alpaca API Error:', error);
-    
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: `Alpaca connection failed: ${error.message}`,
-        fallback: false 
+        error: 'Alpaca data failed',
+        fallback: true
       })
     };
   }
