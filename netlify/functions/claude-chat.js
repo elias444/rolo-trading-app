@@ -1,4 +1,4 @@
-// netlify/functions/claude-chat.js - REAL CLAUDE API ONLY
+// netlify/functions/claude-chat.js - FIXED VERSION
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -29,7 +29,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Get API key from environment variables (SECURE)
+    // Get API key from environment variables
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     
     if (!ANTHROPIC_API_KEY) {
@@ -89,3 +89,15 @@ Be direct and specific. Focus on high-probability setups with clear risk/reward 
 
   } catch (error) {
     console.error('Claude API Error:', error);
+    
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: `Unable to connect to Claude AI: ${error.message}`,
+        isLive: false,
+        troubleshooting: 'Check API key configuration and account credits'
+      })
+    };
+  }
+};
