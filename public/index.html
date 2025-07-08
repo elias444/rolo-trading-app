@@ -71,6 +71,7 @@
             padding-bottom: 90px;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
+            position: relative;
         }
         
         .main-content::-webkit-scrollbar {
@@ -95,6 +96,7 @@
             padding: clamp(8px, 2vw, 12px);
             margin-bottom: clamp(12px, 3vw, 16px);
             -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
         }
         
         .message {
@@ -113,6 +115,7 @@
             border-radius: clamp(12px, 3vw, 18px);
             font-size: clamp(14px, 3.5vw, 16px);
             line-height: 1.4;
+            word-wrap: break-word;
         }
         
         .message.user .message-bubble {
@@ -171,6 +174,47 @@
             background: #cbd5e0;
             cursor: not-allowed;
             transform: none;
+        }
+        
+        /* Ticker Input Field */
+        .ticker-search {
+            background: white;
+            border-radius: clamp(8px, 2vw, 12px);
+            padding: clamp(16px, 4vw, 20px);
+            margin-bottom: clamp(12px, 3vw, 16px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .search-container {
+            display: flex;
+            gap: clamp(8px, 2vw, 12px);
+            align-items: center;
+        }
+        
+        .ticker-input {
+            flex: 1;
+            padding: clamp(10px, 2.5vw, 14px);
+            border: 1px solid #e1e5e9;
+            border-radius: clamp(8px, 2vw, 12px);
+            font-size: clamp(14px, 3.5vw, 16px);
+            outline: none;
+            text-transform: uppercase;
+        }
+        
+        .search-button {
+            padding: clamp(10px, 2.5vw, 14px) clamp(16px, 4vw, 20px);
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: clamp(8px, 2vw, 12px);
+            font-size: clamp(14px, 3.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .search-button:active {
+            transform: scale(0.95);
+            background: #5a67d8;
         }
         
         /* Other Tabs Content */
@@ -249,6 +293,26 @@
             padding: clamp(20px, 5vw, 40px);
             color: #666;
             font-size: clamp(14px, 3.5vw, 16px);
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: clamp(8px, 2vw, 12px);
+            padding: clamp(12px, 3vw, 16px);
+            margin: clamp(8px, 2vw, 12px) 0;
+            color: #dc2626;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+        
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: clamp(8px, 2vw, 12px);
+            padding: clamp(12px, 3vw, 16px);
+            margin: clamp(8px, 2vw, 12px) 0;
+            color: #16a34a;
+            font-size: clamp(12px, 3vw, 14px);
         }
         
         /* Bottom Navigation - STATIC ALWAYS VISIBLE */
@@ -344,6 +408,17 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
+        
+        /* Prevent scroll bounce on iOS */
+        .main-content {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        
+        .chat-messages {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
     </style>
 </head>
 <body>
@@ -354,7 +429,7 @@
                 <div class="logo">🚀 Rolo AI</div>
                 <div class="status-indicator">
                     <div class="status-dot" id="statusDot"></div>
-                    <span id="statusText">Live APIs</span>
+                    <span id="statusText">Connecting...</span>
                 </div>
             </div>
         </div>
@@ -368,7 +443,7 @@
                         <div class="message assistant">
                             <div class="message-bubble">
                                 🚀 <strong>Rolo AI - Your Options Trading Assistant!</strong><br><br>
-                                💡 <strong>I'm powered by enhanced AI with LIVE market data!</strong><br><br>
+                                💡 <strong>I'm powered by REAL AI with LIVE market data!</strong><br><br>
                                 📈 <strong>Try asking me:</strong><br>
                                 • "AAPL options strategy"<br>
                                 • "HOOD bullish play with strikes"<br>
@@ -403,7 +478,26 @@
                         🏠 Home
                     </button>
                 </div>
+                
+                <!-- TICKER SEARCH - NEW FEATURE -->
+                <div class="ticker-search">
+                    <div style="margin-bottom: 12px; font-weight: bold; color: #333;">Search Any Stock:</div>
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="tickerInput" 
+                            class="ticker-input" 
+                            placeholder="Enter ticker (e.g., AAPL, TSLA, NVDA)"
+                            maxlength="6"
+                        >
+                        <button id="analyzeButton" class="search-button">🔍 Analyze</button>
+                    </div>
+                    <div id="searchResult" style="margin-top: 12px;"></div>
+                </div>
+                
+                <!-- Popular Tickers -->
                 <div class="content-card">
+                    <div style="margin-bottom: 12px; font-weight: bold; color: #333;">Popular Tickers:</div>
                     <div class="stock-item" onclick="analyzeStock('AAPL')">
                         <div>
                             <div class="stock-symbol">AAPL</div>
@@ -513,14 +607,81 @@
         // Global state
         let currentTab = 'chat';
         let isLoading = false;
-        let apiConnected = true;
+        let apiStatus = { alpha: false, claude: false };
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Rolo AI initializing...');
+            
+            // Test API connections
+            testAPIConnections();
+            
             // Load live prices on startup
             loadLivePrices();
             
             // Set up chat input
+            setupChatInput();
+            
+            // Set up ticker search
+            setupTickerSearch();
+            
+            // Focus chat input
+            setTimeout(() => {
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) chatInput.focus();
+            }, 300);
+        });
+        
+        // Test API connections
+        async function testAPIConnections() {
+            console.log('🔍 Testing API connections...');
+            
+            // Test Alpha Vantage (stock data)
+            try {
+                const stockTest = await fetch('/.netlify/functions/stock-data?symbol=AAPL');
+                apiStatus.alpha = stockTest.ok;
+                console.log('📊 Alpha Vantage:', stockTest.ok ? 'Connected' : 'Failed');
+            } catch (error) {
+                console.log('📊 Alpha Vantage: Error -', error.message);
+                apiStatus.alpha = false;
+            }
+            
+            // Test Claude (simple ping)
+            try {
+                const claudeTest = await fetch('/.netlify/functions/claude-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'test' })
+                });
+                apiStatus.claude = claudeTest.ok && claudeTest.status !== 500;
+                console.log('🤖 Claude AI:', apiStatus.claude ? 'Connected' : 'Failed');
+            } catch (error) {
+                console.log('🤖 Claude AI: Error -', error.message);
+                apiStatus.claude = false;
+            }
+            
+            updateStatusIndicator();
+        }
+        
+        // Update status indicator
+        function updateStatusIndicator() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (apiStatus.alpha && apiStatus.claude) {
+                statusDot.style.background = '#22c55e';
+                statusText.textContent = 'Live APIs';
+            } else if (apiStatus.alpha || apiStatus.claude) {
+                statusDot.style.background = '#eab308';
+                statusText.textContent = 'Partial APIs';
+            } else {
+                statusDot.style.background = '#ef4444';
+                statusText.textContent = 'Connecting...';
+            }
+        }
+        
+        // Setup chat input
+        function setupChatInput() {
             const chatInput = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
             
@@ -540,10 +701,123 @@
             
             // Send button click
             sendButton.addEventListener('click', sendMessage);
+        }
+        
+        // Setup ticker search
+        function setupTickerSearch() {
+            const tickerInput = document.getElementById('tickerInput');
+            const analyzeButton = document.getElementById('analyzeButton');
             
-            // Focus chat input
-            setTimeout(() => chatInput.focus(), 300);
-        });
+            // Search on Enter
+            tickerInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchTicker();
+                }
+            });
+            
+            // Search on button click
+            analyzeButton.addEventListener('click', searchTicker);
+            
+            // Auto-uppercase
+            tickerInput.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        }
+        
+        // Search ticker function
+        async function searchTicker() {
+            const tickerInput = document.getElementById('tickerInput');
+            const analyzeButton = document.getElementById('analyzeButton');
+            const searchResult = document.getElementById('searchResult');
+            const ticker = tickerInput.value.trim();
+            
+            if (!ticker) {
+                showMessage(searchResult, 'Please enter a ticker symbol', 'error');
+                return;
+            }
+            
+            analyzeButton.disabled = true;
+            analyzeButton.textContent = 'Searching...';
+            searchResult.innerHTML = '';
+            
+            try {
+                console.log(`🔍 Searching for ${ticker}...`);
+                
+                // Get stock data - NO MOCK DATA
+                const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: Unable to fetch data`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Display real results - NO MOCK DATA
+                if (data.price) {
+                    const change = data.change || 0;
+                    const changePercent = data.changePercent || '0.00%';
+                    const changeColor = change >= 0 ? '#22c55e' : '#ef4444';
+                    const changeSign = change >= 0 ? '+' : '';
+                    
+                    searchResult.innerHTML = `
+                        <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div>
+                                    <div style="font-weight: bold; font-size: 18px; color: #333;">${ticker}</div>
+                                    <div style="font-size: 14px; color: #666;">Live Price</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: bold; font-size: 18px; color: #333;">$${parseFloat(data.price).toFixed(2)}</div>
+                                    <div style="font-size: 14px; color: ${changeColor};">${changeSign}${parseFloat(change).toFixed(2)} (${changePercent})</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="analyzeStock('${ticker}')" style="flex: 1; padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">💬 Ask Rolo</button>
+                                <button onclick="addToWatchlist('${ticker}')" style="flex: 1; padding: 8px 12px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer;">⭐ Watch</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    showMessage(searchResult, `✅ Found live data for ${ticker}!`, 'success');
+                } else {
+                    throw new Error('No price data available');
+                }
+                
+            } catch (error) {
+                console.error(`❌ Error searching ${ticker}:`, error);
+                
+                // Show real error - NO MOCK DATA
+                searchResult.innerHTML = `
+                    <div class="error-message">
+                        ❌ Unable to find data for "${ticker}"<br>
+                        Error: ${error.message}<br>
+                        Please check the ticker symbol and try again.
+                    </div>
+                `;
+            } finally {
+                analyzeButton.disabled = false;
+                analyzeButton.textContent = '🔍 Analyze';
+            }
+        }
+        
+        // Show message helper
+        function showMessage(container, message, type) {
+            const className = type === 'error' ? 'error-message' : 'success-message';
+            const existingMessage = container.querySelector(`.${className}`);
+            if (existingMessage) {
+                existingMessage.textContent = message;
+            } else {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = className;
+                messageDiv.textContent = message;
+                container.appendChild(messageDiv);
+            }
+        }
         
         // Tab switching - CHAT IS HOME
         function switchTab(tab) {
@@ -600,16 +874,20 @@
                     const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
                     if (response.ok) {
                         const data = await response.json();
-                        const price = data.price || data.currentPrice || 'N/A';
-                        const priceElement = document.getElementById(`${ticker}-price`);
-                        if (priceElement) {
-                            priceElement.textContent = price !== 'N/A' ? `$${price}` : 'Loading...';
+                        if (data.price && !data.error) {
+                            const priceElement = document.getElementById(`${ticker}-price`);
+                            if (priceElement) {
+                                priceElement.textContent = `$${parseFloat(data.price).toFixed(2)}`;
+                                priceElement.style.color = '#22c55e';
+                            }
+                        } else {
+                            throw new Error(data.error || 'No price data');
                         }
                     } else {
-                        throw new Error('API Error');
+                        throw new Error(`HTTP ${response.status}`);
                     }
                 } catch (error) {
-                    console.error(`Error loading ${ticker}:`, error);
+                    console.error(`❌ Error loading ${ticker}:`, error);
                     const priceElement = document.getElementById(`${ticker}-price`);
                     if (priceElement) {
                         priceElement.textContent = 'Error';
@@ -631,7 +909,12 @@
             }, 300);
         }
         
-        // Send message to enhanced AI - NO MOCK RESPONSES
+        // Add to watchlist (placeholder)
+        function addToWatchlist(symbol) {
+            alert(`${symbol} added to watchlist! (Feature coming soon)`);
+        }
+        
+        // Send message to Claude - FIXED TIMEOUT ISSUE
         async function sendMessage() {
             const chatInput = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
@@ -650,21 +933,28 @@
             addTypingIndicator();
             
             try {
-                // Use enhanced Claude chat - NO FALLBACKS TO MOCK DATA
-                const response = await fetch('/.netlify/functions/enhanced-claude-chat', {
+                console.log('💬 Sending message to Claude:', message);
+                
+                // Use bulletproof Claude function with timeout handling
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+                
+                const response = await fetch('/.netlify/functions/claude-chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ 
                         message: message,
-                        context: 'options_trading',
                         timestamp: new Date().toISOString()
-                    })
+                    }),
+                    signal: controller.signal
                 });
                 
+                clearTimeout(timeoutId);
+                
                 if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+                    throw new Error(`Claude API Error ${response.status}`);
                 }
                 
                 const data = await response.json();
@@ -674,18 +964,25 @@
                 if (data.response) {
                     addMessage('assistant', data.response);
                 } else {
-                    addMessage('assistant', '⚠️ I\'m having trouble connecting to my enhanced analysis system. Please try again in a moment.');
+                    addMessage('assistant', '⚠️ I received an empty response. Please try asking your question again.');
                 }
                 
             } catch (error) {
-                console.error('Enhanced chat error:', error);
+                console.error('❌ Claude chat error:', error);
                 removeTypingIndicator();
                 
-                // NO MOCK RESPONSES - Real error handling only
-                addMessage('assistant', `⚠️ Connection error: ${error.message}. Please check your internet connection and try again.`);
+                // Handle specific error types - NO MOCK RESPONSES
+                if (error.name === 'AbortError') {
+                    addMessage('assistant', '⏰ Request timed out. Please try a simpler question or try again in a moment.');
+                } else if (error.message.includes('500')) {
+                    addMessage('assistant', '🔧 Claude AI is temporarily having issues. Please try again in a minute.');
+                } else {
+                    addMessage('assistant', `⚠️ Connection error: ${error.message}. Please check your connection and try again.`);
+                }
                 
                 // Update status indicator
-                updateStatus(false);
+                apiStatus.claude = false;
+                updateStatusIndicator();
             } finally {
                 isLoading = false;
                 sendButton.disabled = false;
@@ -735,23 +1032,11 @@
             }
         }
         
-        // Update status indicator
-        function updateStatus(connected) {
-            apiConnected = connected;
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            
-            if (connected) {
-                statusDot.style.background = '#22c55e';
-                statusText.textContent = 'Live APIs';
-            } else {
-                statusDot.style.background = '#ef4444';
-                statusText.textContent = 'Connecting...';
-            }
-        }
-        
         // Refresh live prices every 30 seconds
         setInterval(loadLivePrices, 30000);
+        
+        // Refresh API status every 2 minutes
+        setInterval(testAPIConnections, 120000);
     </script>
 </body>
 </html>
