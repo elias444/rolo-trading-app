@@ -1,4 +1,4 @@
-// netlify/functions/claude-chat.js - BASIC CLAUDE CHAT (WORKING)
+// netlify/functions/claude-chat.js - OPTIMIZED FOR 10-SECOND NETLIFY LIMIT
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -29,45 +29,42 @@ exports.handler = async (event, context) => {
       };
     }
 
+    console.log('🚀 Processing Claude request:', message.substring(0, 50) + '...');
+
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     
     if (!ANTHROPIC_API_KEY) {
+      console.log('❌ No Claude API key found');
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
-          error: 'ANTHROPIC_API_KEY environment variable not set'
+          error: 'Claude API key not configured. Please add ANTHROPIC_API_KEY to environment variables.',
+          fallback: true
         })
       };
     }
 
-    console.log(`💬 BASIC CLAUDE REQUEST: ${message.substring(0, 50)}...`);
+    // 🚀 OPTIMIZED FOR SPEED - Shorter prompts, faster responses
+    const systemPrompt = `You are Rolo, a concise options trading AI. Keep responses under 150 words. 
 
-    // Basic system prompt for trading
-    const systemPrompt = `You are Rolo, a professional AI trading assistant specializing in options trading.
+Current time: ${new Date().toLocaleString()}
 
-CURRENT CONTEXT:
-- Date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-- Time: ${new Date().toLocaleTimeString('en-US')}
+RULES:
+- Be specific and actionable
+- Include exact strikes and expirations when possible  
+- Always mention risk management
+- Use bullet points for clarity
+- Be direct, no fluff
 
-CAPABILITIES:
-- Options trading strategies and analysis
-- Risk management recommendations
-- Technical analysis insights
-- Market condition assessment
+Focus on: Options strategies, risk management, specific trade ideas.`;
 
-RESPONSE GUIDELINES:
-- Provide specific options strategies with strikes when possible
-- Include risk management and position sizing
-- Give actionable trading recommendations
-- Keep responses professional but accessible
-- Focus on education and risk awareness
-
-Always remind users that trading involves risk and to do their own research.`;
-
-    // Claude API call with timeout
+    // 🏃‍♂️ FAST API CALL - 7-second timeout to stay under Netlify's 10-second limit
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ Claude API timeout after 7 seconds');
+      controller.abort();
+    }, 7000); // 7 seconds - safe margin
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -79,8 +76,8 @@ Always remind users that trading involves risk and to do their own research.`;
         },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 1000,
+          model: 'claude-3-5-sonnet-20241022', // Latest fast model
+          max_tokens: 800, // Shorter responses = faster processing
           system: systemPrompt,
           messages: [{
             role: 'user',
@@ -100,21 +97,22 @@ Always remind users that trading involves risk and to do their own research.`;
           headers,
           body: JSON.stringify({ 
             error: `Claude API error: ${response.status}`,
-            details: 'Check API key and credits'
+            details: 'Check API key and credits',
+            fallback: true
           })
         };
       }
 
       const data = await response.json();
-      console.log('✅ Basic Claude response generated');
+      console.log('✅ Claude API success!');
       
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({ 
           response: data.content[0].text,
-          type: 'basic',
-          timestamp: new Date().toISOString()
+          isLive: true,
+          source: 'Claude AI'
         })
       };
 
@@ -122,12 +120,30 @@ Always remind users that trading involves risk and to do their own research.`;
       clearTimeout(timeoutId);
       
       if (fetchError.name === 'AbortError') {
+        console.log('⏰ Claude API timed out');
+        
+        // Smart fallback for timeouts
+        const query = message.toLowerCase();
+        let fallbackResponse = '';
+
+        if (query.includes('hood')) {
+          fallbackResponse = `🏹 **HOOD Quick Analysis:**\n\nRobinhood around current levels:\n• Consider $25 calls for momentum\n• $22 puts for downside protection\n• Watch earnings and user growth\n• Risk: High volatility\n\n*Response generated due to timeout*`;
+        } else if (query.includes('aapl')) {
+          fallbackResponse = `🍎 **AAPL Quick Analysis:**\n\nApple at current price:\n• Solid for covered calls\n• Consider monthly spreads\n• Watch iPhone sales data\n• Lower risk, steady growth\n\n*Response generated due to timeout*`;
+        } else if (query.includes('spy')) {
+          fallbackResponse = `📈 **SPY Quick Analysis:**\n\nS&P 500 ETF strategies:\n• 0DTE for quick plays\n• Monthly spreads for income\n• Watch Fed policy\n• Good liquidity\n\n*Response generated due to timeout*`;
+        } else {
+          fallbackResponse = `🤖 **Rolo AI** (Timeout Fallback)\n\nI'm having response delays. Try asking about specific stocks like:\n• AAPL analysis\n• HOOD options\n• SPY strategies\n\nKeep questions short for faster responses.`;
+        }
+
         return {
-          statusCode: 408,
+          statusCode: 200,
           headers,
           body: JSON.stringify({ 
-            error: 'Request timed out. Please try again.',
-            timeout: true
+            response: fallbackResponse,
+            isLive: false,
+            timeout: true,
+            source: 'Rolo Smart Fallback'
           })
         };
       }
@@ -136,14 +152,17 @@ Always remind users that trading involves risk and to do their own research.`;
     }
 
   } catch (error) {
-    console.error('Basic Claude function error:', error);
+    console.error('Claude function error:', error);
     
+    // Emergency fallback
     return {
-      statusCode: 500,
+      statusCode: 200,
       headers,
       body: JSON.stringify({ 
-        error: `Basic Claude AI failed: ${error.message}`,
-        suggestion: 'Check your API configuration and network connection'
+        response: `🤖 **Rolo AI** - Connection Issue\n\nI'm experiencing technical difficulties. Please try:\n• Shorter questions\n• Specific stock symbols (AAPL, HOOD, SPY)\n• Refresh and try again\n\nSystem will auto-recover.`,
+        isLive: false,
+        error: true,
+        source: 'Emergency Fallback'
       })
     };
   }
