@@ -2,35 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Rolo - Options Trading AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rolo - Smart Trading AI</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
+            background: #f2f2f7;
             height: 100vh;
             overflow: hidden;
+            position: fixed;
+            width: 100%;
         }
         
         .app-container {
             display: flex;
             flex-direction: column;
             height: 100vh;
+            width: 100%;
         }
         
         /* Header */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
             color: white;
-            padding: 16px 20px;
-            padding-top: max(16px, env(safe-area-inset-top, 20px));
+            padding: 12px 16px;
+            padding-top: max(12px, env(safe-area-inset-top, 20px));
+            box-shadow: 0 1px 10px rgba(0,0,0,0.1);
             flex-shrink: 0;
+            z-index: 1000;
         }
         
         .header-content {
@@ -40,11 +46,11 @@
         }
         
         .logo {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 600;
         }
         
-        .status-indicator {
+        .status {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -55,50 +61,75 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #ef4444;
+            background: #30d158;
+            animation: pulse 2s infinite;
         }
         
-        /* Main Content Area */
+        .status-dot.connecting {
+            background: #ff9500;
+        }
+        
+        .status-dot.error {
+            background: #ff3b30;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Main Content */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
         
-        /* Tab Content */
         .tab-content {
             flex: 1;
             display: none;
             flex-direction: column;
             overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
         
         .tab-content.active {
             display: flex;
         }
         
-        /* Chat Tab Specific */
+        /* Chat Tab */
         .chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 16px;
-            padding-bottom: 0;
+            padding: 0;
         }
         
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 8px;
-            margin-bottom: 12px;
+            padding: 16px;
+            margin-bottom: 0;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         
         .message {
             margin-bottom: 16px;
             display: flex;
             gap: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .message.user {
@@ -106,7 +137,7 @@
         }
         
         .message-bubble {
-            max-width: 80%;
+            max-width: 85%;
             padding: 12px 16px;
             border-radius: 18px;
             font-size: 16px;
@@ -115,132 +146,106 @@
         }
         
         .message.user .message-bubble {
-            background: #667eea;
+            background: #007aff;
             color: white;
             border-bottom-right-radius: 4px;
         }
         
-        .message.assistant .message-bubble {
+        .message.rolo .message-bubble {
             background: white;
-            color: #333;
+            color: #1c1c1e;
             border-bottom-left-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .chat-input-area {
+            background: white;
+            border-top: 0.5px solid #d1d1d6;
+            padding: 12px 16px;
+            flex-shrink: 0;
         }
         
         .chat-input-container {
             display: flex;
-            gap: 12px;
-            padding: 16px;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            flex-shrink: 0;
+            align-items: flex-end;
+            gap: 8px;
+            background: #f2f2f7;
+            border-radius: 20px;
+            padding: 6px;
+            border: 1px solid #d1d1d6;
         }
         
         .chat-input {
             flex: 1;
-            border: 1px solid #d1d5db;
+            border: none;
             outline: none;
-            padding: 12px 16px;
+            background: transparent;
+            padding: 8px 12px;
             font-size: 16px;
-            border-radius: 12px;
-            background: #f9fafb;
             resize: none;
-            min-height: 44px;
-            max-height: 120px;
+            min-height: 20px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-family: inherit;
         }
         
         .send-button {
-            padding: 12px 20px;
-            background: #667eea;
-            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
+            background: #007aff;
             border: none;
-            border-radius: 12px;
+            color: white;
             font-size: 16px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
             flex-shrink: 0;
         }
         
         .send-button:active {
-            background: #5a67d8;
+            transform: scale(0.9);
         }
         
         .send-button:disabled {
-            background: #cbd5e0;
+            background: #8e8e93;
+            transform: none;
         }
         
-        /* Other Tabs */
+        /* Other tabs styling */
         .tab-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid #e5e7eb;
             background: white;
+            border-bottom: 0.5px solid #d1d1d6;
+            padding: 16px;
+            flex-shrink: 0;
         }
         
         .tab-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
+            font-size: 22px;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-bottom: 4px;
         }
         
-        .home-button {
-            padding: 8px 16px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
+        .tab-subtitle {
+            font-size: 13px;
+            color: #8e8e93;
         }
         
         .tab-body {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 0;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         
-        /* Ticker Search */
-        .ticker-search {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .search-container {
-            display: flex;
-            gap: 12px;
-        }
-        
-        .ticker-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
-            text-transform: uppercase;
-        }
-        
-        .search-button {
-            padding: 12px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        
-        .search-result {
-            margin-top: 16px;
-        }
-        
-        /* Stock Items */
+        /* Cards and content */
         .content-card {
             background: white;
+            margin: 16px;
             border-radius: 12px;
             padding: 16px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -251,8 +256,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px;
-            border-bottom: 1px solid #f1f3f4;
+            border-bottom: 0.5px solid #f2f2f7;
             cursor: pointer;
+            transition: background-color 0.15s ease;
+            background: white;
         }
         
         .stock-item:last-child {
@@ -260,104 +267,201 @@
         }
         
         .stock-item:active {
-            background: #f8f9fa;
+            background: #f2f2f7;
         }
         
-        .stock-symbol {
-            font-weight: bold;
+        .stock-info h3 {
             font-size: 16px;
-            color: #333;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-bottom: 2px;
+        }
+        
+        .stock-info p {
+            font-size: 13px;
+            color: #8e8e93;
         }
         
         .stock-price {
+            text-align: right;
+        }
+        
+        .stock-price .price {
             font-size: 16px;
             font-weight: 600;
-            color: #22c55e;
+            color: #1c1c1e;
         }
         
-        .loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-            font-size: 16px;
+        .stock-price .change {
+            font-size: 13px;
+            margin-top: 2px;
         }
         
-        .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 12px;
-            color: #dc2626;
-            font-size: 14px;
-            margin: 8px 0;
+        .stock-price .change.positive {
+            color: #30d158;
         }
         
-        .success-message {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 8px;
-            padding: 12px;
-            color: #16a34a;
-            font-size: 14px;
-            margin: 8px 0;
+        .stock-price .change.negative {
+            color: #ff3b30;
         }
         
         /* Bottom Navigation */
         .bottom-nav {
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            padding: 8px 4px;
-            padding-bottom: max(8px, env(safe-area-inset-bottom, 12px));
+            background: rgba(242, 242, 247, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid rgba(209, 209, 214, 0.6);
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom, 20px));
             flex-shrink: 0;
         }
         
         .nav-items {
             display: flex;
             justify-content: space-around;
+            align-items: center;
         }
         
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px;
+            padding: 6px 12px;
             border: none;
             background: none;
             cursor: pointer;
-            color: #9ca3af;
+            color: #8e8e93;
+            transition: all 0.15s ease;
             min-width: 60px;
         }
         
         .nav-item.active {
-            color: #667eea;
+            color: #007aff;
+        }
+        
+        .nav-item:active {
+            transform: scale(0.95);
         }
         
         .nav-icon {
-            font-size: 20px;
-            margin-bottom: 4px;
+            font-size: 22px;
+            margin-bottom: 2px;
         }
         
         .nav-label {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 500;
+            text-align: center;
         }
         
-        /* Loading animation */
+        /* Loading and status */
+        .loading-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8e93;
+        }
+        
         .typing {
             display: inline-block;
-            width: 3px;
-            height: 3px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
-            background: #667eea;
+            background: #8e8e93;
             animation: typing 1.4s infinite ease-in-out;
+            margin: 0 1px;
         }
         
         .typing:nth-child(1) { animation-delay: -0.32s; }
         .typing:nth-child(2) { animation-delay: -0.16s; }
         
         @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Analysis display */
+        .analysis-section {
+            margin: 16px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-bottom: 12px;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 0.5px solid #f2f2f7;
+        }
+        
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-size: 14px;
+            color: #8e8e93;
+        }
+        
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1c1c1e;
+        }
+        
+        .metric-value.bullish {
+            color: #30d158;
+        }
+        
+        .metric-value.bearish {
+            color: #ff3b30;
+        }
+        
+        .metric-value.neutral {
+            color: #ff9500;
+        }
+        
+        /* Search */
+        .search-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .ticker-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #d1d1d6;
+            border-radius: 8px;
+            font-size: 16px;
+            text-transform: uppercase;
+            background: #f2f2f7;
+        }
+        
+        .search-btn {
+            padding: 10px 16px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .search-btn:active {
+            transform: scale(0.95);
         }
     </style>
 </head>
@@ -367,7 +471,7 @@
         <div class="header">
             <div class="header-content">
                 <div class="logo">🚀 Rolo AI</div>
-                <div class="status-indicator">
+                <div class="status">
                     <div class="status-dot" id="statusDot"></div>
                     <span id="statusText">Connecting...</span>
                 </div>
@@ -380,83 +484,104 @@
             <div id="chat-tab" class="tab-content active">
                 <div class="chat-container">
                     <div class="chat-messages" id="chatMessages">
-                        <div class="message assistant">
+                        <div class="message rolo">
                             <div class="message-bubble">
-                                🚀 <strong>Rolo AI - Your Options Trading Assistant!</strong><br><br>
-                                💡 <strong>Powered by enhanced AI with LIVE market data!</strong><br><br>
-                                📈 <strong>Ask me anything:</strong><br>
-                                • "AAPL options strategy"<br>
-                                • "HOOD bullish play with strikes"<br>
-                                • "Best SPY income trade this week"<br>
-                                • "TSLA earnings strategy"<br><br>
-                                🎯 <strong>I analyze ANY ticker with real market data!</strong>
+                                <strong>🚀 Rolo AI - Smart Trading Intelligence!</strong><br><br>
+                                💡 <strong>I'm powered by advanced algorithms and LIVE market data!</strong><br><br>
+                                📈 <strong>My data sources:</strong><br>
+                                • Real-time Alpha Vantage data<br>
+                                • Technical indicators (RSI, MACD, SMA)<br>
+                                • Discord sentiment analysis<br>
+                                • StockTwits social data<br>
+                                • Market breadth (VIX, sector rotation)<br><br>
+                                🎯 <strong>Try asking me:</strong><br>
+                                • "AAPL analysis" - Complete technical breakdown<br>
+                                • "HOOD options" - Options strategy with strikes<br>
+                                • "Market sentiment" - Overall market mood<br>
+                                • "Top 10 plays" - Best opportunities today<br><br>
+                                <strong>I analyze real market data to give you smart trading insights!</strong>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="chat-input-container">
-                    <textarea 
-                        id="chatInput" 
-                        class="chat-input" 
-                        placeholder="Ask about options strategies for any ticker..."
-                        rows="1"
-                    ></textarea>
-                    <button id="sendButton" class="send-button">Send</button>
+                <div class="chat-input-area">
+                    <div class="chat-input-container">
+                        <textarea 
+                            id="chatInput" 
+                            class="chat-input" 
+                            placeholder="Ask about stocks, options, or market analysis..."
+                            rows="1"
+                        ></textarea>
+                        <button id="sendButton" class="send-button">↑</button>
+                    </div>
                 </div>
             </div>
             
-            <!-- Ticker Tab -->
-            <div id="ticker-tab" class="tab-content">
+            <!-- Stocks Tab -->
+            <div id="stocks-tab" class="tab-content">
                 <div class="tab-header">
-                    <div class="tab-title">📊 Live Tickers</div>
-                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
+                    <div class="tab-title">📊 Live Stocks</div>
+                    <div class="tab-subtitle">Real-time market data</div>
                 </div>
                 <div class="tab-body">
-                    <div class="ticker-search">
-                        <div style="margin-bottom: 12px; font-weight: bold;">Search Any Stock:</div>
+                    <div class="content-card">
                         <div class="search-container">
-                            <input type="text" id="tickerInput" class="ticker-input" placeholder="Enter ticker (e.g., AAPL)" maxlength="6">
-                            <button id="searchButton" class="search-button">🔍 Search</button>
+                            <input type="text" id="tickerInput" class="ticker-input" placeholder="Enter any ticker..." maxlength="6">
+                            <button id="searchButton" class="search-btn">Analyze</button>
                         </div>
-                        <div id="searchResult" class="search-result"></div>
                     </div>
                     
                     <div class="content-card">
-                        <div style="margin-bottom: 12px; font-weight: bold;">Popular Tickers:</div>
+                        <div style="font-weight: 600; margin-bottom: 12px; color: #1c1c1e;">Popular Stocks:</div>
                         <div class="stock-item" onclick="analyzeStock('AAPL')">
-                            <div>
-                                <div class="stock-symbol">AAPL</div>
-                                <div style="font-size: 12px; color: #666;">Apple Inc.</div>
+                            <div class="stock-info">
+                                <h3>AAPL</h3>
+                                <p>Apple Inc.</p>
                             </div>
-                            <div class="stock-price" id="AAPL-price">Loading...</div>
+                            <div class="stock-price">
+                                <div class="price" id="AAPL-price">Loading...</div>
+                                <div class="change" id="AAPL-change"></div>
+                            </div>
                         </div>
                         <div class="stock-item" onclick="analyzeStock('TSLA')">
-                            <div>
-                                <div class="stock-symbol">TSLA</div>
-                                <div style="font-size: 12px; color: #666;">Tesla, Inc.</div>
+                            <div class="stock-info">
+                                <h3>TSLA</h3>
+                                <p>Tesla, Inc.</p>
                             </div>
-                            <div class="stock-price" id="TSLA-price">Loading...</div>
+                            <div class="stock-price">
+                                <div class="price" id="TSLA-price">Loading...</div>
+                                <div class="change" id="TSLA-change"></div>
+                            </div>
                         </div>
                         <div class="stock-item" onclick="analyzeStock('NVDA')">
-                            <div>
-                                <div class="stock-symbol">NVDA</div>
-                                <div style="font-size: 12px; color: #666;">NVIDIA Corp.</div>
+                            <div class="stock-info">
+                                <h3>NVDA</h3>
+                                <p>NVIDIA Corp.</p>
                             </div>
-                            <div class="stock-price" id="NVDA-price">Loading...</div>
+                            <div class="stock-price">
+                                <div class="price" id="NVDA-price">Loading...</div>
+                                <div class="change" id="NVDA-change"></div>
+                            </div>
                         </div>
                         <div class="stock-item" onclick="analyzeStock('HOOD')">
-                            <div>
-                                <div class="stock-symbol">HOOD</div>
-                                <div style="font-size: 12px; color: #666;">Robinhood Markets</div>
+                            <div class="stock-info">
+                                <h3>HOOD</h3>
+                                <p>Robinhood Markets</p>
                             </div>
-                            <div class="stock-price" id="HOOD-price">Loading...</div>
+                            <div class="stock-price">
+                                <div class="price" id="HOOD-price">Loading...</div>
+                                <div class="change" id="HOOD-change"></div>
+                            </div>
                         </div>
                         <div class="stock-item" onclick="analyzeStock('AI')">
-                            <div>
-                                <div class="stock-symbol">AI</div>
-                                <div style="font-size: 12px; color: #666;">C3.ai, Inc.</div>
+                            <div class="stock-info">
+                                <h3>AI</h3>
+                                <p>C3.ai, Inc.</p>
                             </div>
-                            <div class="stock-price" id="AI-price">Loading...</div>
+                            <div class="stock-price">
+                                <div class="price" id="AI-price">Loading...</div>
+                                <div class="change" id="AI-change"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -465,11 +590,15 @@
             <!-- Analysis Tab -->
             <div id="analysis-tab" class="tab-content">
                 <div class="tab-header">
-                    <div class="tab-title">📈 Analysis</div>
-                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
+                    <div class="tab-title">📈 Technical Analysis</div>
+                    <div class="tab-subtitle">Market indicators & signals</div>
                 </div>
-                <div class="tab-body">
-                    <div class="loading">Select a ticker or ask Rolo in Chat for analysis!</div>
+                <div class="tab-body" id="analysisBody">
+                    <div class="loading-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+                        <div style="font-weight: 600; margin-bottom: 8px;">Analysis Ready</div>
+                        <div>Search a stock to see detailed technical analysis</div>
+                    </div>
                 </div>
             </div>
             
@@ -477,21 +606,29 @@
             <div id="plays-tab" class="tab-content">
                 <div class="tab-header">
                     <div class="tab-title">🎯 Smart Plays</div>
-                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
+                    <div class="tab-subtitle">AI-generated trading opportunities</div>
                 </div>
-                <div class="tab-body">
-                    <div class="loading">Ask Rolo for options strategies to see plays here!</div>
+                <div class="tab-body" id="playsBody">
+                    <div class="loading-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+                        <div style="font-weight: 600; margin-bottom: 8px;">Generating Plays...</div>
+                        <div>Smart algorithms analyzing market data</div>
+                    </div>
                 </div>
             </div>
             
             <!-- Alerts Tab -->
             <div id="alerts-tab" class="tab-content">
                 <div class="tab-header">
-                    <div class="tab-title">🔔 Alerts</div>
-                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
+                    <div class="tab-title">🔔 Live Alerts</div>
+                    <div class="tab-subtitle">Real-time market notifications</div>
                 </div>
-                <div class="tab-body">
-                    <div class="loading">Live alerts will appear here!</div>
+                <div class="tab-body" id="alertsBody">
+                    <div class="loading-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🔔</div>
+                        <div style="font-weight: 600; margin-bottom: 8px;">Monitoring Markets...</div>
+                        <div>Live alerts from multiple data sources</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -503,9 +640,9 @@
                     <div class="nav-icon">💬</div>
                     <div class="nav-label">Chat</div>
                 </button>
-                <button class="nav-item" onclick="switchTab('ticker')">
+                <button class="nav-item" onclick="switchTab('stocks')">
                     <div class="nav-icon">📊</div>
-                    <div class="nav-label">Ticker</div>
+                    <div class="nav-label">Stocks</div>
                 </button>
                 <button class="nav-item" onclick="switchTab('analysis')">
                     <div class="nav-icon">📈</div>
@@ -524,72 +661,65 @@
     </div>
 
     <script>
+        // Global State
         let currentTab = 'chat';
         let isLoading = false;
-        let apiConnected = false;
+        let marketData = {};
+        let conversationHistory = [];
         
-        // Initialize
+        // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initializing Rolo AI...');
-            setupApp();
+            console.log('🚀 Smart Rolo AI starting...');
+            initializeApp();
         });
         
-        function setupApp() {
-            // Test API connection
-            testConnection();
+        function initializeApp() {
+            setupChatInput();
+            setupStockSearch();
+            testDataSources();
+            loadInitialData();
+            generateSmartPlays();
             
-            // Load stock prices
-            loadStockPrices();
-            
-            // Setup chat
-            setupChat();
-            
-            // Setup ticker search
-            setupTickerSearch();
-            
-            // Focus chat input
             setTimeout(() => {
                 const chatInput = document.getElementById('chatInput');
-                if (chatInput) chatInput.focus();
+                if (chatInput && currentTab === 'chat') {
+                    chatInput.focus();
+                }
             }, 500);
         }
         
-        async function testConnection() {
+        // Test all data sources
+        async function testDataSources() {
             try {
-                const response = await fetch('/.netlify/functions/stock-data?symbol=AAPL');
-                if (response.ok) {
-                    apiConnected = true;
-                    updateStatus(true, 'Live APIs');
-                    console.log('✅ API connection successful');
+                // Test Alpha Vantage connection
+                const alphaTest = await fetch('/.netlify/functions/market-intelligence?test=true');
+                if (alphaTest.ok) {
+                    updateStatus('connected', 'Live Data Active');
                 } else {
-                    updateStatus(false, 'API Error');
-                    console.log('❌ API connection failed:', response.status);
+                    updateStatus('connecting', 'Connecting...');
                 }
             } catch (error) {
-                updateStatus(false, 'Offline');
-                console.log('❌ API test failed:', error.message);
+                console.log('Data source test:', error.message);
+                updateStatus('error', 'Data Sources Offline');
             }
         }
         
-        function updateStatus(connected, text) {
+        function updateStatus(status, text) {
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
             
-            if (connected) {
-                statusDot.style.background = '#22c55e';
-            } else {
-                statusDot.style.background = '#ef4444';
-            }
+            statusDot.className = `status-dot ${status}`;
             statusText.textContent = text;
         }
         
-        function setupChat() {
+        // Chat Input Setup
+        function setupChatInput() {
             const chatInput = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
             
             chatInput.addEventListener('input', function() {
                 this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
             });
             
             chatInput.addEventListener('keydown', function(e) {
@@ -602,14 +732,16 @@
             sendButton.addEventListener('click', sendMessage);
         }
         
-        function setupTickerSearch() {
+        // Stock Search Setup
+        function setupStockSearch() {
             const tickerInput = document.getElementById('tickerInput');
             const searchButton = document.getElementById('searchButton');
             
             tickerInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    searchTicker();
+                    const ticker = this.value.trim().toUpperCase();
+                    if (ticker) analyzeStock(ticker);
                 }
             });
             
@@ -617,95 +749,64 @@
                 this.value = this.value.toUpperCase();
             });
             
-            searchButton.addEventListener('click', searchTicker);
+            searchButton.addEventListener('click', function() {
+                const ticker = tickerInput.value.trim().toUpperCase();
+                if (ticker) analyzeStock(ticker);
+            });
         }
         
-        async function searchTicker() {
-            const tickerInput = document.getElementById('tickerInput');
-            const searchButton = document.getElementById('searchButton');
-            const searchResult = document.getElementById('searchResult');
-            const ticker = tickerInput.value.trim();
-            
-            if (!ticker) {
-                searchResult.innerHTML = '<div class="error-message">Please enter a ticker symbol</div>';
-                return;
-            }
-            
-            searchButton.disabled = true;
-            searchButton.textContent = 'Searching...';
-            searchResult.innerHTML = '';
-            
-            try {
-                const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
-                const data = await response.json();
-                
-                if (response.ok && data.price) {
-                    const change = data.change || 0;
-                    const changeColor = change >= 0 ? '#22c55e' : '#ef4444';
-                    const changeSign = change >= 0 ? '+' : '';
-                    
-                    searchResult.innerHTML = `
-                        <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                                <div>
-                                    <div style="font-weight: bold; font-size: 18px;">${ticker}</div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: bold; font-size: 18px;">$${data.price.toFixed(2)}</div>
-                                    <div style="color: ${changeColor};">${changeSign}${change.toFixed(2)}</div>
-                                </div>
-                            </div>
-                            <button onclick="analyzeStock('${ticker}')" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">💬 Ask Rolo About ${ticker}</button>
-                        </div>
-                    `;
-                } else {
-                    searchResult.innerHTML = `<div class="error-message">Could not find data for "${ticker}". Please check the symbol.</div>`;
-                }
-            } catch (error) {
-                searchResult.innerHTML = `<div class="error-message">Error searching for "${ticker}": ${error.message}</div>`;
-            } finally {
-                searchButton.disabled = false;
-                searchButton.textContent = '🔍 Search';
-            }
-        }
-        
-        async function loadStockPrices() {
+        // Load initial market data
+        async function loadInitialData() {
             const tickers = ['AAPL', 'TSLA', 'NVDA', 'HOOD', 'AI'];
             
             for (const ticker of tickers) {
                 try {
-                    const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
+                    const response = await fetch(`/.netlify/functions/smart-stock-data?symbol=${ticker}&entitlement=realtime`);
                     const data = await response.json();
-                    const priceElement = document.getElementById(`${ticker}-price`);
                     
-                    if (response.ok && data.price && priceElement) {
-                        priceElement.textContent = `$${data.price.toFixed(2)}`;
-                        priceElement.style.color = '#22c55e';
-                    } else if (priceElement) {
-                        priceElement.textContent = 'Error';
-                        priceElement.style.color = '#ef4444';
+                    if (response.ok && data.price) {
+                        updateStockDisplay(ticker, data);
+                        marketData[ticker] = data;
+                    } else {
+                        updateStockError(ticker);
                     }
                 } catch (error) {
-                    const priceElement = document.getElementById(`${ticker}-price`);
-                    if (priceElement) {
-                        priceElement.textContent = 'Error';
-                        priceElement.style.color = '#ef4444';
-                    }
+                    console.error(`Error loading ${ticker}:`, error);
+                    updateStockError(ticker);
                 }
             }
         }
         
-        function analyzeStock(symbol) {
-            switchToHome();
-            setTimeout(() => {
-                const chatInput = document.getElementById('chatInput');
-                if (chatInput) {
-                    chatInput.value = `${symbol} options analysis`;
-                    chatInput.focus();
-                }
-            }, 300);
+        function updateStockDisplay(ticker, data) {
+            const priceElement = document.getElementById(`${ticker}-price`);
+            const changeElement = document.getElementById(`${ticker}-change`);
+            
+            if (priceElement && changeElement) {
+                const price = parseFloat(data.price);
+                const change = data.change || 0;
+                const changePercent = data.changePercent || '0.00%';
+                
+                priceElement.textContent = `$${price.toFixed(2)}`;
+                
+                const changeClass = change >= 0 ? 'positive' : 'negative';
+                const changeSign = change >= 0 ? '+' : '';
+                changeElement.textContent = `${changeSign}${parseFloat(change).toFixed(2)} (${changePercent})`;
+                changeElement.className = `change ${changeClass}`;
+            }
         }
         
+        function updateStockError(ticker) {
+            const priceElement = document.getElementById(`${ticker}-price`);
+            const changeElement = document.getElementById(`${ticker}-change`);
+            
+            if (priceElement && changeElement) {
+                priceElement.textContent = 'Error';
+                priceElement.style.color = '#ff3b30';
+                changeElement.textContent = '';
+            }
+        }
+        
+        // Smart Rolo AI Response System (NO ANTHROPIC)
         async function sendMessage() {
             const chatInput = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
@@ -713,6 +814,8 @@
             
             if (!message || isLoading) return;
             
+            // Add user message to history
+            conversationHistory.push({ role: 'user', content: message, timestamp: new Date() });
             addMessage('user', message);
             chatInput.value = '';
             chatInput.style.height = 'auto';
@@ -722,23 +825,38 @@
             addTypingIndicator();
             
             try {
-                const response = await fetch('/.netlify/functions/claude-chat', {
+                // Use Smart Rolo AI (NO EXTERNAL AI APIS)
+                const response = await fetch('/.netlify/functions/smart-rolo-ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ 
+                        message: message,
+                        conversationHistory: conversationHistory.slice(-5), // Last 5 messages for context
+                        marketData: marketData,
+                        timestamp: new Date().toISOString()
+                    })
                 });
                 
                 const data = await response.json();
                 removeTypingIndicator();
                 
                 if (response.ok && data.response) {
-                    addMessage('assistant', data.response);
+                    // Add AI response to history
+                    conversationHistory.push({ role: 'rolo', content: data.response, timestamp: new Date() });
+                    addMessage('rolo', data.response);
+                    
+                    // Update analysis tab if ticker was analyzed
+                    if (data.analysis) {
+                        displayAnalysis(data.analysis);
+                    }
                 } else {
-                    addMessage('assistant', '⚠️ Sorry, I\'m having trouble right now. Please try again.');
+                    throw new Error(data.error || 'Smart AI analysis failed');
                 }
+                
             } catch (error) {
+                console.error('Smart Rolo AI error:', error);
                 removeTypingIndicator();
-                addMessage('assistant', '⚠️ Connection error. Please try again.');
+                addMessage('rolo', '⚠️ I\'m having trouble analyzing the market data right now. Please try again.');
             } finally {
                 isLoading = false;
                 sendButton.disabled = false;
@@ -746,6 +864,90 @@
             }
         }
         
+        // Display analysis results
+        function displayAnalysis(analysis) {
+            const analysisBody = document.getElementById('analysisBody');
+            
+            analysisBody.innerHTML = `
+                <div class="analysis-section">
+                    <div class="section-title">📊 ${analysis.symbol} Analysis</div>
+                    <div class="metric-row">
+                        <span class="metric-label">Current Price</span>
+                        <span class="metric-value">$${analysis.price}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">RSI (14)</span>
+                        <span class="metric-value ${analysis.rsi > 70 ? 'bearish' : analysis.rsi < 30 ? 'bullish' : 'neutral'}">${analysis.rsi}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">MACD Signal</span>
+                        <span class="metric-value ${analysis.macd_signal === 'BULLISH' ? 'bullish' : analysis.macd_signal === 'BEARISH' ? 'bearish' : 'neutral'}">${analysis.macd_signal}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">SMA 20</span>
+                        <span class="metric-value">$${analysis.sma20}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Volume</span>
+                        <span class="metric-value">${(analysis.volume / 1000000).toFixed(1)}M</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Sentiment</span>
+                        <span class="metric-value ${analysis.sentiment === 'BULLISH' ? 'bullish' : analysis.sentiment === 'BEARISH' ? 'bearish' : 'neutral'}">${analysis.sentiment}</span>
+                    </div>
+                </div>
+                
+                <div class="analysis-section">
+                    <div class="section-title">🎯 Options Strategy</div>
+                    <div style="font-size: 14px; line-height: 1.5; color: #1c1c1e;">
+                        ${analysis.options_strategy}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Generate smart plays
+        async function generateSmartPlays() {
+            try {
+                const response = await fetch('/.netlify/functions/smart-plays-generator');
+                const data = await response.json();
+                
+                if (response.ok && data.plays) {
+                    displayPlays(data.plays);
+                }
+            } catch (error) {
+                console.error('Error generating plays:', error);
+            }
+        }
+        
+        function displayPlays(plays) {
+            const playsBody = document.getElementById('playsBody');
+            
+            const playsHTML = plays.map(play => `
+                <div class="analysis-section">
+                    <div class="section-title">${play.emoji} ${play.title}</div>
+                    <div class="metric-row">
+                        <span class="metric-label">Ticker</span>
+                        <span class="metric-value">${play.ticker}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Strategy</span>
+                        <span class="metric-value">${play.strategy}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Confidence</span>
+                        <span class="metric-value ${play.confidence > 75 ? 'bullish' : play.confidence > 50 ? 'neutral' : 'bearish'}">${play.confidence}%</span>
+                    </div>
+                    <div style="font-size: 14px; margin-top: 8px; color: #8e8e93;">
+                        ${play.description}
+                    </div>
+                </div>
+            `).join('');
+            
+            playsBody.innerHTML = playsHTML;
+        }
+        
+        // Message display functions
         function addMessage(type, text) {
             const messagesContainer = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -766,7 +968,7 @@
         function addTypingIndicator() {
             const messagesContainer = document.getElementById('chatMessages');
             const typingDiv = document.createElement('div');
-            typingDiv.className = 'message assistant typing-message';
+            typingDiv.className = 'message rolo typing-message';
             typingDiv.innerHTML = `
                 <div class="message-bubble">
                     <span class="typing"></span>
@@ -785,8 +987,13 @@
             }
         }
         
+        // Tab Navigation
         function switchTab(tab) {
             if (currentTab === tab) return;
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
             
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
@@ -805,30 +1012,27 @@
                     const chatInput = document.getElementById('chatInput');
                     if (chatInput) chatInput.focus();
                 }, 100);
+            } else if (tab === 'plays') {
+                generateSmartPlays();
             }
         }
         
-        function switchToHome() {
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            document.querySelector('.nav-item').classList.add('active');
-            
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            document.getElementById('chat-tab').classList.add('active');
-            currentTab = 'chat';
+        // Stock Analysis
+        function analyzeStock(symbol) {
+            switchTab('chat');
             
             setTimeout(() => {
                 const chatInput = document.getElementById('chatInput');
-                if (chatInput) chatInput.focus();
-            }, 100);
+                if (chatInput) {
+                    chatInput.value = `Analyze ${symbol} with technical indicators and options strategies`;
+                    chatInput.focus();
+                }
+            }, 300);
         }
         
-        // Refresh prices every 30 seconds
-        setInterval(loadStockPrices, 30000);
+        // Auto-refresh data every 30 seconds
+        setInterval(loadInitialData, 30000);
+        setInterval(generateSmartPlays, 300000); // Refresh plays every 5 minutes
     </script>
 </body>
 </html>
