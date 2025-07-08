@@ -1,4 +1,4 @@
-// netlify/functions/stock-data.js
+// netlify/functions/claude-chat.js
 // CLEAN VERSION - NO MOCK DATA ANYWHERE
 exports.handler = async (event, context) => {
   const headers = {
@@ -11,129 +11,121 @@ exports.handler = async (event, context) => {
     return { statusCode: 200, headers, body: '' };
   }
 
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Method not allowed. Please use POST request.' 
+      })
+    };
+  }
+
   try {
-    const { symbol } = event.queryStringParameters || {};
+    const { message } = JSON.parse(event.body);
     
-    if (!symbol) {
+    if (!message) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
-          error: 'Stock symbol parameter required' 
+          error: 'Message parameter required in request body' 
         })
       };
     }
 
-    // Get API key from environment variables
-    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
+    // Get Claude API key from environment variables
+    const CLAUDE_API_KEY = process.env.ANTHROPIC_API_KEY;
     
-    if (!API_KEY) {
+    if (!CLAUDE_API_KEY) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
-          error: 'Alpha Vantage API key not configured in Netlify environment variables',
-          suggestion: 'Add ALPHA_VANTAGE_API_KEY to your Netlify site settings'
+          error: 'Claude API key not configured in Netlify environment variables',
+          suggestion: 'Add ANTHROPIC_API_KEY to your Netlify site settings'
         })
       };
     }
 
-    console.log(`Fetching real data for ${symbol} using Alpha Vantage API...`);
-    
-    // Fetch real stock data from Alpha Vantage
-    const alphaUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
-    const response = await fetch(alphaUrl);
-    
+    console.log('Processing Claude request for message:', message.substring(0, 50) + '...');
+
+    // Create trading-focused prompt
+    const tradingPrompt = `You are Rolo, an expert AI trading assistant specializing in options trading and technical analysis. You provide professional, data-driven trading advice.
+
+Key capabilities:
+- Analyze ANY publicly traded stock ticker
+- Provide specific options strategies with strike prices and expiration dates
+- Explain technical analysis and market conditions
+- Offer risk management advice
+- Educational content about trading concepts
+
+Always be:
+- Professional and knowledgeable
+- Specific with recommendations (exact strikes, dates, prices when possible)
+- Clear about risks involved
+- Educational in your explanations
+
+User message: ${message}
+
+Provide expert trading analysis and recommendations.`;
+
+    // Call Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 1500,
+        messages: [
+          {
+            role: 'user',
+            content: tradingPrompt
+          }
+        ]
+      })
+    });
+
     if (!response.ok) {
-      throw new Error(`Alpha Vantage API error: HTTP ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Claude API error: HTTP ${response.status} - ${errorText}`);
     }
-    
+
     const data = await response.json();
     
-    // Check for API errors
-    if (data.Note) {
-      return {
-        statusCode: 429,
-        headers,
-        body: JSON.stringify({ 
-          error: 'API rate limit exceeded. Please try again in a moment.',
-          note: data.Note
-        })
-      };
-    }
-    
-    if (data.Information) {
-      return {
-        statusCode: 429,
-        headers,
-        body: JSON.stringify({ 
-          error: 'API rate limit or invalid request.',
-          information: data.Information
-        })
-      };
-    }
-    
-    if (data['Error Message']) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ 
-          error: `Invalid stock symbol: ${symbol}`,
-          message: data['Error Message']
-        })
-      };
+    if (!data.content || !data.content[0] || !data.content[0].text) {
+      throw new Error('Invalid response format from Claude API');
     }
 
-    // Extract real quote data
-    const quote = data['Global Quote'];
-    
-    if (!quote || Object.keys(quote).length === 0) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({ 
-          error: `No data available for symbol: ${symbol}`,
-          suggestion: 'Please check if the symbol is valid and markets are open'
-        })
-      };
-    }
-    
-    // Return ONLY real data
-    const stockInfo = {
-      symbol: quote['01. symbol'],
-      price: parseFloat(quote['05. price']).toFixed(2),
-      change: parseFloat(quote['09. change']).toFixed(2),
-      changePercent: parseFloat(quote['10. change percent'].replace('%', '')).toFixed(2),
-      volume: (parseFloat(quote['06. volume']) / 1000000).toFixed(1) + 'M',
-      high: parseFloat(quote['03. high']).toFixed(2),
-      low: parseFloat(quote['04. low']).toFixed(2),
-      open: parseFloat(quote['02. open']).toFixed(2),
-      prevClose: parseFloat(quote['08. previous close']).toFixed(2),
-      lastRefreshed: quote['07. latest trading day'],
-      source: 'Alpha Vantage',
-      isLive: true,
-      isReal: true
-    };
+    const aiResponse = data.content[0].text;
 
-    console.log(`✅ Real data retrieved for ${symbol}: $${stockInfo.price}`);
+    console.log('✅ Claude response generated successfully');
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(stockInfo)
+      body: JSON.stringify({ 
+        response: aiResponse,
+        isLive: true,
+        source: 'Claude AI'
+      })
     };
 
   } catch (error) {
-    console.error('Stock API Error:', error);
+    console.error('Claude API Error:', error);
     
-    // Return error - NO MOCK DATA fallback
+    // Return error - NO MOCK responses
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: `Failed to fetch real stock data: ${error.message}`,
-        isReal: false,
-        suggestion: 'Please check your API key and try again later'
+        error: `AI chat unavailable: ${error.message}`,
+        isLive: false,
+        suggestion: 'Please check your Claude API key and try again'
       })
     };
   }
