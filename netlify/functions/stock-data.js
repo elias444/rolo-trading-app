@@ -1,5 +1,5 @@
 // netlify/functions/stock-data.js
-// CLEAN STOCK DATA - NO MOCK DATA, REAL APIs ONLY
+// CLEAN STOCK DATA FUNCTION - ALPHA VANTAGE ONLY, NO MOCK DATA
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -18,43 +18,62 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: 'Symbol parameter is required' })
+      body: JSON.stringify({ 
+        error: 'Symbol parameter is required',
+        example: '?symbol=AAPL'
+      })
     };
   }
 
   try {
-    // Try Alpha Vantage first
-    const alphaVantageData = await getAlphaVantageData(symbol);
-    if (alphaVantageData) {
+    console.log(`Fetching stock data for ${symbol}...`);
+    
+    // Check if Alpha Vantage API key exists
+    if (!process.env.ALPHA_VANTAGE_API_KEY) {
       return {
-        statusCode: 200,
+        statusCode: 500,
         headers,
-        body: JSON.stringify(alphaVantageData)
+        body: JSON.stringify({
+          error: 'Alpha Vantage API key not configured',
+          symbol: symbol,
+          timestamp: new Date().toISOString()
+        })
       };
     }
 
-    // Try Alpaca as backup
-    const alpacaData = await getAlpacaData(symbol);
-    if (alpacaData) {
+    // Get real data from Alpha Vantage - NO MOCK DATA
+    const alphaData = await getAlphaVantageData(symbol);
+    
+    if (alphaData) {
+      console.log(`✅ Successfully fetched ${symbol}: $${alphaData.price}`);
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(alpacaData)
+        body: JSON.stringify(alphaData)
+      };
+    } else {
+      // No fallback to mock data - return clear error
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({
+          error: `No data available for ${symbol}`,
+          message: 'This ticker may not exist or may not be supported',
+          symbol: symbol,
+          timestamp: new Date().toISOString()
+        })
       };
     }
-
-    // If both fail, return error (NO MOCK DATA)
-    throw new Error('Unable to fetch real-time data from any provider');
 
   } catch (error) {
-    console.error('Stock data error:', error);
+    console.error(`Stock data error for ${symbol}:`, error);
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: 'Real-time data temporarily unavailable',
-        message: `Unable to fetch live data for ${symbol}. Please try again.`,
+        error: 'Failed to fetch stock data',
+        message: error.message,
         symbol: symbol,
         timestamp: new Date().toISOString()
       })
@@ -62,164 +81,83 @@ exports.handler = async (event, context) => {
   }
 };
 
-// Alpha Vantage API - Real data only
+// Alpha Vantage API function - REAL DATA ONLY
 async function getAlphaVantageData(symbol) {
   try {
     const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
-    if (!apiKey) {
-      console.error('Alpha Vantage API key not configured');
-      return null;
-    }
-
-    // Get quote data
+    
+    console.log(`Calling Alpha Vantage for ${symbol}...`);
+    
+    // Get quote data with timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    
     const quoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
-    const quoteResponse = await fetch(quoteUrl);
+    const quoteResponse = await fetch(quoteUrl, { signal: controller.signal });
+    
+    clearTimeout(timeout);
     
     if (!quoteResponse.ok) {
-      throw new Error(`Alpha Vantage API error: ${quoteResponse.status}`);
+      throw new Error(`Alpha Vantage API error: HTTP ${quoteResponse.status}`);
     }
     
     const quoteData = await quoteResponse.json();
     
-    if (quoteData['Error Message'] || quoteData['Note']) {
-      console.log('Alpha Vantage API limit or error:', quoteData);
+    // Check for API errors
+    if (quoteData['Error Message']) {
+      console.log('Alpha Vantage error:', quoteData['Error Message']);
+      return null;
+    }
+    
+    if (quoteData['Note']) {
+      console.log('Alpha Vantage rate limit:', quoteData['Note']);
       return null;
     }
     
     const quote = quoteData['Global Quote'];
-    if (!quote) {
-      console.log('No quote data from Alpha Vantage');
+    if (!quote || !quote['05. price']) {
+      console.log('No quote data received from Alpha Vantage');
       return null;
     }
 
-    // Get company overview for additional data
-    let companyData = {};
-    try {
-      const overviewUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`;
-      const overviewResponse = await fetch(overviewUrl);
-      if (overviewResponse.ok) {
-        const overview = await overviewResponse.json();
-        if (overview && !overview['Error Message']) {
-          companyData = overview;
-        }
-      }
-    } catch (overviewError) {
-      console.log('Company overview fetch failed:', overviewError.message);
+    // Parse real data - NO MOCK VALUES
+    const price = parseFloat(quote['05. price']);
+    const change = parseFloat(quote['09. change']);
+    const changePercent = quote['10. change percent'].replace('%', '');
+    const volume = parseInt(quote['06. volume']);
+    
+    // Validate data quality
+    if (isNaN(price) || price <= 0) {
+      console.log('Invalid price data received:', quote['05. price']);
+      return null;
     }
 
-    // Return structured data - ALL REAL
-    return {
-      symbol: symbol,
-      price: parseFloat(quote['05. price']),
-      change: parseFloat(quote['09. change']),
-      changePercent: quote['10. change percent'],
-      volume: parseInt(quote['06. volume']),
+    // Return structured real data
+    const result = {
+      symbol: symbol.toUpperCase(),
+      price: price,
+      change: change,
+      changePercent: changePercent + '%',
+      volume: volume,
       previousClose: parseFloat(quote['08. previous close']),
       open: parseFloat(quote['02. open']),
       high: parseFloat(quote['03. high']),
       low: parseFloat(quote['04. low']),
-      marketCap: companyData.MarketCapitalization || null,
-      peRatio: companyData.PERatio || null,
-      high52Week: companyData['52WeekHigh'] || null,
-      low52Week: companyData['52WeekLow'] || null,
-      dividendYield: companyData.DividendYield || null,
-      beta: companyData.Beta || null,
-      sector: companyData.Sector || null,
-      industry: companyData.Industry || null,
-      description: companyData.Description || null,
       source: 'Alpha Vantage',
       timestamp: new Date().toISOString(),
-      lastUpdated: quote['07. latest trading day']
+      lastUpdated: quote['07. latest trading day'],
+      isRealTime: true
     };
+    
+    console.log(`Alpha Vantage data for ${symbol}:`, result);
+    return result;
 
   } catch (error) {
-    console.error('Alpha Vantage error:', error);
-    return null;
-  }
-}
-
-// Alpaca API - Backup real data source
-async function getAlpacaData(symbol) {
-  try {
-    const apiKey = process.env.ALPACA_API_KEY;
-    const secretKey = process.env.ALPACA_SECRET_KEY;
-    
-    if (!apiKey || !secretKey) {
-      console.error('Alpaca API credentials not configured');
-      return null;
+    if (error.name === 'AbortError') {
+      console.log('Alpha Vantage request timed out for', symbol);
+    } else {
+      console.error('Alpha Vantage fetch error:', error);
     }
-
-    const headers = {
-      'APCA-API-KEY-ID': apiKey,
-      'APCA-API-SECRET-KEY': secretKey
-    };
-
-    // Get latest trade
-    const tradesUrl = `https://data.alpaca.markets/v2/stocks/${symbol}/trades/latest`;
-    const tradesResponse = await fetch(tradesUrl, { headers });
-    
-    if (!tradesResponse.ok) {
-      throw new Error(`Alpaca API error: ${tradesResponse.status}`);
-    }
-    
-    const tradesData = await tradesResponse.json();
-    
-    if (!tradesData.trade) {
-      console.log('No trade data from Alpaca');
-      return null;
-    }
-
-    // Get latest quote
-    let quoteData = {};
-    try {
-      const quotesUrl = `https://data.alpaca.markets/v2/stocks/${symbol}/quotes/latest`;
-      const quotesResponse = await fetch(quotesUrl, { headers });
-      if (quotesResponse.ok) {
-        quoteData = await quotesResponse.json();
-      }
-    } catch (quoteError) {
-      console.log('Quote fetch failed:', quoteError.message);
-    }
-
-    // Get snapshot for additional data
-    let snapshotData = {};
-    try {
-      const snapshotUrl = `https://data.alpaca.markets/v2/stocks/${symbol}/snapshot`;
-      const snapshotResponse = await fetch(snapshotUrl, { headers });
-      if (snapshotResponse.ok) {
-        snapshotData = await snapshotResponse.json();
-      }
-    } catch (snapshotError) {
-      console.log('Snapshot fetch failed:', snapshotError.message);
-    }
-
-    // Return structured data - ALL REAL
-    const snapshot = snapshotData.snapshot || {};
-    const dailyBar = snapshot.dailyBar || {};
-    const prevDailyBar = snapshot.prevDailyBar || {};
-
-    return {
-      symbol: symbol,
-      price: tradesData.trade.p,
-      volume: dailyBar.v || null,
-      open: dailyBar.o || null,
-      high: dailyBar.h || null,
-      low: dailyBar.l || null,
-      previousClose: prevDailyBar.c || null,
-      change: prevDailyBar.c ? (tradesData.trade.p - prevDailyBar.c) : null,
-      changePercent: prevDailyBar.c ? 
-        `${(((tradesData.trade.p - prevDailyBar.c) / prevDailyBar.c) * 100).toFixed(2)}%` : null,
-      bid: quoteData.quote?.bp || null,
-      ask: quoteData.quote?.ap || null,
-      bidSize: quoteData.quote?.bs || null,
-      askSize: quoteData.quote?.as || null,
-      source: 'Alpaca',
-      timestamp: new Date().toISOString(),
-      lastUpdated: tradesData.trade.t
-    };
-
-  } catch (error) {
-    console.error('Alpaca error:', error);
     return null;
   }
 }
