@@ -1,4 +1,4 @@
-// netlify/functions/stock-data.js - FIXED FOR CORRECT PRICES
+// netlify/functions/stock-data.js - LIVE ALPHA VANTAGE PRICING RESTORED
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -21,145 +21,99 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
+    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY || 'MAQEUTLGYYXC1HF1';
     
-    console.log('=== STOCK PRICE DEBUG ===');
-    console.log('Requested symbol:', symbol);
+    console.log('=== LIVE STOCK DATA REQUEST ===');
+    console.log('Symbol:', symbol);
     console.log('API Key exists:', !!API_KEY);
-    console.log('API Key first 8 chars:', API_KEY ? API_KEY.substring(0, 8) + '...' : 'MISSING');
+    console.log('Using key:', API_KEY.substring(0, 8) + '...');
 
-    if (!API_KEY) {
-      console.log('❌ No Alpha Vantage API key found in environment variables');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'ALPHA_VANTAGE_API_KEY environment variable not set',
-          symbol: symbol,
-          isDemo: true
-        })
-      };
-    }
-
-    // 🚀 PREMIUM REAL-TIME ENDPOINT
-    const realtimeUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
-    console.log('Calling Alpha Vantage URL:', realtimeUrl.replace(API_KEY, 'HIDDEN_KEY'));
-
-    const response = await fetch(realtimeUrl);
+    // 🚀 REAL-TIME Alpha Vantage API with premium entitlement
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${API_KEY}`;
+    
+    console.log('Fetching LIVE data from Alpha Vantage...');
+    
+    const response = await fetch(url);
     const data = await response.json();
     
-    console.log('Raw API Response:', JSON.stringify(data, null, 2));
-
-    // Check for API errors
+    console.log('API Response received:', Object.keys(data));
+    
     if (data['Error Message']) {
-      console.log('❌ API Error:', data['Error Message']);
+      console.log('Alpha Vantage Error:', data['Error Message']);
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
-          error: data['Error Message'],
-          symbol: symbol,
-          suggestion: 'Check if ticker symbol is valid'
+          error: `Alpha Vantage Error: ${data['Error Message']}`,
+          symbol: symbol
         })
       };
     }
-
+    
     if (data['Note']) {
-      console.log('⚠️ API Rate Limited:', data['Note']);
+      console.log('Alpha Vantage Rate Limit:', data['Note']);
       return {
         statusCode: 429,
         headers,
         body: JSON.stringify({ 
-          error: 'API rate limited - please wait and try again',
+          error: 'API rate limit reached',
           details: data['Note'],
           symbol: symbol
         })
       };
     }
 
-    // Extract stock data from Global Quote
     const quote = data['Global Quote'];
-    if (!quote) {
-      console.log('❌ No Global Quote found in response');
-      console.log('Available response keys:', Object.keys(data));
+    if (!quote || !quote['01. symbol']) {
+      console.log('No quote data found for', symbol);
       return {
-        statusCode: 500,
+        statusCode: 404,
         headers,
         body: JSON.stringify({ 
-          error: 'No quote data found in API response',
-          symbol: symbol,
-          rawData: data
-        })
-      };
-    }
-
-    // 📊 PARSE REAL PRICE DATA
-    const price = parseFloat(quote['05. price']);
-    const change = parseFloat(quote['09. change']);
-    const changePercent = quote['10. change percent']?.replace('%', '');
-    const volume = parseInt(quote['06. volume']) / 1000000; // Convert to millions
-    const high = parseFloat(quote['03. high']);
-    const low = parseFloat(quote['04. low']);
-    const open = parseFloat(quote['02. open']);
-
-    console.log('=== PARSED PRICE DATA ===');
-    console.log('Raw price from API:', quote['05. price']);
-    console.log('Parsed price:', price);
-    console.log('Change:', change);
-    console.log('Change %:', changePercent);
-    console.log('Volume (millions):', volume);
-
-    // Validate the price data
-    if (isNaN(price) || price <= 0) {
-      console.log('❌ Invalid price data received');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Invalid price data from API',
-          receivedPrice: quote['05. price'],
+          error: `No real-time data available for symbol: ${symbol}`,
           symbol: symbol
         })
       };
     }
 
-    // 🎯 RETURN CORRECT PRICE DATA
-    const result = {
-      symbol: symbol.toUpperCase(),
-      price: price.toFixed(2),
-      change: change.toFixed(2),
-      changePercent: parseFloat(changePercent).toFixed(2),
-      volume: volume.toFixed(1),
-      high: high.toFixed(2),
-      low: low.toFixed(2),
-      open: open.toFixed(2),
-      timestamp: new Date().toISOString(),
-      source: 'Alpha Vantage Premium',
+    // 📊 EXTRACT LIVE STOCK DATA
+    const stockInfo = {
+      symbol: quote['01. symbol'],
+      price: parseFloat(quote['05. price']).toFixed(2),
+      change: parseFloat(quote['09. change']).toFixed(2),
+      changePercent: parseFloat(quote['10. change percent'].replace('%', '')).toFixed(2),
+      volume: (parseFloat(quote['06. volume']) / 1000000).toFixed(1),
+      high: parseFloat(quote['03. high']).toFixed(2),
+      low: parseFloat(quote['04. low']).toFixed(2),
+      open: parseFloat(quote['02. open']).toFixed(2),
+      prevClose: parseFloat(quote['08. previous close']).toFixed(2),
       isLive: true,
-      isDemo: false
+      isPremium: true,
+      timestamp: new Date().toISOString(),
+      lastRefreshed: quote['07. latest trading day'],
+      source: 'Alpha Vantage Premium'
     };
 
-    console.log('=== FINAL RESULT ===');
-    console.log('Returning to app:', JSON.stringify(result, null, 2));
-    console.log('=== END DEBUG ===');
+    console.log('=== LIVE STOCK DATA SUCCESS ===');
+    console.log(`${stockInfo.symbol}: $${stockInfo.price} (${stockInfo.changePercent}%)`);
+    console.log(`Volume: ${stockInfo.volume}M | High/Low: $${stockInfo.high}/$${stockInfo.low}`);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(result)
+      body: JSON.stringify(stockInfo)
     };
 
   } catch (error) {
-    console.error('❌ Stock data error:', error);
+    console.error('Stock data error:', error);
     
-    // Return error info but don't break the app
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         error: `Stock data failed: ${error.message}`,
         symbol: event.queryStringParameters?.symbol?.toUpperCase() || 'UNKNOWN',
-        isDemo: true,
+        isLive: false,
         suggestion: 'Check network connection and API key'
       })
     };
