@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Rolo - Options Trading AI</title>
     <style>
         * {
@@ -14,28 +14,23 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f8f9fa;
-            overflow-x: hidden;
             height: 100vh;
-            position: fixed;
-            width: 100%;
+            overflow: hidden;
         }
         
         .app-container {
             display: flex;
             flex-direction: column;
             height: 100vh;
-            position: relative;
         }
         
         /* Header */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
-            padding-top: max(clamp(12px, 3vw, 16px), env(safe-area-inset-top, 20px));
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            padding: 16px 20px;
+            padding-top: max(16px, env(safe-area-inset-top, 20px));
+            flex-shrink: 0;
         }
         
         .header-content {
@@ -45,7 +40,7 @@
         }
         
         .logo {
-            font-size: clamp(18px, 4.5vw, 22px);
+            font-size: 20px;
             font-weight: bold;
         }
         
@@ -53,56 +48,57 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: clamp(11px, 2.8vw, 13px);
+            font-size: 12px;
         }
         
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #22c55e;
+            background: #ef4444;
         }
         
-        /* Main Content - FIXED SCROLLING */
+        /* Main Content Area */
         .main-content {
             flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-bottom: 90px;
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            position: relative;
-        }
-        
-        .main-content::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .tab-content {
-            min-height: calc(100vh - 140px);
-            padding: clamp(12px, 3vw, 16px);
-        }
-        
-        /* Chat Tab - DEFAULT HOME */
-        .chat-container {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 230px);
+            overflow: hidden;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .tab-content.active {
+            display: flex;
+        }
+        
+        /* Chat Tab Specific */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            padding-bottom: 0;
         }
         
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: clamp(8px, 2vw, 12px);
-            margin-bottom: clamp(12px, 3vw, 16px);
+            padding: 8px;
+            margin-bottom: 12px;
             -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
         }
         
         .message {
-            margin-bottom: clamp(12px, 3vw, 16px);
+            margin-bottom: 16px;
             display: flex;
-            gap: clamp(8px, 2vw, 12px);
+            gap: 8px;
         }
         
         .message.user {
@@ -111,9 +107,9 @@
         
         .message-bubble {
             max-width: 80%;
-            padding: clamp(10px, 2.5vw, 14px) clamp(12px, 3vw, 16px);
-            border-radius: clamp(12px, 3vw, 18px);
-            font-size: clamp(14px, 3.5vw, 16px);
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 16px;
             line-height: 1.4;
             word-wrap: break-word;
         }
@@ -133,128 +129,120 @@
         
         .chat-input-container {
             display: flex;
-            gap: clamp(8px, 2vw, 12px);
-            padding: clamp(8px, 2vw, 12px);
+            gap: 12px;
+            padding: 16px;
             background: white;
-            border-radius: clamp(12px, 3vw, 16px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-top: 1px solid #e5e7eb;
+            flex-shrink: 0;
         }
         
         .chat-input {
             flex: 1;
-            border: none;
+            border: 1px solid #d1d5db;
             outline: none;
-            padding: clamp(10px, 2.5vw, 14px);
-            font-size: clamp(14px, 3.5vw, 16px);
-            border-radius: clamp(8px, 2vw, 12px);
-            background: #f8f9fa;
+            padding: 12px 16px;
+            font-size: 16px;
+            border-radius: 12px;
+            background: #f9fafb;
             resize: none;
             min-height: 44px;
             max-height: 120px;
         }
         
         .send-button {
-            padding: clamp(10px, 2.5vw, 14px) clamp(16px, 4vw, 20px);
+            padding: 12px 20px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: clamp(8px, 2vw, 12px);
-            font-size: clamp(14px, 3.5vw, 16px);
+            border-radius: 12px;
+            font-size: 16px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 60px;
+            flex-shrink: 0;
         }
         
         .send-button:active {
-            transform: scale(0.95);
             background: #5a67d8;
         }
         
         .send-button:disabled {
             background: #cbd5e0;
-            cursor: not-allowed;
-            transform: none;
         }
         
-        /* Ticker Input Field */
-        .ticker-search {
-            background: white;
-            border-radius: clamp(8px, 2vw, 12px);
-            padding: clamp(16px, 4vw, 20px);
-            margin-bottom: clamp(12px, 3vw, 16px);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .search-container {
-            display: flex;
-            gap: clamp(8px, 2vw, 12px);
-            align-items: center;
-        }
-        
-        .ticker-input {
-            flex: 1;
-            padding: clamp(10px, 2.5vw, 14px);
-            border: 1px solid #e1e5e9;
-            border-radius: clamp(8px, 2vw, 12px);
-            font-size: clamp(14px, 3.5vw, 16px);
-            outline: none;
-            text-transform: uppercase;
-        }
-        
-        .search-button {
-            padding: clamp(10px, 2.5vw, 14px) clamp(16px, 4vw, 20px);
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: clamp(8px, 2vw, 12px);
-            font-size: clamp(14px, 3.5vw, 16px);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .search-button:active {
-            transform: scale(0.95);
-            background: #5a67d8;
-        }
-        
-        /* Other Tabs Content */
+        /* Other Tabs */
         .tab-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: clamp(16px, 4vw, 20px);
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
         }
         
         .tab-title {
-            font-size: clamp(18px, 4.5vw, 22px);
+            font-size: 20px;
             font-weight: bold;
             color: #333;
         }
         
         .home-button {
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
+            padding: 8px 16px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: clamp(6px, 1.5vw, 8px);
-            font-size: clamp(12px, 3vw, 14px);
+            border-radius: 8px;
+            font-size: 14px;
             cursor: pointer;
+        }
+        
+        .tab-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Ticker Search */
+        .ticker-search {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .search-container {
             display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
+            gap: 12px;
         }
         
-        .home-button:active {
-            transform: scale(0.95);
-            background: #5a67d8;
+        .ticker-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            text-transform: uppercase;
         }
         
+        .search-button {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .search-result {
+            margin-top: 16px;
+        }
+        
+        /* Stock Items */
         .content-card {
             background: white;
-            border-radius: clamp(8px, 2vw, 12px);
-            padding: clamp(16px, 4vw, 20px);
-            margin-bottom: clamp(12px, 3vw, 16px);
+            border-radius: 12px;
+            padding: 16px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
@@ -262,10 +250,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: clamp(12px, 3vw, 16px);
+            padding: 16px;
             border-bottom: 1px solid #f1f3f4;
             cursor: pointer;
-            transition: all 0.2s ease;
         }
         
         .stock-item:last-child {
@@ -278,117 +265,81 @@
         
         .stock-symbol {
             font-weight: bold;
-            font-size: clamp(14px, 3.5vw, 16px);
+            font-size: 16px;
             color: #333;
         }
         
         .stock-price {
-            font-size: clamp(14px, 3.5vw, 16px);
+            font-size: 16px;
             font-weight: 600;
             color: #22c55e;
         }
         
         .loading {
             text-align: center;
-            padding: clamp(20px, 5vw, 40px);
+            padding: 40px 20px;
             color: #666;
-            font-size: clamp(14px, 3.5vw, 16px);
+            font-size: 16px;
         }
         
         .error-message {
             background: #fef2f2;
             border: 1px solid #fecaca;
-            border-radius: clamp(8px, 2vw, 12px);
-            padding: clamp(12px, 3vw, 16px);
-            margin: clamp(8px, 2vw, 12px) 0;
+            border-radius: 8px;
+            padding: 12px;
             color: #dc2626;
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: 14px;
+            margin: 8px 0;
         }
         
         .success-message {
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
-            border-radius: clamp(8px, 2vw, 12px);
-            padding: clamp(12px, 3vw, 16px);
-            margin: clamp(8px, 2vw, 12px) 0;
+            border-radius: 8px;
+            padding: 12px;
             color: #16a34a;
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: 14px;
+            margin: 8px 0;
         }
         
-        /* Bottom Navigation - STATIC ALWAYS VISIBLE */
+        /* Bottom Navigation */
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
             background: white;
             border-top: 1px solid #e5e7eb;
-            padding: clamp(8px, 2vw, 12px) clamp(4px, 1vw, 8px);
-            padding-bottom: max(clamp(8px, 2vw, 12px), env(safe-area-inset-bottom, 12px));
-            z-index: 2000;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            padding: 8px 4px;
+            padding-bottom: max(8px, env(safe-area-inset-bottom, 12px));
+            flex-shrink: 0;
         }
         
         .nav-items {
             display: flex;
             justify-content: space-around;
-            align-items: center;
-            max-width: 100%;
         }
         
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: clamp(6px, 1.5vw, 8px);
+            padding: 8px;
             border: none;
             background: none;
             cursor: pointer;
-            transition: all 0.2s ease;
-            flex: 1;
-            max-width: 80px;
+            color: #9ca3af;
+            min-width: 60px;
         }
         
         .nav-item.active {
             color: #667eea;
         }
         
-        .nav-item:not(.active) {
-            color: #9ca3af;
-        }
-        
         .nav-icon {
-            font-size: clamp(18px, 4.5vw, 22px);
-            margin-bottom: 2px;
+            font-size: 20px;
+            margin-bottom: 4px;
         }
         
         .nav-label {
-            font-size: clamp(10px, 2.5vw, 12px);
+            font-size: 12px;
             font-weight: 500;
-        }
-        
-        /* Hide inactive tabs */
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 390px) {
-            .nav-label {
-                font-size: 10px;
-            }
-            
-            .nav-icon {
-                font-size: 18px;
-            }
-            
-            .message-bubble {
-                max-width: 85%;
-            }
         }
         
         /* Loading animation */
@@ -408,17 +359,6 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
-        
-        /* Prevent scroll bounce on iOS */
-        .main-content {
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-        }
-        
-        .chat-messages {
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-        }
     </style>
 </head>
 <body>
@@ -436,37 +376,32 @@
         
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Chat Tab - DEFAULT HOME -->
+            <!-- Chat Tab -->
             <div id="chat-tab" class="tab-content active">
                 <div class="chat-container">
                     <div class="chat-messages" id="chatMessages">
                         <div class="message assistant">
                             <div class="message-bubble">
                                 🚀 <strong>Rolo AI - Your Options Trading Assistant!</strong><br><br>
-                                💡 <strong>I'm powered by REAL AI with LIVE market data!</strong><br><br>
-                                📈 <strong>Try asking me:</strong><br>
+                                💡 <strong>Powered by enhanced AI with LIVE market data!</strong><br><br>
+                                📈 <strong>Ask me anything:</strong><br>
                                 • "AAPL options strategy"<br>
                                 • "HOOD bullish play with strikes"<br>
                                 • "Best SPY income trade this week"<br>
-                                • "TSLA earnings volatility strategy"<br><br>
-                                🎯 <strong>I analyze ANY ticker with:</strong><br>
-                                ✅ Live prices from Alpha Vantage<br>
-                                ✅ Real-time technical analysis<br>
-                                ✅ Specific options strategies with strikes<br>
-                                ✅ Risk management & profit targets<br><br>
-                                Ask me about any stock ticker and I'll give you professional options analysis! 📊
+                                • "TSLA earnings strategy"<br><br>
+                                🎯 <strong>I analyze ANY ticker with real market data!</strong>
                             </div>
                         </div>
                     </div>
-                    <div class="chat-input-container">
-                        <textarea 
-                            id="chatInput" 
-                            class="chat-input" 
-                            placeholder="Ask about options strategies for any ticker..."
-                            rows="1"
-                        ></textarea>
-                        <button id="sendButton" class="send-button">Send</button>
-                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <textarea 
+                        id="chatInput" 
+                        class="chat-input" 
+                        placeholder="Ask about options strategies for any ticker..."
+                        rows="1"
+                    ></textarea>
+                    <button id="sendButton" class="send-button">Send</button>
                 </div>
             </div>
             
@@ -474,64 +409,55 @@
             <div id="ticker-tab" class="tab-content">
                 <div class="tab-header">
                     <div class="tab-title">📊 Live Tickers</div>
-                    <button class="home-button" onclick="switchToHome()">
-                        🏠 Home
-                    </button>
+                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
                 </div>
-                
-                <!-- TICKER SEARCH - NEW FEATURE -->
-                <div class="ticker-search">
-                    <div style="margin-bottom: 12px; font-weight: bold; color: #333;">Search Any Stock:</div>
-                    <div class="search-container">
-                        <input 
-                            type="text" 
-                            id="tickerInput" 
-                            class="ticker-input" 
-                            placeholder="Enter ticker (e.g., AAPL, TSLA, NVDA)"
-                            maxlength="6"
-                        >
-                        <button id="analyzeButton" class="search-button">🔍 Analyze</button>
-                    </div>
-                    <div id="searchResult" style="margin-top: 12px;"></div>
-                </div>
-                
-                <!-- Popular Tickers -->
-                <div class="content-card">
-                    <div style="margin-bottom: 12px; font-weight: bold; color: #333;">Popular Tickers:</div>
-                    <div class="stock-item" onclick="analyzeStock('AAPL')">
-                        <div>
-                            <div class="stock-symbol">AAPL</div>
-                            <div style="font-size: 12px; color: #666;">Apple Inc.</div>
+                <div class="tab-body">
+                    <div class="ticker-search">
+                        <div style="margin-bottom: 12px; font-weight: bold;">Search Any Stock:</div>
+                        <div class="search-container">
+                            <input type="text" id="tickerInput" class="ticker-input" placeholder="Enter ticker (e.g., AAPL)" maxlength="6">
+                            <button id="searchButton" class="search-button">🔍 Search</button>
                         </div>
-                        <div class="stock-price" id="AAPL-price">Loading...</div>
+                        <div id="searchResult" class="search-result"></div>
                     </div>
-                    <div class="stock-item" onclick="analyzeStock('TSLA')">
-                        <div>
-                            <div class="stock-symbol">TSLA</div>
-                            <div style="font-size: 12px; color: #666;">Tesla, Inc.</div>
+                    
+                    <div class="content-card">
+                        <div style="margin-bottom: 12px; font-weight: bold;">Popular Tickers:</div>
+                        <div class="stock-item" onclick="analyzeStock('AAPL')">
+                            <div>
+                                <div class="stock-symbol">AAPL</div>
+                                <div style="font-size: 12px; color: #666;">Apple Inc.</div>
+                            </div>
+                            <div class="stock-price" id="AAPL-price">Loading...</div>
                         </div>
-                        <div class="stock-price" id="TSLA-price">Loading...</div>
-                    </div>
-                    <div class="stock-item" onclick="analyzeStock('NVDA')">
-                        <div>
-                            <div class="stock-symbol">NVDA</div>
-                            <div style="font-size: 12px; color: #666;">NVIDIA Corp.</div>
+                        <div class="stock-item" onclick="analyzeStock('TSLA')">
+                            <div>
+                                <div class="stock-symbol">TSLA</div>
+                                <div style="font-size: 12px; color: #666;">Tesla, Inc.</div>
+                            </div>
+                            <div class="stock-price" id="TSLA-price">Loading...</div>
                         </div>
-                        <div class="stock-price" id="NVDA-price">Loading...</div>
-                    </div>
-                    <div class="stock-item" onclick="analyzeStock('HOOD')">
-                        <div>
-                            <div class="stock-symbol">HOOD</div>
-                            <div style="font-size: 12px; color: #666;">Robinhood Markets</div>
+                        <div class="stock-item" onclick="analyzeStock('NVDA')">
+                            <div>
+                                <div class="stock-symbol">NVDA</div>
+                                <div style="font-size: 12px; color: #666;">NVIDIA Corp.</div>
+                            </div>
+                            <div class="stock-price" id="NVDA-price">Loading...</div>
                         </div>
-                        <div class="stock-price" id="HOOD-price">Loading...</div>
-                    </div>
-                    <div class="stock-item" onclick="analyzeStock('AI')">
-                        <div>
-                            <div class="stock-symbol">AI</div>
-                            <div style="font-size: 12px; color: #666;">C3.ai, Inc.</div>
+                        <div class="stock-item" onclick="analyzeStock('HOOD')">
+                            <div>
+                                <div class="stock-symbol">HOOD</div>
+                                <div style="font-size: 12px; color: #666;">Robinhood Markets</div>
+                            </div>
+                            <div class="stock-price" id="HOOD-price">Loading...</div>
                         </div>
-                        <div class="stock-price" id="AI-price">Loading...</div>
+                        <div class="stock-item" onclick="analyzeStock('AI')">
+                            <div>
+                                <div class="stock-symbol">AI</div>
+                                <div style="font-size: 12px; color: #666;">C3.ai, Inc.</div>
+                            </div>
+                            <div class="stock-price" id="AI-price">Loading...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -539,13 +465,11 @@
             <!-- Analysis Tab -->
             <div id="analysis-tab" class="tab-content">
                 <div class="tab-header">
-                    <div class="tab-title">📈 Technical Analysis</div>
-                    <button class="home-button" onclick="switchToHome()">
-                        🏠 Home
-                    </button>
+                    <div class="tab-title">📈 Analysis</div>
+                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
                 </div>
-                <div class="content-card">
-                    <div class="loading">Select a ticker from the Ticker tab or ask Rolo in Chat for technical analysis!</div>
+                <div class="tab-body">
+                    <div class="loading">Select a ticker or ask Rolo in Chat for analysis!</div>
                 </div>
             </div>
             
@@ -553,30 +477,26 @@
             <div id="plays-tab" class="tab-content">
                 <div class="tab-header">
                     <div class="tab-title">🎯 Smart Plays</div>
-                    <button class="home-button" onclick="switchToHome()">
-                        🏠 Home
-                    </button>
+                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
                 </div>
-                <div class="content-card">
-                    <div class="loading">Ask Rolo for specific options strategies in Chat to see plays here!</div>
+                <div class="tab-body">
+                    <div class="loading">Ask Rolo for options strategies to see plays here!</div>
                 </div>
             </div>
             
             <!-- Alerts Tab -->
             <div id="alerts-tab" class="tab-content">
                 <div class="tab-header">
-                    <div class="tab-title">🔔 Live Alerts</div>
-                    <button class="home-button" onclick="switchToHome()">
-                        🏠 Home
-                    </button>
+                    <div class="tab-title">🔔 Alerts</div>
+                    <button class="home-button" onclick="switchToHome()">🏠 Home</button>
                 </div>
-                <div class="content-card">
-                    <div class="loading">Real-time alerts will appear here when significant market moves are detected!</div>
+                <div class="tab-body">
+                    <div class="loading">Live alerts will appear here!</div>
                 </div>
             </div>
         </div>
         
-        <!-- Bottom Navigation - ALWAYS VISIBLE -->
+        <!-- Bottom Navigation -->
         <div class="bottom-nav">
             <div class="nav-items">
                 <button class="nav-item active" onclick="switchTab('chat')">
@@ -604,94 +524,74 @@
     </div>
 
     <script>
-        // Global state
         let currentTab = 'chat';
         let isLoading = false;
-        let apiStatus = { alpha: false, claude: false };
+        let apiConnected = false;
         
-        // Initialize app
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Rolo AI initializing...');
+            console.log('🚀 Initializing Rolo AI...');
+            setupApp();
+        });
+        
+        function setupApp() {
+            // Test API connection
+            testConnection();
             
-            // Test API connections
-            testAPIConnections();
+            // Load stock prices
+            loadStockPrices();
             
-            // Load live prices on startup
-            loadLivePrices();
+            // Setup chat
+            setupChat();
             
-            // Set up chat input
-            setupChatInput();
-            
-            // Set up ticker search
+            // Setup ticker search
             setupTickerSearch();
             
             // Focus chat input
             setTimeout(() => {
                 const chatInput = document.getElementById('chatInput');
                 if (chatInput) chatInput.focus();
-            }, 300);
-        });
-        
-        // Test API connections
-        async function testAPIConnections() {
-            console.log('🔍 Testing API connections...');
-            
-            // Test Alpha Vantage (stock data)
-            try {
-                const stockTest = await fetch('/.netlify/functions/stock-data?symbol=AAPL');
-                apiStatus.alpha = stockTest.ok;
-                console.log('📊 Alpha Vantage:', stockTest.ok ? 'Connected' : 'Failed');
-            } catch (error) {
-                console.log('📊 Alpha Vantage: Error -', error.message);
-                apiStatus.alpha = false;
-            }
-            
-            // Test Claude (simple ping)
-            try {
-                const claudeTest = await fetch('/.netlify/functions/claude-chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: 'test' })
-                });
-                apiStatus.claude = claudeTest.ok && claudeTest.status !== 500;
-                console.log('🤖 Claude AI:', apiStatus.claude ? 'Connected' : 'Failed');
-            } catch (error) {
-                console.log('🤖 Claude AI: Error -', error.message);
-                apiStatus.claude = false;
-            }
-            
-            updateStatusIndicator();
+            }, 500);
         }
         
-        // Update status indicator
-        function updateStatusIndicator() {
+        async function testConnection() {
+            try {
+                const response = await fetch('/.netlify/functions/stock-data?symbol=AAPL');
+                if (response.ok) {
+                    apiConnected = true;
+                    updateStatus(true, 'Live APIs');
+                    console.log('✅ API connection successful');
+                } else {
+                    updateStatus(false, 'API Error');
+                    console.log('❌ API connection failed:', response.status);
+                }
+            } catch (error) {
+                updateStatus(false, 'Offline');
+                console.log('❌ API test failed:', error.message);
+            }
+        }
+        
+        function updateStatus(connected, text) {
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
             
-            if (apiStatus.alpha && apiStatus.claude) {
+            if (connected) {
                 statusDot.style.background = '#22c55e';
-                statusText.textContent = 'Live APIs';
-            } else if (apiStatus.alpha || apiStatus.claude) {
-                statusDot.style.background = '#eab308';
-                statusText.textContent = 'Partial APIs';
             } else {
                 statusDot.style.background = '#ef4444';
-                statusText.textContent = 'Connecting...';
             }
+            statusText.textContent = text;
         }
         
-        // Setup chat input
-        function setupChatInput() {
+        function setupChat() {
             const chatInput = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
             
-            // Auto-resize textarea
             chatInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
             
-            // Send message on Enter (not Shift+Enter)
             chatInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -699,16 +599,13 @@
                 }
             });
             
-            // Send button click
             sendButton.addEventListener('click', sendMessage);
         }
         
-        // Setup ticker search
         function setupTickerSearch() {
             const tickerInput = document.getElementById('tickerInput');
-            const analyzeButton = document.getElementById('analyzeButton');
+            const searchButton = document.getElementById('searchButton');
             
-            // Search on Enter
             tickerInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -716,178 +613,79 @@
                 }
             });
             
-            // Search on button click
-            analyzeButton.addEventListener('click', searchTicker);
-            
-            // Auto-uppercase
             tickerInput.addEventListener('input', function() {
                 this.value = this.value.toUpperCase();
             });
+            
+            searchButton.addEventListener('click', searchTicker);
         }
         
-        // Search ticker function
         async function searchTicker() {
             const tickerInput = document.getElementById('tickerInput');
-            const analyzeButton = document.getElementById('analyzeButton');
+            const searchButton = document.getElementById('searchButton');
             const searchResult = document.getElementById('searchResult');
             const ticker = tickerInput.value.trim();
             
             if (!ticker) {
-                showMessage(searchResult, 'Please enter a ticker symbol', 'error');
+                searchResult.innerHTML = '<div class="error-message">Please enter a ticker symbol</div>';
                 return;
             }
             
-            analyzeButton.disabled = true;
-            analyzeButton.textContent = 'Searching...';
+            searchButton.disabled = true;
+            searchButton.textContent = 'Searching...';
             searchResult.innerHTML = '';
             
             try {
-                console.log(`🔍 Searching for ${ticker}...`);
-                
-                // Get stock data - NO MOCK DATA
                 const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: Unable to fetch data`);
-                }
-                
                 const data = await response.json();
                 
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                // Display real results - NO MOCK DATA
-                if (data.price) {
+                if (response.ok && data.price) {
                     const change = data.change || 0;
-                    const changePercent = data.changePercent || '0.00%';
                     const changeColor = change >= 0 ? '#22c55e' : '#ef4444';
                     const changeSign = change >= 0 ? '+' : '';
                     
                     searchResult.innerHTML = `
                         <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                                 <div>
-                                    <div style="font-weight: bold; font-size: 18px; color: #333;">${ticker}</div>
-                                    <div style="font-size: 14px; color: #666;">Live Price</div>
+                                    <div style="font-weight: bold; font-size: 18px;">${ticker}</div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div style="font-weight: bold; font-size: 18px; color: #333;">$${parseFloat(data.price).toFixed(2)}</div>
-                                    <div style="font-size: 14px; color: ${changeColor};">${changeSign}${parseFloat(change).toFixed(2)} (${changePercent})</div>
+                                    <div style="font-weight: bold; font-size: 18px;">$${data.price.toFixed(2)}</div>
+                                    <div style="color: ${changeColor};">${changeSign}${change.toFixed(2)}</div>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="analyzeStock('${ticker}')" style="flex: 1; padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">💬 Ask Rolo</button>
-                                <button onclick="addToWatchlist('${ticker}')" style="flex: 1; padding: 8px 12px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer;">⭐ Watch</button>
-                            </div>
+                            <button onclick="analyzeStock('${ticker}')" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">💬 Ask Rolo About ${ticker}</button>
                         </div>
                     `;
-                    
-                    showMessage(searchResult, `✅ Found live data for ${ticker}!`, 'success');
                 } else {
-                    throw new Error('No price data available');
+                    searchResult.innerHTML = `<div class="error-message">Could not find data for "${ticker}". Please check the symbol.</div>`;
                 }
-                
             } catch (error) {
-                console.error(`❌ Error searching ${ticker}:`, error);
-                
-                // Show real error - NO MOCK DATA
-                searchResult.innerHTML = `
-                    <div class="error-message">
-                        ❌ Unable to find data for "${ticker}"<br>
-                        Error: ${error.message}<br>
-                        Please check the ticker symbol and try again.
-                    </div>
-                `;
+                searchResult.innerHTML = `<div class="error-message">Error searching for "${ticker}": ${error.message}</div>`;
             } finally {
-                analyzeButton.disabled = false;
-                analyzeButton.textContent = '🔍 Analyze';
+                searchButton.disabled = false;
+                searchButton.textContent = '🔍 Search';
             }
         }
         
-        // Show message helper
-        function showMessage(container, message, type) {
-            const className = type === 'error' ? 'error-message' : 'success-message';
-            const existingMessage = container.querySelector(`.${className}`);
-            if (existingMessage) {
-                existingMessage.textContent = message;
-            } else {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = className;
-                messageDiv.textContent = message;
-                container.appendChild(messageDiv);
-            }
-        }
-        
-        // Tab switching - CHAT IS HOME
-        function switchTab(tab) {
-            if (currentTab === tab) return;
-            
-            // Haptic feedback
-            if (navigator.vibrate) {
-                navigator.vibrate(10);
-            }
-            
-            // Update navigation
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
-            
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Show selected tab
-            document.getElementById(`${tab}-tab`).classList.add('active');
-            
-            currentTab = tab;
-            
-            // Focus chat input if returning to chat
-            if (tab === 'chat') {
-                setTimeout(() => {
-                    const chatInput = document.getElementById('chatInput');
-                    if (chatInput) chatInput.focus();
-                }, 100);
-            }
-        }
-        
-        // Home button - Always returns to chat
-        function switchToHome() {
-            // Update navigation to chat
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            document.querySelector('.nav-item').classList.add('active'); // First nav item is chat
-            
-            // Switch to chat tab
-            switchTab('chat');
-        }
-        
-        // Load live prices - NO MOCK DATA
-        async function loadLivePrices() {
+        async function loadStockPrices() {
             const tickers = ['AAPL', 'TSLA', 'NVDA', 'HOOD', 'AI'];
             
             for (const ticker of tickers) {
                 try {
                     const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.price && !data.error) {
-                            const priceElement = document.getElementById(`${ticker}-price`);
-                            if (priceElement) {
-                                priceElement.textContent = `$${parseFloat(data.price).toFixed(2)}`;
-                                priceElement.style.color = '#22c55e';
-                            }
-                        } else {
-                            throw new Error(data.error || 'No price data');
-                        }
-                    } else {
-                        throw new Error(`HTTP ${response.status}`);
+                    const data = await response.json();
+                    const priceElement = document.getElementById(`${ticker}-price`);
+                    
+                    if (response.ok && data.price && priceElement) {
+                        priceElement.textContent = `$${data.price.toFixed(2)}`;
+                        priceElement.style.color = '#22c55e';
+                    } else if (priceElement) {
+                        priceElement.textContent = 'Error';
+                        priceElement.style.color = '#ef4444';
                     }
                 } catch (error) {
-                    console.error(`❌ Error loading ${ticker}:`, error);
                     const priceElement = document.getElementById(`${ticker}-price`);
                     if (priceElement) {
                         priceElement.textContent = 'Error';
@@ -897,24 +695,17 @@
             }
         }
         
-        // Analyze stock - Goes to chat with pre-filled question
         function analyzeStock(symbol) {
             switchToHome();
             setTimeout(() => {
                 const chatInput = document.getElementById('chatInput');
                 if (chatInput) {
-                    chatInput.value = `${symbol} options analysis with specific strategies and strikes`;
+                    chatInput.value = `${symbol} options analysis`;
                     chatInput.focus();
                 }
             }, 300);
         }
         
-        // Add to watchlist (placeholder)
-        function addToWatchlist(symbol) {
-            alert(`${symbol} added to watchlist! (Feature coming soon)`);
-        }
-        
-        // Send message to Claude - FIXED TIMEOUT ISSUE
         async function sendMessage() {
             const chatInput = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
@@ -922,67 +713,32 @@
             
             if (!message || isLoading) return;
             
-            // Add user message
             addMessage('user', message);
             chatInput.value = '';
             chatInput.style.height = 'auto';
             
-            // Show loading
             isLoading = true;
             sendButton.disabled = true;
             addTypingIndicator();
             
             try {
-                console.log('💬 Sending message to Claude:', message);
-                
-                // Use bulletproof Claude function with timeout handling
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-                
                 const response = await fetch('/.netlify/functions/claude-chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        message: message,
-                        timestamp: new Date().toISOString()
-                    }),
-                    signal: controller.signal
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
                 });
-                
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    throw new Error(`Claude API Error ${response.status}`);
-                }
                 
                 const data = await response.json();
                 removeTypingIndicator();
                 
-                // Add AI response - REAL ANALYSIS ONLY
-                if (data.response) {
+                if (response.ok && data.response) {
                     addMessage('assistant', data.response);
                 } else {
-                    addMessage('assistant', '⚠️ I received an empty response. Please try asking your question again.');
+                    addMessage('assistant', '⚠️ Sorry, I\'m having trouble right now. Please try again.');
                 }
-                
             } catch (error) {
-                console.error('❌ Claude chat error:', error);
                 removeTypingIndicator();
-                
-                // Handle specific error types - NO MOCK RESPONSES
-                if (error.name === 'AbortError') {
-                    addMessage('assistant', '⏰ Request timed out. Please try a simpler question or try again in a moment.');
-                } else if (error.message.includes('500')) {
-                    addMessage('assistant', '🔧 Claude AI is temporarily having issues. Please try again in a minute.');
-                } else {
-                    addMessage('assistant', `⚠️ Connection error: ${error.message}. Please check your connection and try again.`);
-                }
-                
-                // Update status indicator
-                apiStatus.claude = false;
-                updateStatusIndicator();
+                addMessage('assistant', '⚠️ Connection error. Please try again.');
             } finally {
                 isLoading = false;
                 sendButton.disabled = false;
@@ -990,7 +746,6 @@
             }
         }
         
-        // Add message to chat
         function addMessage(type, text) {
             const messagesContainer = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -1003,13 +758,11 @@
             messageDiv.appendChild(bubbleDiv);
             messagesContainer.appendChild(messageDiv);
             
-            // Scroll to bottom - FIXED SCROLLING
             setTimeout(() => {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }, 10);
         }
         
-        // Typing indicator
         function addTypingIndicator() {
             const messagesContainer = document.getElementById('chatMessages');
             const typingDiv = document.createElement('div');
@@ -1032,11 +785,50 @@
             }
         }
         
-        // Refresh live prices every 30 seconds
-        setInterval(loadLivePrices, 30000);
+        function switchTab(tab) {
+            if (currentTab === tab) return;
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            currentTab = tab;
+            
+            if (tab === 'chat') {
+                setTimeout(() => {
+                    const chatInput = document.getElementById('chatInput');
+                    if (chatInput) chatInput.focus();
+                }, 100);
+            }
+        }
         
-        // Refresh API status every 2 minutes
-        setInterval(testAPIConnections, 120000);
+        function switchToHome() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector('.nav-item').classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.getElementById('chat-tab').classList.add('active');
+            currentTab = 'chat';
+            
+            setTimeout(() => {
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) chatInput.focus();
+            }, 100);
+        }
+        
+        // Refresh prices every 30 seconds
+        setInterval(loadStockPrices, 30000);
     </script>
 </body>
 </html>
