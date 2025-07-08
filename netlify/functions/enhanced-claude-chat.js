@@ -1,4 +1,4 @@
-// netlify/functions/enhanced-claude-chat.js - SIMPLIFIED WORKING VERSION
+// netlify/functions/enhanced-claude-chat.js - RESTORED ORIGINAL WITH LIVE PRICING
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -19,7 +19,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { message, requestIntelligence = true } = JSON.parse(event.body);
+    const { message } = JSON.parse(event.body);
     
     if (!message) {
       return {
@@ -29,69 +29,81 @@ exports.handler = async (event, context) => {
       };
     }
 
+    console.log('🧠 Processing ENHANCED Claude request:', message.substring(0, 100) + '...');
+
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     
     if (!ANTHROPIC_API_KEY) {
+      console.log('❌ No Claude API key found');
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
-          error: 'Claude API key not configured. Please add ANTHROPIC_API_KEY to environment variables.'
+          error: 'ANTHROPIC_API_KEY environment variable not set'
         })
       };
     }
 
-    console.log(`🧠 ENHANCED CLAUDE REQUEST: ${message.substring(0, 50)}...`);
-    
-    // 🚀 EXTRACT TICKERS from message
+    // 🔍 EXTRACT TICKERS from user message
     const tickers = extractTickers(message);
+    console.log('Detected tickers:', tickers);
+
+    // 📊 GET REAL-TIME MARKET CONTEXT
     let enhancedContext = '';
+    let stockData = {};
     
-    // 🔥 ADD REAL-TIME CONTEXT if tickers detected
-    if (tickers.length > 0 && requestIntelligence) {
-      console.log(`📊 Adding context for: ${tickers.join(', ')}`);
-      enhancedContext = await getQuickMarketContext(tickers[0]);
+    if (tickers.length > 0) {
+      console.log('Fetching real-time data for tickers:', tickers);
+      
+      // Get real stock data for each ticker
+      for (const ticker of tickers.slice(0, 2)) { // Limit to 2 tickers to avoid timeout
+        try {
+          const contextData = await getQuickMarketContext(ticker);
+          if (contextData) {
+            enhancedContext += contextData + '\n';
+            stockData[ticker] = contextData;
+          }
+        } catch (error) {
+          console.log(`Failed to get data for ${ticker}:`, error.message);
+        }
+      }
     }
 
-    // 🎯 ENHANCED SYSTEM PROMPT
-    const currentDate = new Date();
-    const enhancedSystemPrompt = `You are Rolo, the ultimate AI trading assistant with enhanced market intelligence.
+    // 🤖 ENHANCED SYSTEM PROMPT
+    const enhancedSystemPrompt = `You are Rolo, a professional options trading AI assistant with access to real-time market data and comprehensive analysis capabilities.
 
-CURRENT CONTEXT:
-- Date: ${currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-- Time: ${currentDate.toLocaleTimeString('en-US')}
-- Market Status: ${getMarketStatus(currentDate)}
+CURRENT MARKET CONTEXT:
+${enhancedContext || 'General market analysis mode'}
 
-ENHANCED CAPABILITIES:
-You provide professional options trading analysis with:
-✅ Real-time market awareness
-✅ Specific options strategies with exact strikes
-✅ Professional risk management
-✅ Current market context integration
-✅ Social sentiment consideration
+CORE CAPABILITIES:
+- Real-time stock price analysis using Alpha Vantage premium data
+- Options trading strategies with specific strikes and expirations
+- Technical analysis with RSI, MACD, moving averages
+- Risk management and position sizing recommendations
+- VIX-aware volatility strategies
+- Market sentiment integration
 
 RESPONSE GUIDELINES:
-- Give specific options strategies with exact strikes and entry/exit points
-- Include comprehensive risk management and position sizing
-- Reference current market conditions when provided
-- Provide actionable, professional trading recommendations
-- Focus on risk-defined strategies and education
+- Use the real-time data provided in your analysis
+- Provide specific options strategies with exact strikes
+- Include risk management advice
+- Reference current market conditions when relevant
+- Be direct and actionable for options traders
+- Focus on the tickers mentioned: ${tickers.join(', ') || 'general analysis'}
 
-TRADING FOCUS:
-- Options strategies (calls, puts, spreads, condors, straddles)
-- Risk-defined trades with clear profit targets and stop losses
-- Current market volatility environment consideration
-- Professional risk management principles
-- Educational value with practical application`;
+TRADING CONTEXT:
+- Current date: ${new Date().toLocaleDateString()}
+- Market session: ${getMarketSession()}
+- Focus on options trading opportunities
 
-    // 🔧 CONSTRUCT ENHANCED MESSAGE
-    const enhancedMessage = enhancedContext ? 
-      `${message}\n\n--- CURRENT MARKET CONTEXT ---\n${enhancedContext}\n\nBASE YOUR ANALYSIS ON THIS REAL-TIME DATA.` : 
-      message;
+Provide comprehensive, data-driven options trading analysis.`;
 
-    // 🤖 CLAUDE API CALL
+    // 🚀 ENHANCED CLAUDE API CALL with real-time context
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => {
+      console.log('Enhanced Claude API timeout after 9 seconds');
+      controller.abort();
+    }, 9000); // 9 seconds to stay under Netlify's 10-second limit
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -104,11 +116,13 @@ TRADING FOCUS:
         signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 1200,
+          max_tokens: 2000,
           system: enhancedSystemPrompt,
           messages: [{
             role: 'user',
-            content: enhancedMessage
+            content: enhancedContext ? 
+              `${message}\n\n--- CURRENT MARKET CONTEXT ---\n${enhancedContext}\n\nBASE YOUR ANALYSIS ON THIS REAL-TIME DATA.` : 
+              message
           }]
         })
       });
@@ -195,7 +209,8 @@ function extractTickers(message) {
   
   const knownTickers = [
     'SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'HOOD',
-    'AMD', 'COIN', 'GME', 'AMC', 'PLTR', 'SOFI', 'F', 'BAC', 'JPM', 'XOM', 'CVX'
+    'AMD', 'COIN', 'GME', 'AMC', 'PLTR', 'SOFI', 'F', 'BAC', 'JPM', 'XOM', 'CVX',
+    'BRK.A', 'BRK.B', 'NFLX', 'ADBE', 'CRM', 'UBER', 'LYFT', 'SHOP', 'SQ', 'PYPL'
   ];
   
   const validTickers = matches.filter(ticker => 
@@ -205,14 +220,17 @@ function extractTickers(message) {
   return [...new Set(validTickers)].slice(0, 2);
 }
 
-// 📊 GET QUICK MARKET CONTEXT
+// 📊 GET QUICK MARKET CONTEXT with real Alpha Vantage data
 async function getQuickMarketContext(symbol) {
   try {
     const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
     
     if (!API_KEY) {
-      return `Enhanced analysis for ${symbol} (market data unavailable - API key not configured)`;
+      console.log('No Alpha Vantage API key found');
+      return null;
     }
+
+    console.log(`Fetching live data for ${symbol}`);
 
     // Quick stock data fetch with timeout
     const controller = new AbortController();
@@ -224,41 +242,55 @@ async function getQuickMarketContext(symbol) {
     clearTimeout(timeoutId);
     
     const data = await response.json();
+    
+    if (data['Error Message']) {
+      console.log(`Alpha Vantage error for ${symbol}:`, data['Error Message']);
+      return null;
+    }
+    
+    if (data['Note']) {
+      console.log(`Alpha Vantage rate limit for ${symbol}:`, data['Note']);
+      return null;
+    }
+    
     const quote = data['Global Quote'];
     
-    if (quote) {
+    if (quote && quote['05. price']) {
       const price = parseFloat(quote['05. price']);
       const change = parseFloat(quote['09. change']);
       const changePercent = parseFloat(quote['10. change percent'].replace('%', ''));
-      const volume = parseFloat(quote['06. volume']);
+      const volume = parseInt(quote['06. volume']) / 1000000; // Convert to millions
       
-      return `REAL-TIME ${symbol} DATA:
-• Price: $${price.toFixed(2)} | Change: ${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent.toFixed(2)}%)
-• Volume: ${(volume / 1000000).toFixed(1)}M shares
-• Trading Range: $${quote['04. low']} - $${quote['03. high']}
-• Market Trend: ${changePercent > 1 ? 'Strong Bullish' : changePercent > 0 ? 'Bullish' : changePercent < -1 ? 'Strong Bearish' : changePercent < 0 ? 'Bearish' : 'Neutral'}
-
-PROVIDE SPECIFIC OPTIONS STRATEGIES BASED ON THIS CURRENT PRICE ACTION.`;
+      console.log(`✅ Got live data for ${symbol}: $${price} (${changePercent}%)`);
+      
+      return `${symbol} LIVE DATA: Price $${price.toFixed(2)}, Change ${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent.toFixed(2)}%), Volume ${volume.toFixed(1)}M`;
     }
     
-    return `${symbol} analysis (real-time data temporarily unavailable)`;
+    return null;
     
   } catch (error) {
-    console.log(`Quick context fetch failed for ${symbol}:`, error.message);
-    return `${symbol} enhanced analysis (using market knowledge)`;
+    console.log(`Failed to get market context for ${symbol}:`, error.message);
+    return null;
   }
 }
 
-// 📊 GET MARKET STATUS
-function getMarketStatus(currentDate) {
-  const hour = currentDate.getHours();
-  const day = currentDate.getDay();
+// 🕐 GET MARKET SESSION
+function getMarketSession() {
+  const now = new Date();
+  const hour = now.getHours();
+  const day = now.getDay();
   
-  if (day === 0 || day === 6) return 'Market Closed (Weekend)';
+  // Weekend
+  if (day === 0 || day === 6) {
+    return 'Weekend (Markets Closed)';
+  }
   
-  if (hour < 4) return 'Market Closed';
-  if (hour >= 4 && hour < 9.5) return 'Pre-Market';
-  if (hour >= 9.5 && hour < 16) return 'Market Open';
-  if (hour >= 16 && hour < 20) return 'After Hours';
-  return 'Market Closed';
+  // Market hours (9:30 AM - 4:00 PM ET)
+  if (hour >= 9 && hour < 16) {
+    return 'Regular Trading Hours';
+  } else if (hour >= 4 && hour < 20) {
+    return 'After Hours Trading';
+  } else {
+    return 'Pre-Market/Overnight';
+  }
 }
