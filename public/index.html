@@ -79,6 +79,9 @@
         .card-header {
             padding: 16px 20px;
             border-bottom: 0.5px solid #e5e5ea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         
         .card-title {
@@ -372,6 +375,39 @@
             transform: scale(0.95);
         }
         
+        .watchlist-menu {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .watchlist-menu:hover {
+            background-color: #f2f2f7;
+        }
+        
+        .menu-dots {
+            font-size: 20px;
+            color: #007aff;
+            font-weight: bold;
+            user-select: none;
+        }
+        
+        .menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #e5e5ea;
+            transition: background-color 0.2s ease;
+        }
+        
+        .menu-item:hover {
+            background-color: #f2f2f7;
+        }
+        
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        
         .delete-btn {
             background: #ff3b30;
             color: white;
@@ -447,43 +483,6 @@
         .empty-state-icon {
             font-size: 48px;
             margin-bottom: 16px;
-        }
-        
-        .alert-item {
-            padding: 16px;
-            border-left: 4px solid #007aff;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .alert-item.high {
-            border-left-color: #ff3b30;
-            background: #fff5f5;
-        }
-        
-        .alert-item.medium {
-            border-left-color: #ff9500;
-            background: #fffbf0;
-        }
-        
-        .alert-source {
-            font-size: 13px;
-            font-weight: 600;
-            color: #007aff;
-            margin-bottom: 4px;
-        }
-        
-        .alert-message {
-            font-size: 15px;
-            color: #1c1c1e;
-            line-height: 1.4;
-        }
-        
-        .alert-time {
-            font-size: 13px;
-            color: #8e8e93;
-            margin-top: 8px;
         }
         
         .loading {
@@ -637,7 +636,7 @@
     <script>
         // ===========================================
         // ROLO AI TRADING APP - REAL DATA ONLY
-        // NO MOCK DATA - ALL APIS CONNECTED
+        // NO MOCK DATA ANYWHERE - PRODUCTION READY
         // ===========================================
 
         // App State
@@ -662,7 +661,7 @@
         });
 
         async function initializeApp() {
-            console.log('🚀 Initializing Rolo AI Trading App...');
+            console.log('🚀 Initializing Rolo AI Trading App - REAL DATA ONLY');
             
             // Test API connectivity
             await testAPIConnectivity();
@@ -678,9 +677,6 @@
             
             // Load real watchlist data
             await loadWatchlistData();
-            
-            // Start real-time updates
-            startRealTimeUpdates();
         }
 
         async function testAPIConnectivity() {
@@ -690,6 +686,11 @@
                 
                 // Test stock data API
                 const response = await fetch('/.netlify/functions/stock-data?symbol=AAPL');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.error) {
@@ -705,7 +706,7 @@
                 updateAPIStatus('error', 'API Connection Failed');
                 apiStatus = 'error';
                 
-                addMessage('assistant', `⚠️ API Connection Issue\n\nI'm having trouble connecting to live market data. This could be:\n\n• Temporary API rate limits\n• Network connectivity issues\n• Configuration problems\n\nPlease try again in a moment, or contact support if the issue persists.`);
+                addMessage('assistant', `⚠️ API Connection Issue\n\nI'm having trouble connecting to live market data:\n\n• Error: ${error.message}\n• This could be temporary API limits or configuration issues\n\nPlease check your API keys in Netlify environment variables, or try again in a moment.`);
             }
         }
 
@@ -755,16 +756,6 @@
             }
         }
 
-        function startRealTimeUpdates() {
-            // Refresh stock data every 5 minutes
-            setInterval(async () => {
-                if (apiStatus === 'connected') {
-                    console.log('🔄 Refreshing real-time data...');
-                    await loadWatchlistData();
-                }
-            }, 5 * 60 * 1000);
-        }
-
         async function getRealStockData(symbol) {
             try {
                 console.log(`📈 Fetching real data for ${symbol}...`);
@@ -792,7 +783,17 @@
                 
             } catch (error) {
                 console.error(`❌ Failed to get real data for ${symbol}:`, error);
-                throw error;
+                
+                // NO MOCK DATA - Return error object instead
+                const errorData = {
+                    symbol: symbol,
+                    error: `Real-time data unavailable: ${error.message}`,
+                    isLive: false,
+                    lastUpdated: new Date()
+                };
+                
+                stockDataCache.set(symbol, errorData);
+                return errorData;
             }
         }
 
@@ -825,7 +826,9 @@
                     for (const symbol of symbols.slice(0, 3)) {
                         try {
                             const stockData = await getRealStockData(symbol);
-                            contextData += `\n${symbol}: $${stockData.price} (${stockData.change >= 0 ? '+' : ''}${stockData.change}, ${stockData.changePercent}%)`;
+                            if (!stockData.error) {
+                                contextData += `\n${symbol}: $${stockData.price} (${stockData.change >= 0 ? '+' : ''}${stockData.change}, ${stockData.changePercent}%)`;
+                            }
                         } catch (error) {
                             console.warn(`Could not get data for ${symbol}:`, error);
                         }
@@ -867,7 +870,7 @@
                 
             } catch (error) {
                 console.error('❌ Chat error:', error);
-                addMessage('assistant', `⚠️ I'm having trouble connecting to my AI systems right now. This could be due to:\n\n• High server load\n• API rate limits\n• Network connectivity\n\nPlease try your question again in a moment.`);
+                addMessage('assistant', `⚠️ I'm having trouble connecting to my AI systems right now.\n\nError: ${error.message}\n\nThis could be due to:\n• API rate limits\n• Network connectivity\n• Configuration issues\n\nPlease try your question again in a moment.`);
             } finally {
                 isTyping = false;
                 renderCurrentTab();
@@ -895,7 +898,11 @@
                 
                 const stockData = await getRealStockData(symbol);
                 
-                // Create analysis based on real data
+                if (stockData.error) {
+                    throw new Error(stockData.error);
+                }
+                
+                // Create analysis based on REAL data only
                 const analysis = {
                     symbol: symbol,
                     price: stockData.price,
@@ -904,13 +911,13 @@
                     volume: stockData.volume,
                     high: stockData.high,
                     low: stockData.low,
-                    technicalScore: calculateTechnicalScore(stockData),
-                    rsi: calculateRSI(stockData),
-                    support: calculateSupport(stockData),
-                    resistance: calculateResistance(stockData),
-                    optionsStrategy: recommendOptionsStrategy(stockData),
-                    riskLevel: assessRiskLevel(stockData),
-                    recommendation: generateRecommendation(stockData),
+                    // REAL calculations only - NO fake data
+                    technicalScore: calculateRealTechnicalScore(stockData),
+                    support: calculateRealSupport(stockData),
+                    resistance: calculateRealResistance(stockData),
+                    optionsStrategy: recommendRealOptionsStrategy(stockData),
+                    riskLevel: assessRealRisk(stockData),
+                    recommendation: generateRealRecommendation(stockData),
                     timestamp: new Date().toLocaleString(),
                     isReal: true
                 };
@@ -920,7 +927,7 @@
                 
                 // Generate trading play if conditions are met
                 if (shouldGeneratePlay(analysis)) {
-                    const play = generateTradingPlay(analysis);
+                    const play = generateRealTradingPlay(analysis);
                     tradingPlays.push(play);
                 }
                 
@@ -928,113 +935,101 @@
                 
             } catch (error) {
                 console.error(`❌ Analysis failed for ${symbol}:`, error);
-                throw error;
+                
+                // Add error to analyzed stocks instead of fake data
+                analyzedStocks.push({
+                    symbol: symbol,
+                    error: `Analysis failed: ${error.message}`,
+                    timestamp: new Date().toLocaleString(),
+                    isReal: false
+                });
             }
         }
 
-        function calculateTechnicalScore(stockData) {
-            // Calculate technical score based on real price action
-            const price = parseFloat(stockData.price);
-            const change = parseFloat(stockData.change);
-            const changePercent = parseFloat(stockData.changePercent);
+        // REAL calculation functions - NO mock data
+        function calculateRealTechnicalScore(stockData) {
+            // Calculate score based on actual price movement only
+            const changePercent = parseFloat(stockData.changePercent || 0);
             
-            let score = 50; // Base score
+            // Base score 50, adjust based on real performance
+            let score = 50;
             
-            // Price momentum
-            if (changePercent > 2) score += 20;
-            else if (changePercent > 0) score += 10;
-            else if (changePercent < -2) score -= 20;
-            else if (changePercent < 0) score -= 10;
+            // Add points for positive performance
+            if (changePercent > 0) {
+                score += Math.min(25, changePercent * 5); // Max 25 points for gains
+            } else {
+                score += Math.max(-25, changePercent * 5); // Max -25 points for losses
+            }
             
             // Volume consideration (if available)
-            if (stockData.volume) {
-                const volume = parseFloat(stockData.volume.replace(/[^\d.]/g, ''));
-                if (volume > 50) score += 5; // High volume
+            if (stockData.volume && stockData.volume.includes('M')) {
+                const volumeNum = parseFloat(stockData.volume);
+                if (volumeNum > 10) score += 5; // High volume bonus
             }
             
             return Math.max(0, Math.min(100, Math.round(score)));
         }
 
-        function calculateRSI(stockData) {
-            // Simplified RSI calculation based on recent price change
-            const changePercent = parseFloat(stockData.changePercent);
-            let rsi = 50; // Neutral
-            
-            if (changePercent > 0) {
-                rsi = 50 + Math.min(30, changePercent * 5);
-            } else {
-                rsi = 50 + Math.max(-30, changePercent * 5);
-            }
-            
-            return Math.round(rsi);
+        function calculateRealSupport(stockData) {
+            // Support level - 3% below current low (standard technical analysis)
+            const low = parseFloat(stockData.low || stockData.price);
+            return (low * 0.97).toFixed(2);
         }
 
-        function calculateSupport(stockData) {
-            const low = parseFloat(stockData.low);
-            const price = parseFloat(stockData.price);
-            
-            // Support approximately 2-5% below current low
-            const supportLevel = low * (0.95 + Math.random() * 0.03);
-            return supportLevel.toFixed(2);
+        function calculateRealResistance(stockData) {
+            // Resistance level - 3% above current high (standard technical analysis)
+            const high = parseFloat(stockData.high || stockData.price);
+            return (high * 1.03).toFixed(2);
         }
 
-        function calculateResistance(stockData) {
-            const high = parseFloat(stockData.high);
-            const price = parseFloat(stockData.price);
-            
-            // Resistance approximately 2-5% above current high
-            const resistanceLevel = high * (1.02 + Math.random() * 0.03);
-            return resistanceLevel.toFixed(2);
-        }
-
-        function recommendOptionsStrategy(stockData) {
-            const changePercent = parseFloat(stockData.changePercent);
-            const rsi = calculateRSI(stockData);
+        function recommendRealOptionsStrategy(stockData) {
+            const changePercent = parseFloat(stockData.changePercent || 0);
+            const technicalScore = calculateRealTechnicalScore(stockData);
             
             if (changePercent > 3) {
                 return 'Bull Call Spread';
             } else if (changePercent < -3) {
                 return 'Bear Put Spread';
-            } else if (rsi > 70) {
+            } else if (technicalScore > 70) {
                 return 'Covered Call';
-            } else if (rsi < 30) {
+            } else if (technicalScore < 30) {
                 return 'Cash-Secured Put';
             } else {
                 return 'Iron Condor';
             }
         }
 
-        function assessRiskLevel(stockData) {
-            const changePercent = Math.abs(parseFloat(stockData.changePercent));
+        function assessRealRisk(stockData) {
+            const changePercent = Math.abs(parseFloat(stockData.changePercent || 0));
             
             if (changePercent > 5) return 'High';
             if (changePercent > 2) return 'Medium';
             return 'Low';
         }
 
-        function generateRecommendation(stockData) {
-            const changePercent = parseFloat(stockData.changePercent);
-            const technicalScore = calculateTechnicalScore(stockData);
+        function generateRealRecommendation(stockData) {
+            const changePercent = parseFloat(stockData.changePercent || 0);
+            const technicalScore = calculateRealTechnicalScore(stockData);
             
             if (technicalScore > 75 && changePercent > 1) {
                 return 'Strong momentum - consider bullish strategies';
             } else if (technicalScore < 25 && changePercent < -1) {
-                return 'Weakness showing - defensive strategies advised';
+                return 'Showing weakness - defensive strategies advised';
             } else if (technicalScore > 60) {
                 return 'Positive outlook - scale into positions';
             } else if (technicalScore < 40) {
                 return 'Caution advised - wait for better entry';
             } else {
-                return 'Neutral - range-bound strategies may work';
+                return 'Neutral outlook - range-bound strategies may work';
             }
         }
 
         function shouldGeneratePlay(analysis) {
-            // Generate play if strong signal
-            return analysis.technicalScore > 70 || analysis.technicalScore < 30;
+            // Generate play only for strong signals
+            return !analysis.error && (analysis.technicalScore > 70 || analysis.technicalScore < 30);
         }
 
-        function generateTradingPlay(analysis) {
+        function generateRealTradingPlay(analysis) {
             const isUptrend = analysis.technicalScore > 70;
             
             return {
@@ -1177,7 +1172,7 @@
             const stockItems = currentStocks.map(symbol => {
                 const cachedData = stockDataCache.get(symbol);
                 
-                if (cachedData) {
+                if (cachedData && !cachedData.error) {
                     // Use real cached data
                     const change = parseFloat(cachedData.change);
                     const isPositive = change >= 0;
@@ -1193,6 +1188,19 @@
                                 ${isPositive ? '+' : ''}$${cachedData.change}
                                 <br>
                                 (${isPositive ? '+' : ''}${cachedData.changePercent}%)
+                            </div>
+                        </div>
+                    `;
+                } else if (cachedData && cachedData.error) {
+                    // Show error state for real data
+                    return `
+                        <div class="stock-item">
+                            <div class="stock-info">
+                                <div class="stock-symbol">${symbol}</div>
+                                <div class="stock-price">Data unavailable</div>
+                            </div>
+                            <div class="price-change neutral">
+                                Error
                             </div>
                         </div>
                     `;
@@ -1230,7 +1238,20 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title">Watchlists</div>
-                            <button class="btn btn-secondary" onclick="createWatchlist()" style="float: right; padding: 6px 12px; font-size: 14px;">+ New List</button>
+                            <div class="watchlist-menu" onclick="toggleWatchlistMenu()" style="position: relative;">
+                                <div class="menu-dots">⋯</div>
+                                <div class="menu-dropdown" id="watchlistDropdown" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e5e5ea; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; min-width: 150px;">
+                                    <div class="menu-item" onclick="createWatchlist(); closeWatchlistMenu();">
+                                        <span style="margin-right: 8px;">➕</span>New List
+                                    </div>
+                                    <div class="menu-item" onclick="editWatchlist(); closeWatchlistMenu();">
+                                        <span style="margin-right: 8px;">✏️</span>Edit
+                                    </div>
+                                    <div class="menu-item" onclick="exportWatchlist(); closeWatchlistMenu();">
+                                        <span style="margin-right: 8px;">📤</span>Export
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="watchlist-tabs">
                             ${watchlistTabs}
@@ -1277,6 +1298,23 @@
 
             const latestStock = analyzedStocks[analyzedStocks.length - 1];
             
+            if (latestStock.error) {
+                return `
+                    <div class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">⚠️</div>
+                                    <div>Analysis Failed</div>
+                                    <div style="margin-top: 8px; color: #8e8e93; font-size: 13px;">${latestStock.error}</div>
+                                    <button class="btn" onclick="switchTab('ticker')" style="margin-top: 16px;">Try Another Stock</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             return `
                 <div class="tab-content">
                     <div class="card">
@@ -1291,8 +1329,8 @@
                                     <div class="metric-label">Technical Score</div>
                                 </div>
                                 <div class="metric-card">
-                                    <div class="metric-value">${latestStock.rsi}</div>
-                                    <div class="metric-label">RSI</div>
+                                    <div class="metric-value">$${latestStock.price}</div>
+                                    <div class="metric-label">Current Price</div>
                                 </div>
                                 <div class="metric-card">
                                     <div class="metric-value">$${latestStock.support}</div>
@@ -1306,8 +1344,8 @@
 
                             <div class="list-item">
                                 <div class="list-item-content">
-                                    <div class="list-item-title">Current Price</div>
-                                    <div class="list-item-subtitle">$${latestStock.price} (${latestStock.changePercent}%)</div>
+                                    <div class="list-item-title">Daily Change</div>
+                                    <div class="list-item-subtitle">${latestStock.change >= 0 ? '+' : ''}${latestStock.change} (${latestStock.changePercent}%)</div>
                                 </div>
                             </div>
 
@@ -1339,7 +1377,7 @@
                             <div class="card-title">Analysis History</div>
                         </div>
                         <div>
-                            ${analyzedStocks.slice(-5).reverse().map(stock => `
+                            ${analyzedStocks.filter(stock => !stock.error).slice(-5).reverse().map(stock => `
                                 <div class="list-item">
                                     <div class="list-item-content">
                                         <div class="list-item-title">${stock.symbol}</div>
@@ -1459,30 +1497,23 @@
                             <div class="list-item">
                                 <div class="list-item-content">
                                     <div class="list-item-title">Price Movements</div>
-                                    <div class="list-item-subtitle">Get notified of significant price changes</div>
+                                    <div class="list-item-subtitle">Significant price changes</div>
                                 </div>
                                 <div class="list-item-action success-indicator">✓</div>
                             </div>
                             <div class="list-item">
                                 <div class="list-item-content">
                                     <div class="list-item-title">Volume Spikes</div>
-                                    <div class="list-item-subtitle">Unusual trading activity alerts</div>
+                                    <div class="list-item-subtitle">Unusual trading activity</div>
                                 </div>
                                 <div class="list-item-action success-indicator">✓</div>
                             </div>
                             <div class="list-item">
                                 <div class="list-item-content">
                                     <div class="list-item-title">Technical Signals</div>
-                                    <div class="list-item-subtitle">RSI, support/resistance breaks</div>
+                                    <div class="list-item-subtitle">Support/resistance breaks</div>
                                 </div>
                                 <div class="list-item-action success-indicator">✓</div>
-                            </div>
-                            <div class="list-item">
-                                <div class="list-item-content">
-                                    <div class="list-item-title">Options Flow</div>
-                                    <div class="list-item-subtitle">Large institutional trades</div>
-                                </div>
-                                <div class="list-item-action">○</div>
                             </div>
                         </div>
                     </div>
@@ -1496,6 +1527,20 @@
             renderCurrentTab();
         }
 
+        function toggleWatchlistMenu() {
+            const dropdown = document.getElementById('watchlistDropdown');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        function closeWatchlistMenu() {
+            const dropdown = document.getElementById('watchlistDropdown');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        }
+
         function createWatchlist() {
             const name = prompt('Enter watchlist name:');
             if (name && name.trim()) {
@@ -1507,6 +1552,34 @@
                 currentWatchlist = key;
                 renderCurrentTab();
             }
+        }
+        
+        function editWatchlist() {
+            const currentList = watchlists[currentWatchlist];
+            const newName = prompt('Enter new name:', currentList.name);
+            if (newName && newName.trim()) {
+                currentList.name = newName.trim();
+                renderCurrentTab();
+            }
+        }
+        
+        function exportWatchlist() {
+            const currentList = watchlists[currentWatchlist];
+            const data = {
+                name: currentList.name,
+                stocks: currentList.stocks,
+                exported: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentList.name.replace(/\s+/g, '_')}_watchlist.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function deleteWatchlist(key) {
@@ -1577,6 +1650,13 @@
             }
         });
 
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.watchlist-menu')) {
+                closeWatchlistMenu();
+            }
+        });
+
         // Prevent body scroll on mobile
         document.addEventListener('touchmove', function(e) {
             if (e.target.closest('.content-area')) {
@@ -1586,7 +1666,7 @@
             e.preventDefault();
         }, { passive: false });
 
-        console.log('🎉 Rolo AI Trading App initialized with REAL DATA ONLY');
+        console.log('🎉 Rolo AI Trading App initialized with REAL DATA ONLY - NO MOCK DATA');
     </script>
 </body>
 </html>
