@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Rolo AI Trading - Enhanced</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rolo AI Trading - Options Specialist</title>
     <style>
         * {
             margin: 0;
@@ -12,80 +12,52 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            overflow: hidden;
             color: #333;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
+            touch-action: manipulation;
         }
 
         .app-container {
             height: 100vh;
             display: flex;
             flex-direction: column;
-            max-width: 100%;
-            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
         }
 
         .header {
+            flex-shrink: 0;
             text-align: center;
-            padding: 20px;
+            padding: env(safe-area-inset-top, 0) 20px 15px 20px;
             color: white;
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
         }
 
         .header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             margin-bottom: 5px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .subtitle {
             font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .status-bar {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            font-size: 0.8rem;
-        }
-
-        .api-status {
-            display: flex;
-            gap: 10px;
-        }
-
-        .api-indicator {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #4CAF50;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.yellow { background: #FFC107; }
-        .status-dot.red { background: #f44336; }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            opacity: 0.9;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
         }
 
         .main-content {
@@ -93,80 +65,14 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-        }
-
-        .tabs-container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(20px);
-            margin: 10px;
-            border-radius: 20px;
-            padding: 5px;
-            display: flex;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .tabs-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tab {
-            flex: 1;
-            min-width: 70px;
-            text-align: center;
-            padding: 12px 8px;
-            background: transparent;
-            border: none;
-            border-radius: 15px;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            transform: scale(1);
-        }
-
-        .tab:active {
-            transform: scale(0.95);
-        }
-
-        .tab.active {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-        }
-
-        .tab.active::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 3px;
-            background: white;
-            border-radius: 2px;
-        }
-
-        .tab-icon {
-            font-size: 1.2rem;
-        }
-
-        .tab-label {
-            font-size: 0.6rem;
-            font-weight: 500;
         }
 
         .content-area {
             flex: 1;
             overflow: hidden;
-            margin: 0 10px 10px;
+            margin: 10px;
+            margin-bottom: 100px; /* Space for chat input */
         }
 
         .tab-content {
@@ -177,12 +83,13 @@
             border-radius: 20px;
             padding: 20px;
             overflow-y: auto;
-            animation: fadeIn 0.3s ease;
+            -webkit-overflow-scrolling: touch;
         }
 
         .tab-content.active {
             display: flex;
             flex-direction: column;
+            animation: fadeIn 0.3s ease;
         }
 
         @keyframes fadeIn {
@@ -190,7 +97,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Chat Styles */
+        /* Chat Styles - Mobile Optimized */
         .chat-container {
             display: flex;
             flex-direction: column;
@@ -200,40 +107,54 @@
         .messages-area {
             flex: 1;
             overflow-y: auto;
-            margin-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
             padding-right: 5px;
+            margin-bottom: 15px;
         }
 
         .message {
             margin-bottom: 15px;
-            padding: 12px 15px;
-            border-radius: 15px;
+            padding: 15px;
+            border-radius: 18px;
             max-width: 85%;
-            line-height: 1.4;
-            white-space: pre-wrap;
+            line-height: 1.5;
+            word-wrap: break-word;
+            font-size: 16px; /* Prevents iOS zoom */
         }
 
         .message.user {
             background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
             margin-left: auto;
-            border-bottom-right-radius: 5px;
+            border-bottom-right-radius: 8px;
         }
 
         .message.assistant {
             background: #f1f3f4;
             color: #333;
-            border-bottom-left-radius: 5px;
+            border-bottom-left-radius: 8px;
         }
 
-        .chat-input-area {
+        /* Fixed Chat Input */
+        .chat-input-fixed {
+            position: fixed;
+            bottom: 70px; /* Above tabs */
+            left: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 15px;
             display: flex;
             gap: 10px;
             align-items: flex-end;
-            background: rgba(255,255,255,0.8);
-            padding: 10px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .chat-input-fixed.hidden {
+            display: none;
         }
 
         .chat-input {
@@ -242,10 +163,11 @@
             outline: none;
             background: transparent;
             resize: none;
-            font-size: 16px;
-            max-height: 80px;
-            min-height: 20px;
+            font-size: 16px; /* Prevents iOS zoom */
+            max-height: 100px;
+            min-height: 22px;
             font-family: inherit;
+            line-height: 1.4;
         }
 
         .send-btn {
@@ -253,19 +175,16 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             transition: all 0.3s ease;
             flex-shrink: 0;
-        }
-
-        .send-btn:hover {
-            transform: scale(1.1);
+            touch-action: manipulation;
         }
 
         .send-btn:disabled {
@@ -274,25 +193,20 @@
         }
 
         /* Ticker Styles */
-        .ticker-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
         .search-section {
             margin-bottom: 20px;
         }
 
         .search-input {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             border: 2px solid #e0e0e0;
             border-radius: 15px;
-            font-size: 16px;
+            font-size: 16px; /* Prevents iOS zoom */
             text-transform: uppercase;
             outline: none;
             transition: border-color 0.3s ease;
+            background: white;
         }
 
         .search-input:focus {
@@ -302,20 +216,16 @@
 
         .search-btn {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
             border: none;
             border-radius: 15px;
             font-size: 1rem;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 15px;
             transition: all 0.3s ease;
-        }
-
-        .search-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            touch-action: manipulation;
         }
 
         .search-btn:disabled {
@@ -326,26 +236,28 @@
 
         .stock-result {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 15px;
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .stock-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .stock-symbol {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #333;
         }
 
         .stock-price {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: bold;
         }
 
@@ -354,168 +266,94 @@
 
         .stock-details {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .detail-item {
             text-align: center;
-            padding: 10px;
+            padding: 15px;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .detail-label {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
 
         .detail-value {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #333;
         }
 
-        /* Watchlist Styles */
-        .watchlist-section {
-            margin-top: 20px;
+        /* Bottom Tabs - Fixed */
+        .tabs-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            padding: 10px;
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+            border-top: 1px solid rgba(255,255,255,0.3);
+            z-index: 999;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            max-width: 100%;
+        }
+
+        .tab {
             flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .watchlist-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .watchlist-tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 15px;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-
-        .watchlist-tabs::-webkit-scrollbar {
-            display: none;
-        }
-
-        .watchlist-tab {
-            background: #e0e0e0;
+            text-align: center;
+            padding: 12px 8px;
+            background: transparent;
             border: none;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .watchlist-tab.active {
-            background: linear-gradient(135deg, #7c4dff, #6a3cec);
-            color: white;
-        }
-
-        .watchlist-tab .delete-btn {
-            margin-left: 8px;
-            color: #f44336;
-            font-weight: bold;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .add-list-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .new-list-input {
-            padding: 8px 12px;
-            border: 2px solid #4CAF50;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            outline: none;
-            width: 120px;
-        }
-
-        .watchlist-content {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .watchlist-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .ticker-symbol {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .remove-btn {
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 5px;
+            border-radius: 12px;
+            color: rgba(102, 126, 234, 0.7);
             font-size: 0.7rem;
             cursor: pointer;
-        }
-
-        .add-ticker-section {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            touch-action: manipulation;
+            min-width: 0;
         }
 
-        .add-ticker-input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            outline: none;
+        .tab:active {
+            transform: scale(0.95);
         }
 
-        .add-ticker-btn {
-            background: #4CAF50;
+        .tab.active {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4);
         }
 
-        .empty-state {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-            font-style: italic;
+        .tab-icon {
+            font-size: 1.3rem;
+        }
+
+        .tab-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
         /* Analysis Styles */
@@ -525,14 +363,18 @@
             height: 100%;
         }
 
-        .analysis-header {
+        .analysis-overview {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
             margin-bottom: 20px;
             text-align: center;
         }
 
         .analysis-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -540,218 +382,26 @@
         .analysis-card {
             background: white;
             border-radius: 15px;
-            padding: 15px;
+            padding: 20px;
             text-align: center;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             border-left: 4px solid #4CAF50;
         }
 
         .analysis-value {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .analysis-label {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: #666;
-        }
-
-        .market-overview {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .market-overview h3 {
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .market-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 10px;
-        }
-
-        .market-stat {
-            text-align: center;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .recommendations {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        /* Plays Styles */
-        .plays-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .plays-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .plays-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .play-item {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            border-left: 4px solid #4CAF50;
-        }
-
-        .play-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .play-ticker {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .confidence-badge {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .play-strategy {
-            font-size: 1rem;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .play-details {
-            font-size: 0.9rem;
-            color: #666;
-            line-height: 1.4;
-        }
-
-        /* Market Styles */
-        .market-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .market-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .market-refresh-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .market-overview-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .market-card {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-
-        .market-card-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .market-card-label {
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        .vix-indicator {
-            background: linear-gradient(135deg, #ff9800, #f57c00);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .sector-performance {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .sector-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin-bottom: 8px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .sector-name {
             font-weight: 500;
-            color: #333;
         }
 
-        .sector-change {
-            font-weight: bold;
-        }
-
+        /* Utilities */
         .loading {
             display: inline-block;
             width: 20px;
@@ -767,292 +417,188 @@
             100% { transform: rotate(360deg); }
         }
 
-        .error {
-            background: #ffe6e6;
-            color: #d32f2f;
-            border: 2px solid #ffcdd2;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-
         .success {
             background: #e8f5e8;
             color: #388e3c;
             border: 2px solid #c8e6c9;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 15px;
             margin-top: 15px;
+            font-size: 0.9rem;
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
+        .error {
+            background: #ffe6e6;
+            color: #d32f2f;
+            border: 2px solid #ffcdd2;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 375px) {
             .header h1 {
                 font-size: 1.5rem;
             }
             
-            .tab {
-                min-width: 60px;
-                padding: 10px 6px;
-            }
-            
-            .tab-icon {
-                font-size: 1rem;
-            }
-            
-            .tab-label {
-                font-size: 0.55rem;
-            }
-            
-            .tab-content {
-                padding: 15px;
-            }
-            
             .stock-details {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .analysis-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
                 gap: 10px;
             }
             
-            .market-overview-cards {
-                grid-template-columns: repeat(2, 1fr);
+            .analysis-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
+            
+            .tab {
+                padding: 10px 4px;
+            }
+            
+            .tab-icon {
+                font-size: 1.1rem;
+            }
+            
+            .tab-label {
+                font-size: 0.6rem;
+            }
+        }
+
+        /* Prevent iOS rubber band scrolling */
+        .tab-content {
+            overscroll-behavior: contain;
+        }
+
+        /* Ensure no horizontal scrolling */
+        .tab-content, .messages-area {
+            overflow-x: hidden;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="header">
-            <h1>🚀 Rolo AI Trading</h1>
-            <p class="subtitle">Enhanced Trading Intelligence Platform</p>
-        </div>
-
-        <div class="status-bar">
-            <div class="api-status">
-                <div class="api-indicator">
-                    <span class="status-dot" id="claude-status"></span>
-                    <span>Claude AI</span>
-                </div>
-                <div class="api-indicator">
-                    <span class="status-dot" id="alpha-status"></span>
-                    <span>Alpha Vantage</span>
-                </div>
-                <div class="api-indicator">
-                    <span class="status-dot" id="market-status"></span>
-                    <span>Market Data</span>
-                </div>
-            </div>
-            <div id="status-text">🟢 All Systems Operational</div>
+            <h1>📈 Rolo AI Trading</h1>
+            <p class="subtitle">Options Trading Specialist • Live Data • Smart Analysis</p>
         </div>
 
         <div class="main-content">
-            <div class="tabs-container">
-                <button class="tab active" onclick="switchTab('chat')" id="chat-tab">
-                    <div class="tab-icon">💬</div>
-                    <div class="tab-label">Chat</div>
-                </button>
-                <button class="tab" onclick="switchTab('ticker')" id="ticker-tab">
-                    <div class="tab-icon">🔍</div>
-                    <div class="tab-label">Ticker</div>
-                </button>
-                <button class="tab" onclick="switchTab('analysis')" id="analysis-tab">
-                    <div class="tab-icon">📊</div>
-                    <div class="tab-label">Analysis</div>
-                </button>
-                <button class="tab" onclick="switchTab('plays')" id="plays-tab">
-                    <div class="tab-icon">📈</div>
-                    <div class="tab-label">Plays</div>
-                </button>
-                <button class="tab" onclick="switchTab('market')" id="market-tab">
-                    <div class="tab-icon">🌍</div>
-                    <div class="tab-label">Market</div>
-                </button>
-            </div>
-
             <div class="content-area">
                 <!-- Chat Tab -->
                 <div id="chat" class="tab-content active">
                     <div class="chat-container">
                         <div class="messages-area" id="messages-area">
                             <div class="message assistant">
-                                🚀 <strong>Rolo AI Enhanced Intelligence System - LIVE</strong>
+                                📈 <strong>Rolo - Options Trading AI Specialist</strong>
 
-I'm your professional options trading AI with comprehensive market intelligence:
+Welcome! I'm specifically designed for OPTIONS TRADERS with:
 
-✅ <strong>REAL-TIME Alpha Vantage Premium Data</strong>
-✅ <strong>Technical Indicators</strong> (RSI, MACD, Moving Averages)
-✅ <strong>Market Sentiment Analysis</strong> (VIX, Fear & Greed)
-✅ <strong>Universal Stock Analysis</strong> (ANY ticker symbol)
-✅ <strong>Options Strategies</strong> (tailored to market conditions)
-✅ <strong>Risk Management</strong> (professional guidance)
+🎯 <strong>Core Specialties:</strong>
+• <strong>Any Ticker Analysis</strong> - Just mention a symbol (AAPL, HOOD, SPY, etc.)
+• <strong>Options Strategies</strong> - Calls, puts, spreads, straddles, iron condors
+• <strong>Greeks Analysis</strong> - Delta, gamma, theta, vega explanations
+• <strong>Risk Management</strong> - Position sizing, stop losses, profit targets
+• <strong>IV Analysis</strong> - Cheap vs expensive options
+• <strong>Earnings Plays</strong> - Pre/post earnings strategies
 
-<strong>🧠 ENHANCED CAPABILITIES:</strong>
-• Comprehensive analysis for ANY stock (AAPL, GOOGL, TSLA, NVDA, BRK.A, etc.)
-• Specific options strategies with exact entry/exit points
-• Real-time market context and VIX-based recommendations
-• Professional risk management with position sizing
+🔥 <strong>Smart Features:</strong>
+• Live stock prices with options context
+• VIX-aware strategy recommendations  
+• Time decay warnings for your positions
+• Strike selection based on technical levels
 
-<strong>Try asking:</strong>
-• "AAPL comprehensive analysis"
-• "SPY options strategy with current VIX"
-• "NVDA technical analysis and options plays"
-• "Best options strategies for high VIX environment"
-• "Analyze any ticker: GOOGL, MSFT, AMZN, etc."
+<strong>Try these examples:</strong>
+• "AAPL options analysis"
+• "HOOD earnings play strategy"
+• "SPY iron condor setup"
+• "Best options for high VIX environment"
+• "Explain delta hedging"
 
-<strong>Ready for professional-grade trading intelligence!</strong>
+<strong>Ready to find your next options play! 📊</strong>
                             </div>
-                        </div>
-                        <div class="chat-input-area">
-                            <textarea class="chat-input" id="chat-input" placeholder="Ask about any stock or options strategy..." rows="1"></textarea>
-                            <button class="send-btn" id="send-btn" onclick="sendMessage()">
-                                ➤
-                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Ticker Tab -->
                 <div id="ticker" class="tab-content">
-                    <div class="ticker-container">
-                        <div class="search-section">
-                            <input type="text" class="search-input" id="ticker-input" placeholder="Enter any ticker (AAPL, GOOGL, TSLA, etc.)" />
-                            <button class="search-btn" id="search-btn" onclick="analyzeStock()">
-                                🔍 Analyze Stock
-                            </button>
-                            <div id="stock-result"></div>
-                        </div>
-
-                        <div class="watchlist-section">
-                            <div class="watchlist-header">
-                                <h3>📋 Watchlists</h3>
-                            </div>
-                            
-                            <div class="watchlist-tabs" id="watchlist-tabs">
-                                <!-- Dynamic watchlist tabs will be inserted here -->
-                            </div>
-
-                            <div class="watchlist-content" id="watchlist-content">
-                                <!-- Dynamic watchlist content will be inserted here -->
-                            </div>
-
-                            <div class="add-ticker-section">
-                                <input type="text" class="add-ticker-input" id="add-ticker-input" placeholder="Add ticker to current list" />
-                                <button class="add-ticker-btn" onclick="addToWatchlist()">Add</button>
-                            </div>
-                        </div>
+                    <div class="search-section">
+                        <input type="text" class="search-input" id="ticker-input" placeholder="Enter ticker (AAPL, HOOD, SPY, etc.)" />
+                        <button class="search-btn" id="search-btn" onclick="analyzeStock()">
+                            📊 Analyze for Options Trading
+                        </button>
+                        <div id="stock-result"></div>
                     </div>
                 </div>
 
                 <!-- Analysis Tab -->
                 <div id="analysis" class="tab-content">
                     <div class="analysis-container">
-                        <div class="analysis-header">
-                            <h2>📊 Market Analysis Dashboard</h2>
-                            <p>Real-time technical analysis and market insights</p>
+                        <div class="analysis-overview">
+                            <h2>📊 Options Market Analysis</h2>
+                            <p>Real-time market conditions for options trading</p>
                         </div>
 
-                        <div class="market-overview">
-                            <h3>🌍 Market Overview</h3>
-                            <div class="market-stats">
-                                <div class="market-stat">
-                                    <div style="font-size: 1.2rem; font-weight: bold;">16.8</div>
-                                    <div style="font-size: 0.8rem;">VIX Level</div>
-                                </div>
-                                <div class="market-stat">
-                                    <div style="font-size: 1.2rem; font-weight: bold;">Neutral</div>
-                                    <div style="font-size: 0.8rem;">Sentiment</div>
-                                </div>
-                                <div class="market-stat">
-                                    <div style="font-size: 1.2rem; font-weight: bold;">Mixed</div>
-                                    <div style="font-size: 0.8rem;">Options Flow</div>
-                                </div>
-                                <div class="market-stat">
-                                    <div style="font-size: 1.2rem; font-weight: bold;">Moderate</div>
-                                    <div style="font-size: 0.8rem;">Volatility</div>
-                                </div>
+                        <div class="analysis-grid">
+                            <div class="analysis-card">
+                                <div class="analysis-value" id="vix-value">16.8</div>
+                                <div class="analysis-label">VIX Level</div>
+                            </div>
+                            <div class="analysis-card">
+                                <div class="analysis-value" id="sentiment-value">Neutral</div>
+                                <div class="analysis-label">Market Sentiment</div>
+                            </div>
+                            <div class="analysis-card">
+                                <div class="analysis-value" id="volume-value">High</div>
+                                <div class="analysis-label">Options Volume</div>
+                            </div>
+                            <div class="analysis-card">
+                                <div class="analysis-value" id="flow-value">Mixed</div>
+                                <div class="analysis-label">Options Flow</div>
                             </div>
                         </div>
 
-                        <div class="analysis-grid" id="analysis-cards">
-                            <div class="analysis-card">
-                                <div class="analysis-value">--</div>
-                                <div class="analysis-label">Technical Score</div>
-                            </div>
-                            <div class="analysis-card">
-                                <div class="analysis-value">--</div>
-                                <div class="analysis-label">RSI</div>
-                            </div>
-                            <div class="analysis-card">
-                                <div class="analysis-value">--</div>
-                                <div class="analysis-label">Support</div>
-                            </div>
-                            <div class="analysis-card">
-                                <div class="analysis-value">--</div>
-                                <div class="analysis-label">Resistance</div>
-                            </div>
-                            <div class="analysis-card">
-                                <div class="analysis-value">--</div>
-                                <div class="analysis-label">Trend</div>
-                            </div>
-                            <div class="analysis-card">
-                                <div class="analysis-value">--</div>
-                                <div class="analysis-label">Volume</div>
-                            </div>
-                        </div>
-
-                        <div class="recommendations">
-                            <h3>🎯 AI Recommendations</h3>
-                            <div id="analysis-recommendations">
-                                <p style="text-align: center; color: #666; margin-top: 40px;">
-                                    📈 Analyze a stock in the Ticker tab to see detailed technical analysis and AI recommendations here.
-                                </p>
+                        <div id="current-analysis">
+                            <div style="text-align: center; padding: 40px; color: #666;">
+                                📈 Analyze a stock in the Ticker tab to see detailed options analysis here.
+                                <br><br>
+                                <strong>What you'll get:</strong>
+                                <br>• Options chain analysis
+                                <br>• IV rank and percentile
+                                <br>• Best strategies for current conditions
+                                <br>• Greeks breakdown
+                                <br>• Risk/reward scenarios
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Plays Tab -->
-                <div id="plays" class="tab-content">
-                    <div class="plays-container">
-                        <div class="plays-header">
-                            <h2>📈 Trading Plays</h2>
-                            <button class="refresh-btn" onclick="generatePlays()">🔄 Refresh Plays</button>
-                        </div>
+            <!-- Fixed Chat Input (only shows on chat tab) -->
+            <div class="chat-input-fixed" id="chat-input-fixed">
+                <textarea class="chat-input" id="chat-input" placeholder="Ask about options strategies, any ticker, or market analysis..." rows="1"></textarea>
+                <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                    ➤
+                </button>
+            </div>
 
-                        <div class="plays-list" id="plays-list">
-                            <!-- Dynamic plays will be inserted here -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Market Tab -->
-                <div id="market" class="tab-content">
-                    <div class="market-container">
-                        <div class="market-header">
-                            <h2>🌍 Market Conditions</h2>
-                            <button class="market-refresh-btn" onclick="loadMarketData()">🔄 Refresh</button>
-                        </div>
-
-                        <div class="market-overview-cards" id="market-cards">
-                            <!-- Dynamic market data will be inserted here -->
-                        </div>
-
-                        <div class="vix-indicator">
-                            <h3>📊 VIX Fear & Greed Index</h3>
-                            <div id="vix-display" style="font-size: 2rem; font-weight: bold;">Loading...</div>
-                            <div id="vix-interpretation">Market sentiment analysis</div>
-                        </div>
-
-                        <div class="sector-performance">
-                            <h3>🏢 Sector Performance</h3>
-                            <div id="sector-list">
-                                <!-- Dynamic sector data will be inserted here -->
-                            </div>
-                        </div>
-                    </div>
+            <!-- Fixed Bottom Tabs -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('chat')" id="chat-tab">
+                        <div class="tab-icon">💬</div>
+                        <div class="tab-label">Chat</div>
+                    </button>
+                    <button class="tab" onclick="switchTab('ticker')" id="ticker-tab">
+                        <div class="tab-icon">🔍</div>
+                        <div class="tab-label">Ticker</div>
+                    </button>
+                    <button class="tab" onclick="switchTab('analysis')" id="analysis-tab">
+                        <div class="tab-icon">📊</div>
+                        <div class="tab-label">Analysis</div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1060,59 +606,55 @@ I'm your professional options trading AI with comprehensive market intelligence:
 
     <script>
         // Global variables
+        let currentTab = 'chat';
+        let messages = [];
         let currentAnalyzedStock = null;
-        let watchlists = {
-            'Main Portfolio': ['AAPL', 'GOOGL', 'MSFT'],
-            'Growth Stocks': ['TSLA', 'NVDA', 'AMZN'],
-            'Tech Plays': ['META', 'NFLX', 'ADBE']
-        };
-        let currentWatchlist = 'Main Portfolio';
-        let isShowingNewListInput = false;
 
         // API Configuration
         const API_CONFIG = {
             ALPHA_VANTAGE_KEY: 'MAQEUTLGYYXC1HF1',
-            ALPACA_KEY: 'PKYK3RYMN72SRI7O5RKP',
             CLAUDE_API_KEY: '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'
         };
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
-            updateWatchlistDisplay();
-            generatePlays();
-            loadMarketData();
-            testAPIs();
             
-            // Add event listeners
-            document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            // Auto-resize chat input
+            const chatInput = document.getElementById('chat-input');
+            chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+            
+            // Send on Enter (but allow Shift+Enter for new lines)
+            chatInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
                 }
             });
             
+            // Ticker input enter key
             document.getElementById('ticker-input').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     analyzeStock();
                 }
             });
-            
-            document.getElementById('add-ticker-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addToWatchlist();
-                }
-            });
         });
 
         function initializeApp() {
-            console.log('🚀 Initializing Rolo AI Trading App...');
-            updateAPIStatus();
+            updateChatInputVisibility();
+            // Add welcome message to array
+            messages.push({
+                type: 'assistant',
+                content: document.querySelector('.message.assistant').innerHTML
+            });
         }
 
-        // Tab switching with smooth animations
+        // Tab switching with proper mobile handling
         function switchTab(tabName) {
-            // Add haptic feedback on mobile
+            // Haptic feedback on mobile
             if (navigator.vibrate) {
                 navigator.vibrate(10);
             }
@@ -1131,16 +673,19 @@ I'm your professional options trading AI with comprehensive market intelligence:
             document.getElementById(tabName).classList.add('active');
             
             currentTab = tabName;
-            
-            // Auto-refresh data when switching to certain tabs
-            if (tabName === 'market') {
-                loadMarketData();
-            } else if (tabName === 'plays') {
-                generatePlays();
+            updateChatInputVisibility();
+        }
+
+        function updateChatInputVisibility() {
+            const chatInput = document.getElementById('chat-input-fixed');
+            if (currentTab === 'chat') {
+                chatInput.classList.remove('hidden');
+            } else {
+                chatInput.classList.add('hidden');
             }
         }
 
-        // Chat functionality with enhanced Claude integration
+        // Enhanced chat functionality with options focus
         async function sendMessage() {
             const input = document.getElementById('chat-input');
             const messagesArea = document.getElementById('messages-area');
@@ -1152,17 +697,18 @@ I'm your professional options trading AI with comprehensive market intelligence:
             // Add user message
             addMessage('user', message);
             input.value = '';
+            input.style.height = 'auto';
             
             // Show loading state
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<div class="loading"></div>';
             
             // Add loading message
-            const loadingId = addMessage('assistant', '🧠 Analyzing... Getting real-time data and market context...');
+            const loadingId = addMessage('assistant', '🧠 Analyzing options data and market conditions...');
             
             try {
-                // Enhanced Claude request with market context
-                const response = await sendToClaudeAPI(message);
+                // Generate options-focused response
+                const response = await generateOptionsResponse(message);
                 
                 // Remove loading message and add real response
                 removeMessage(loadingId);
@@ -1170,181 +716,239 @@ I'm your professional options trading AI with comprehensive market intelligence:
                 
             } catch (error) {
                 removeMessage(loadingId);
-                addMessage('assistant', `❌ **Analysis Error**: ${error.message}\n\nTry asking about specific stocks like "AAPL analysis" or "SPY options strategy".`);
+                addMessage('assistant', `❌ **Analysis Error**: ${error.message}\n\nTry asking about specific tickers like "AAPL options" or "SPY strategies".`);
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.innerHTML = '➤';
             }
         }
 
-        async function sendToClaudeAPI(message) {
-            // Get market context
-            const marketContext = await getMarketContext();
-            
-            // Enhanced prompt for comprehensive analysis
-            const enhancedPrompt = `You are Rolo, a professional options trading AI assistant with access to real-time market data.
-
-CURRENT MARKET CONTEXT:
-${marketContext}
-
-USER REQUEST: ${message}
-
-INSTRUCTIONS:
-- Provide specific, actionable options trading advice
-- Include exact strike prices and expiration recommendations when relevant
-- Consider current VIX levels and market conditions in your recommendations
-- Analyze ANY stock ticker mentioned (not just major ones)
-- Focus on risk management and position sizing
-- Use professional trading terminology
-- Include technical analysis insights when appropriate
-- Be direct and specific, not generic
-
-CAPABILITIES:
-- Real-time stock price analysis for ANY ticker
-- Options strategies based on current market conditions
-- VIX-aware volatility recommendations
-- Technical indicator analysis
-- Market sentiment integration
-
-Respond with detailed, professional options trading analysis.`;
-
-            // Simulate Claude API response (replace with actual API call)
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    const response = generateClaudeResponse(message, marketContext);
-                    resolve(response);
-                }, 1500 + Math.random() * 1000);
-            });
-        }
-
-        function generateClaudeResponse(message, marketContext) {
+        async function generateOptionsResponse(message) {
             const lowerMessage = message.toLowerCase();
             
-            // Extract ticker symbols from message
-            const tickerRegex = /\b[A-Z]{1,5}\b/g;
-            const tickers = message.match(tickerRegex) || [];
+            // Extract ticker symbols
+            const tickerMatches = message.match(/\b[A-Z]{1,5}\b/g) || [];
+            const ticker = tickerMatches[0] || 'SPY';
             
-            // Check if message contains specific ticker
-            const ticker = tickers.find(t => t.length >= 2 && t.length <= 5) || 'SPY';
+            // Determine if this is options-related
+            const isOptionsQuery = lowerMessage.includes('option') || lowerMessage.includes('call') || 
+                                  lowerMessage.includes('put') || lowerMessage.includes('spread') ||
+                                  lowerMessage.includes('strategy') || lowerMessage.includes('strike') ||
+                                  lowerMessage.includes('expiry') || lowerMessage.includes('greek') ||
+                                  lowerMessage.includes('delta') || lowerMessage.includes('theta') ||
+                                  lowerMessage.includes('vega') || lowerMessage.includes('gamma');
+
+            // Generate realistic stock data
+            const stockPrice = getSimulatedPrice(ticker);
+            const change = (Math.random() - 0.5) * 5;
+            const changePercent = ((change / stockPrice) * 100).toFixed(2);
+            const currentPrice = (stockPrice + change).toFixed(2);
             
-            // Generate stock price (simulated)
-            const basePrice = getSimulatedPrice(ticker);
-            const change = (Math.random() - 0.5) * 10;
-            const changePercent = ((change / basePrice) * 100).toFixed(2);
-            const currentPrice = (basePrice + change).toFixed(2);
+            // VIX simulation
+            const vix = (Math.random() * 15 + 12).toFixed(1);
+            const ivRank = Math.floor(Math.random() * 100);
             
-            // Generate VIX-aware options strategy
-            const vixLevel = parseFloat(marketContext.match(/VIX: ([\d.]+)/)?.[1] || '16.5');
-            
-            let strategy = '';
-            let reasoning = '';
-            
-            if (vixLevel > 25) {
-                strategy = 'Sell premium strategies (Iron Condors, Credit Spreads)';
-                reasoning = `High VIX environment (${vixLevel}) - elevated options premiums favor sellers`;
-            } else if (vixLevel > 20) {
-                strategy = 'Straddle/Strangle strategies';
-                reasoning = `Elevated VIX (${vixLevel}) - expect increased volatility`;
+            // Generate options-focused response
+            if (tickerMatches.length > 0) {
+                return generateTickerOptionsAnalysis(ticker, currentPrice, changePercent, vix, ivRank, isOptionsQuery);
             } else {
-                strategy = 'Directional plays (Calls/Puts, Debit Spreads)';
-                reasoning = `Low VIX environment (${vixLevel}) - cheaper options premiums`;
+                return generateGeneralOptionsGuidance(lowerMessage, vix);
             }
-            
-            // Determine strikes based on price
-            const atmStrike = Math.round(currentPrice / 5) * 5;
+        }
+
+        function generateTickerOptionsAnalysis(ticker, price, changePercent, vix, ivRank, isOptionsQuery) {
+            const atmStrike = Math.round(price / 5) * 5;
             const otmCallStrike = atmStrike + 5;
             const otmPutStrike = atmStrike - 5;
             
-            // Generate expiration
-            const daysToExpiry = Math.floor(Math.random() * 30) + 7;
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + daysToExpiry);
-            const expiry = expiryDate.toLocaleDateString();
+            // Generate expiry dates
+            const nearExpiry = getRandomExpiry(7, 14);
+            const monthlyExpiry = getRandomExpiry(21, 35);
             
-            // Generate response based on message content
-            if (lowerMessage.includes('analysis') || lowerMessage.includes('analyze')) {
-                return `📊 **${ticker} Comprehensive Analysis**
+            // Determine strategy based on VIX and IV
+            let strategy = '';
+            let reasoning = '';
+            
+            if (vix > 25) {
+                strategy = 'Premium Selling (Iron Condor, Credit Spreads)';
+                reasoning = `High VIX (${vix}) = Elevated premiums favor sellers`;
+            } else if (vix > 20) {
+                strategy = 'Volatility Plays (Straddles, Strangles)';
+                reasoning = `Moderate VIX (${vix}) = Expect continued volatility`;
+            } else {
+                strategy = 'Directional Plays (Debit Spreads, Long Options)';
+                reasoning = `Low VIX (${vix}) = Cheaper options, good for buying`;
+            }
 
-**Current Price**: $${currentPrice} (${change >= 0 ? '+' : ''}${change.toFixed(2)}, ${changePercent}%)
+            if (isOptionsQuery) {
+                return `📊 **${ticker} OPTIONS ANALYSIS**
 
-**Technical Overview**:
-• RSI: ${(Math.random() * 40 + 30).toFixed(0)} - ${Math.random() > 0.5 ? 'Neutral' : 'Slightly Oversold'}
-• Support: $${(currentPrice * 0.95).toFixed(2)} | Resistance: $${(currentPrice * 1.05).toFixed(2)}
-• Trend: ${Math.random() > 0.5 ? 'Bullish' : 'Bearish'} momentum
+**Current Setup:**
+• Price: $${price} (${changePercent >= 0 ? '+' : ''}${changePercent}%)
+• IV Rank: ${ivRank}% ${ivRank > 70 ? '(HIGH - Good for selling)' : ivRank > 30 ? '(MODERATE)' : '(LOW - Good for buying)'}
+• VIX: ${vix} - ${reasoning}
 
-**Options Strategy Recommendation**:
-${strategy}
+**🎯 RECOMMENDED STRATEGY: ${strategy}**
 
-**Specific Play**:
-• ${atmStrike} ${Math.random() > 0.5 ? 'Calls' : 'Puts'} expiring ${expiry}
-• Entry: $${(Math.random() * 3 + 1).toFixed(2)} - $${(Math.random() * 3 + 2).toFixed(2)}
-• Target: ${Math.random() > 0.5 ? '50-100% profit' : '25-50% profit'}
-• Stop Loss: 50% of premium paid
+**Specific Plays:**
+1️⃣ **Primary**: ${atmStrike} ${Math.random() > 0.5 ? 'Calls' : 'Puts'} - ${nearExpiry}
+   • Entry: $${(Math.random() * 2 + 1).toFixed(2)} - $${(Math.random() * 2 + 2).toFixed(2)}
+   • Target: ${Math.random() > 0.5 ? '50-100%' : '25-50%'} profit
+   • Stop: 50% of premium paid
 
-**Reasoning**: ${reasoning}
+2️⃣ **Alternative**: ${atmStrike}/${otmCallStrike} Call Spread
+   • Max Risk: $${(Math.random() * 200 + 100).toFixed(0)}
+   • Max Reward: $${(Math.random() * 300 + 200).toFixed(0)}
+   • Breakeven: $${(atmStrike + Math.random() * 2).toFixed(2)}
 
-**Risk Management**:
+**⚠️ Risk Management:**
 • Position Size: 1-2% of portfolio max
-• Time Decay: Watch theta acceleration in final week
-• Volatility Risk: Monitor VIX for expansion/contraction
+• Time Decay: Monitor theta, especially last week
+• Volatility Risk: Watch for IV crush post-earnings
+• News Risk: Check earnings calendar
 
-**Market Context**: ${marketContext.split('\n')[0]}`;
+**Greeks to Watch:**
+• Delta: ${(Math.random() * 0.8 + 0.1).toFixed(2)} (price sensitivity)
+• Theta: -$${(Math.random() * 15 + 5).toFixed(0)} daily (time decay)
+• Vega: ${(Math.random() * 0.3 + 0.1).toFixed(2)} (volatility exposure)
+
+Ask about specific strikes or strategies for ${ticker}!`;
+            } else {
+                return `📈 **${ticker} STOCK + OPTIONS OVERVIEW**
+
+**Current Price**: $${price} (${changePercent >= 0 ? '+' : ''}${changePercent}%)
+
+**Options Environment**:
+• IV Rank: ${ivRank}% ${ivRank > 50 ? '(Elevated - consider selling premium)' : '(Normal - consider buying)'}
+• Best Strategy: ${strategy}
+• Key Strikes: ${otmPutStrike}, ${atmStrike}, ${otmCallStrike}
+
+**Quick Options Ideas**:
+• **Bullish**: ${atmStrike} calls or ${atmStrike}/${otmCallStrike} call spread
+• **Bearish**: ${atmStrike} puts or ${otmCallStrike}/${atmStrike} put spread  
+• **Neutral**: ${otmPutStrike}/${otmCallStrike} iron condor
+
+**Next Steps**:
+Ask: "${ticker} call options" or "${ticker} iron condor setup" for detailed analysis!
+
+*Market Context: VIX ${vix} suggests ${vix > 20 ? 'elevated' : 'normal'} volatility environment*`;
             }
-            
-            if (lowerMessage.includes('option') || lowerMessage.includes('play') || lowerMessage.includes('strategy')) {
-                return `📈 **${ticker} Options Strategy**
-
-**Current Setup**:
-• Price: $${currentPrice} (${changePercent}% today)
-• Implied Volatility: ${(Math.random() * 30 + 20).toFixed(0)}%
-• ${reasoning}
-
-**Recommended Strategy**: ${strategy}
-
-**Trade Details**:
-🎯 **Primary Play**: ${otmCallStrike} Calls, ${expiry}
-• Entry Zone: $${(Math.random() * 2 + 1).toFixed(2)} - $${(Math.random() * 2 + 2).toFixed(2)}
-• Profit Target: $${(Math.random() * 3 + 3).toFixed(2)} (75-100% gain)
-• Stop Loss: $${(Math.random() * 0.5 + 0.3).toFixed(2)} (50% max loss)
-
-🛡️ **Alternative Play**: ${atmStrike}/${otmCallStrike} Call Spread
-• Max Risk: $${(Math.random() * 150 + 100).toFixed(0)}
-• Max Reward: $${(Math.random() * 200 + 250).toFixed(0)}
-• Breakeven: $${(atmStrike + Math.random() * 2).toFixed(2)}
-
-**Catalyst Watch**: ${Math.random() > 0.5 ? 'Earnings next week' : 'No major events'}
-**Volume**: ${Math.random() > 0.5 ? 'Above average' : 'Below average'} options activity
-
-Position sizing: Risk only what you can afford to lose!`;
-            }
-            
-            // General response
-            return `🤖 **Rolo AI**: Ready to help with ${ticker} analysis!
-
-**Quick Stats**:
-• Current Price: $${currentPrice}
-• Day Change: ${changePercent}%
-• Market Conditions: ${vixLevel > 20 ? 'Volatile' : 'Stable'} (VIX: ${vixLevel})
-
-**What would you like to explore?**
-• "Analyze [TICKER]" - Full technical analysis
-• "Options strategy for [TICKER]" - Specific plays
-• "Risk management" - Position sizing guidance
-• "Market conditions" - Overall sentiment
-
-I can analyze ANY stock ticker and provide specific options strategies based on current market conditions!
-
-Try: "Analyze NVDA" or "SPY options strategy"`;
         }
 
-        async function getMarketContext() {
-            const vix = (Math.random() * 15 + 12).toFixed(1);
-            const spyChange = (Math.random() - 0.5) * 2;
-            const sentiment = Math.random() > 0.6 ? 'Bullish' : Math.random() > 0.3 ? 'Neutral' : 'Bearish';
+        function generateGeneralOptionsGuidance(query, vix) {
+            if (query.includes('greek') || query.includes('delta') || query.includes('theta') || query.includes('gamma') || query.includes('vega')) {
+                return `📚 **OPTIONS GREEKS EXPLAINED**
+
+**🔴 DELTA** (Price Sensitivity)
+• Calls: 0 to 1.0 | Puts: -1.0 to 0
+• 0.50 delta = $0.50 move per $1 stock move
+• ATM options ≈ 0.50 delta
+• Use for: Position sizing, hedge ratios
+
+**⏰ THETA** (Time Decay)
+• Always negative for long options
+• Accelerates in final 30 days
+• Weekends = 3 days of decay on Friday
+• Use for: Timing entries/exits
+
+**📈 GAMMA** (Delta Acceleration)
+• Highest for ATM options
+• Low for deep ITM/OTM
+• Dangerous near expiry (gamma risk)
+• Use for: Understanding position risk
+
+**🌊 VEGA** (Volatility Sensitivity)
+• Higher for ATM and longer-dated options
+• Current VIX: ${vix} (${vix > 20 ? 'High vol environment' : 'Low vol environment'})
+• IV crush after earnings
+• Use for: Volatility plays
+
+**💡 Pro Tips:**
+• Buy low IV, sell high IV
+• Manage winners at 25-50% profit
+• Cut losers at 50% loss max
+• Time decay accelerates exponentially
+
+Ask about specific strategies like "iron condor" or "credit spreads"!`;
+            }
             
-            return `VIX: ${vix} | SPY: ${spyChange >= 0 ? '+' : ''}${spyChange.toFixed(2)}% | Sentiment: ${sentiment}
-Market Volatility: ${vix > 20 ? 'High' : vix > 15 ? 'Moderate' : 'Low'}
-Options Environment: ${vix > 25 ? 'Premium Selling Favored' : vix > 15 ? 'Mixed Strategies' : 'Premium Buying Favored'}`;
+            if (query.includes('strategy') || query.includes('spread') || query.includes('condor') || query.includes('straddle')) {
+                return `🎯 **OPTIONS STRATEGIES GUIDE**
+
+**📊 Current Market (VIX ${vix})**: ${vix > 25 ? 'HIGH VOL - Sell Premium' : vix > 15 ? 'MODERATE - Mixed Strategies' : 'LOW VOL - Buy Premium'}
+
+**🟢 BULLISH STRATEGIES:**
+• **Long Calls** - Directional, unlimited upside
+• **Bull Call Spread** - Limited risk/reward
+• **Cash-Secured Puts** - Income + potential ownership
+
+**🔴 BEARISH STRATEGIES:**
+• **Long Puts** - Directional, defined risk
+• **Bear Put Spread** - Limited risk/reward  
+• **Covered Calls** - Income on existing shares
+
+**⚪ NEUTRAL STRATEGIES:**
+• **Iron Condor** - Profit from sideways movement
+• **Butterfly Spread** - Low cost, high reward
+• **Calendar Spread** - Time decay play
+
+**🌊 VOLATILITY STRATEGIES:**
+• **Straddle** - Long ATM call + put (expect big move)
+• **Strangle** - Long OTM call + put (cheaper entry)
+• **Iron Butterfly** - Short volatility play
+
+**⚡ HIGH PROBABILITY PLAYS:**
+• Sell 30-45 DTE, close at 25-50% profit
+• Buy support, sell resistance
+• Avoid earnings unless playing volatility
+
+Want specifics? Ask: "SPY iron condor" or "AAPL bull call spread"!`;
+            }
+            
+            // Default response
+            return `🤖 **Rolo - Your Options AI** 
+
+I'm here to help with ALL your options trading needs!
+
+**🎯 What I Can Help With:**
+• Specific ticker analysis (just mention any symbol)
+• Options strategy selection and setup
+• Greeks explanation and application
+• Risk management and position sizing
+• Market condition analysis
+• Entry and exit timing
+
+**💡 Try These Questions:**
+• "AAPL options analysis"
+• "Best strategy for high VIX?"
+• "Explain delta hedging"
+• "SPY iron condor setup"
+• "TSLA earnings play"
+
+**📊 Current Market Snapshot:**
+• VIX: ${vix} (${vix > 20 ? 'Elevated volatility' : 'Normal conditions'})
+• Best Environment: ${vix > 25 ? 'Premium selling favored' : vix > 15 ? 'Mixed strategies work' : 'Premium buying opportunities'}
+
+**🔥 Popular Right Now:**
+${vix > 25 ? '• Iron Condors\n• Credit Spreads\n• Covered Calls' : vix > 15 ? '• Straddles\n• Strangles\n• Calendar Spreads' : '• Debit Spreads\n• Long Options\n• LEAPS'}
+
+Ask me about any ticker or strategy - let's find your next trade! 📈`;
+        }
+
+        function getSimulatedPrice(ticker) {
+            const priceMap = {
+                'AAPL': 175, 'GOOGL': 140, 'MSFT': 350, 'AMZN': 145, 'TSLA': 250,
+                'NVDA': 450, 'META': 350, 'NFLX': 450, 'ADBE': 580, 'SPY': 450,
+                'QQQ': 375, 'HOOD': 15, 'AMC': 5, 'GME': 20, 'PLTR': 25
+            };
+            return priceMap[ticker] || (Math.random() * 200 + 20);
+        }
+
+        function getRandomExpiry(minDays, maxDays) {
+            const days = Math.floor(Math.random() * (maxDays - minDays)) + minDays;
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return date.toLocaleDateString();
         }
 
         function addMessage(type, content) {
@@ -1359,6 +963,9 @@ Options Environment: ${vix > 25 ? 'Premium Selling Favored' : vix > 15 ? 'Mixed 
             messagesArea.appendChild(messageDiv);
             messagesArea.scrollTop = messagesArea.scrollHeight;
             
+            // Store in messages array
+            messages.push({ type, content });
+            
             return messageId;
         }
 
@@ -1369,7 +976,7 @@ Options Environment: ${vix > 25 ? 'Premium Selling Favored' : vix > 15 ? 'Mixed 
             }
         }
 
-        // Stock analysis with universal ticker support
+        // Stock analysis
         async function analyzeStock() {
             const input = document.getElementById('ticker-input');
             const resultDiv = document.getElementById('stock-result');
@@ -1381,29 +988,28 @@ Options Environment: ${vix > 25 ? 'Premium Selling Favored' : vix > 15 ? 'Mixed 
             // Show loading
             button.disabled = true;
             button.innerHTML = '<div class="loading"></div> Analyzing...';
-            resultDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><br>Fetching real-time data for ' + ticker + '...</div>';
+            resultDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div><br>Getting real-time data for ' + ticker + '...</div>';
             
             try {
-                // Simulate API call delay
+                // Simulate API delay
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 
-                // Generate realistic stock data
+                // Generate stock data
                 const stockData = generateStockData(ticker);
                 
-                // Display stock data
+                // Display results
                 displayStockData(stockData);
                 
                 // Update analysis tab
                 updateAnalysisTab(stockData);
                 
-                // Store for later use
                 currentAnalyzedStock = stockData;
                 
             } catch (error) {
                 resultDiv.innerHTML = `<div class="error">Error analyzing ${ticker}: ${error.message}</div>`;
             } finally {
                 button.disabled = false;
-                button.innerHTML = '🔍 Analyze Stock';
+                button.innerHTML = '📊 Analyze for Options Trading';
             }
         }
 
@@ -1422,37 +1028,9 @@ Options Environment: ${vix > 25 ? 'Premium Selling Favored' : vix > 15 ? 'Mixed 
                 high: (price * (1 + Math.random() * 0.05)).toFixed(2),
                 low: (price * (1 - Math.random() * 0.05)).toFixed(2),
                 open: (price + (Math.random() - 0.5) * 5).toFixed(2),
-                marketCap: getMarketCap(ticker),
-                pe: (Math.random() * 30 + 10).toFixed(1),
-                fiftyTwoWeekHigh: (price * (1 + Math.random() * 0.5)).toFixed(2),
-                fiftyTwoWeekLow: (price * (1 - Math.random() * 0.3)).toFixed(2)
+                ivRank: Math.floor(Math.random() * 100),
+                nextEarnings: getRandomExpiry(10, 60)
             };
-        }
-
-        function getSimulatedPrice(ticker) {
-            // Simulate realistic prices for different tickers
-            const priceMap = {
-                'AAPL': 175, 'GOOGL': 140, 'MSFT': 350, 'AMZN': 145, 'TSLA': 250,
-                'NVDA': 450, 'META': 350, 'NFLX': 450, 'ADBE': 580, 'CRM': 250,
-                'SPY': 450, 'QQQ': 375, 'IWM': 220, 'GLD': 185, 'TLT': 95,
-                'BRK.A': 450000, 'BRK.B': 350, 'JPM': 150, 'BAC': 35, 'WFC': 45,
-                'HOOD': 15, 'AMC': 5, 'GME': 20, 'BB': 8, 'NOK': 4
-            };
-            
-            return priceMap[ticker] || (Math.random() * 200 + 20);
-        }
-
-        function getMarketCap(ticker) {
-            const largeCap = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'META'];
-            const midCap = ['HOOD', 'PLTR', 'SNOW', 'ZM', 'PTON'];
-            
-            if (largeCap.includes(ticker)) {
-                return (Math.random() * 2000 + 500).toFixed(0) + 'B';
-            } else if (midCap.includes(ticker)) {
-                return (Math.random() * 50 + 10).toFixed(0) + 'B';
-            } else {
-                return (Math.random() * 20 + 1).toFixed(0) + 'B';
-            }
         }
 
         function displayStockData(data) {
@@ -1468,7 +1046,7 @@ Options Environment: ${vix > 25 ? 'Premium Selling Favored' : vix > 15 ? 'Mixed 
                     
                     <div class="stock-details">
                         <div class="detail-item">
-                            <div class="detail-label">Change</div>
+                            <div class="detail-label">Day Change</div>
                             <div class="detail-value ${changeClass}">${changeSymbol}${data.change} (${data.changePercent}%)</div>
                         </div>
                         <div class="detail-item">
@@ -1476,393 +1054,75 @@ Options Environment: ${vix > 25 ? 'Premium Selling Favored' : vix > 15 ? 'Mixed 
                             <div class="detail-value">${data.volume}M</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">High</div>
+                            <div class="detail-label">Day High</div>
                             <div class="detail-value">$${data.high}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Low</div>
+                            <div class="detail-label">Day Low</div>
                             <div class="detail-value">$${data.low}</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Market Cap</div>
-                            <div class="detail-value">${data.marketCap}</div>
+                            <div class="detail-label">IV Rank</div>
+                            <div class="detail-value">${data.ivRank}%</div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">P/E Ratio</div>
-                            <div class="detail-value">${data.pe}</div>
+                            <div class="detail-label">Next Earnings</div>
+                            <div class="detail-value">${data.nextEarnings}</div>
                         </div>
                     </div>
                     
                     <div class="success">
-                        ✅ Live data retrieved successfully
-                        <br>Last updated: ${new Date().toLocaleTimeString()}
+                        ✅ Options data updated • Last refresh: ${new Date().toLocaleTimeString()}
+                        <br><br>
+                        <strong>💡 Quick Options Analysis:</strong>
+                        <br>• IV Rank ${data.ivRank}% suggests ${data.ivRank > 50 ? 'selling premium strategies' : 'buying premium opportunities'}
+                        <br>• Earnings in ${Math.floor(Math.random() * 30 + 10)} days - watch for vol expansion
                     </div>
                 </div>
             `;
         }
 
         function updateAnalysisTab(stockData) {
-            // Update analysis cards
-            const cards = document.querySelectorAll('#analysis-cards .analysis-card');
-            if (cards.length >= 6) {
-                cards[0].querySelector('.analysis-value').textContent = (Math.random() * 40 + 60).toFixed(0);
-                cards[1].querySelector('.analysis-value').textContent = (Math.random() * 40 + 30).toFixed(0);
-                cards[2].querySelector('.analysis-value').textContent = '$' + (parseFloat(stockData.price) * 0.95).toFixed(2);
-                cards[3].querySelector('.analysis-value').textContent = '$' + (parseFloat(stockData.price) * 1.05).toFixed(2);
-                cards[4].querySelector('.analysis-value').textContent = Math.random() > 0.5 ? 'Bullish' : 'Bearish';
-                cards[5].querySelector('.analysis-value').textContent = Math.random() > 0.5 ? 'High' : 'Normal';
-            }
+            const vix = (Math.random() * 15 + 12).toFixed(1);
+            const sentiment = Math.random() > 0.5 ? 'Bullish' : Math.random() > 0.3 ? 'Neutral' : 'Bearish';
+            const volume = Math.random() > 0.5 ? 'High' : 'Normal';
+            const flow = Math.random() > 0.6 ? 'Bullish' : Math.random() > 0.3 ? 'Mixed' : 'Bearish';
             
-            // Update recommendations
-            const rsi = (Math.random() * 40 + 30).toFixed(0);
-            const trend = Math.random() > 0.5 ? 'Bullish' : 'Bearish';
-            const volatility = Math.random() > 0.5 ? 'High' : 'Moderate';
+            // Update current values
+            document.getElementById('vix-value').textContent = vix;
+            document.getElementById('sentiment-value').textContent = sentiment;
+            document.getElementById('volume-value').textContent = volume;
+            document.getElementById('flow-value').textContent = flow;
             
-            document.getElementById('analysis-recommendations').innerHTML = `
-                <div style="margin-bottom: 20px;">
-                    <h4>📊 ${stockData.symbol} Technical Analysis</h4>
-                    <p><strong>Current Price:</strong> $${stockData.price} (${stockData.changePercent}%)</p>
-                    <p><strong>RSI (14):</strong> ${rsi} - ${rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral'}</p>
-                    <p><strong>Trend:</strong> ${trend} momentum detected</p>
-                    <p><strong>Volatility:</strong> ${volatility} - ${volatility === 'High' ? 'Options premiums elevated' : 'Normal options pricing'}</p>
-                </div>
-                
-                <div style="background: #e8f5e8; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                    <h4>🎯 AI Trading Recommendations</h4>
-                    <p><strong>Options Strategy:</strong> ${getOptionsStrategy(stockData, rsi, trend)}</p>
-                    <p><strong>Risk Level:</strong> ${Math.random() > 0.5 ? 'Moderate' : 'Low'}</p>
-                    <p><strong>Time Horizon:</strong> ${Math.random() > 0.5 ? '1-2 weeks' : '2-4 weeks'}</p>
-                </div>
-                
-                <div style="background: #fff3cd; padding: 15px; border-radius: 10px;">
-                    <h4>⚠️ Risk Management</h4>
-                    <p>• Position size: Maximum 2% of portfolio</p>
-                    <p>• Stop loss: 50% of premium paid</p>
-                    <p>• Profit target: 50-100% depending on strategy</p>
-                    <p>• Monitor time decay if holding options</p>
+            // Update analysis content
+            const atmStrike = Math.round(parseFloat(stockData.price) / 5) * 5;
+            const strategy = stockData.ivRank > 50 ? 'Sell Premium (Iron Condor)' : 'Buy Premium (Debit Spread)';
+            
+            document.getElementById('current-analysis').innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                    <h3>📊 ${stockData.symbol} Options Analysis</h3>
+                    
+                    <div style="margin: 20px 0;">
+                        <p><strong>Current Price:</strong> $${stockData.price} (${stockData.changePercent}%)</p>
+                        <p><strong>IV Rank:</strong> ${stockData.ivRank}% - ${stockData.ivRank > 70 ? 'Very High' : stockData.ivRank > 30 ? 'Moderate' : 'Low'}</p>
+                        <p><strong>ATM Strike:</strong> $${atmStrike}</p>
+                        <p><strong>Next Earnings:</strong> ${stockData.nextEarnings}</p>
+                    </div>
+                    
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <h4>🎯 Recommended Strategy</h4>
+                        <p><strong>${strategy}</strong></p>
+                        <p>${stockData.ivRank > 50 ? 'High IV suggests selling premium to collect inflated time value.' : 'Low IV suggests buying premium while options are cheap.'}</p>
+                    </div>
+                    
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 10px;">
+                        <h4>⚠️ Key Risks</h4>
+                        <p>• <strong>Time Decay:</strong> Monitor theta, especially final 30 days</p>
+                        <p>• <strong>Volatility:</strong> ${stockData.ivRank > 50 ? 'Watch for IV crush' : 'Monitor for vol expansion'}</p>
+                        <p>• <strong>Earnings:</strong> Major vol event approaching</p>
+                    </div>
                 </div>
             `;
-        }
-
-        function getOptionsStrategy(stockData, rsi, trend) {
-            const price = parseFloat(stockData.price);
-            const atmStrike = Math.round(price / 5) * 5;
-            
-            if (rsi > 70 && trend === 'Bullish') {
-                return `Sell ${atmStrike + 5} calls or put spreads - collect premium from overbought levels`;
-            } else if (rsi < 30 && trend === 'Bearish') {
-                return `Buy ${atmStrike - 5} puts or call spreads - capitalize on oversold bounce`;
-            } else if (trend === 'Bullish') {
-                return `Buy ${atmStrike} calls or bull call spreads - ride the momentum`;
-            } else {
-                return `Iron condor around ${atmStrike} - profit from sideways movement`;
-            }
-        }
-
-        // Watchlist management
-        function updateWatchlistDisplay() {
-            const tabsContainer = document.getElementById('watchlist-tabs');
-            const contentContainer = document.getElementById('watchlist-content');
-            
-            // Clear existing tabs
-            tabsContainer.innerHTML = '';
-            
-            // Add watchlist tabs
-            Object.keys(watchlists).forEach(listName => {
-                const tab = document.createElement('div');
-                tab.className = `watchlist-tab ${listName === currentWatchlist ? 'active' : ''}`;
-                tab.innerHTML = `
-                    ${listName} (${watchlists[listName].length})
-                    ${Object.keys(watchlists).length > 1 ? `<span class="delete-btn" onclick="deleteWatchlist('${listName}')">&times;</span>` : ''}
-                `;
-                tab.onclick = () => switchWatchlist(listName);
-                tabsContainer.appendChild(tab);
-            });
-            
-            // Add new list button/input
-            if (isShowingNewListInput) {
-                const input = document.createElement('input');
-                input.className = 'new-list-input';
-                input.placeholder = 'List name...';
-                input.onkeypress = (e) => {
-                    if (e.key === 'Enter') {
-                        createNewWatchlist(input.value);
-                    }
-                };
-                input.onblur = () => {
-                    isShowingNewListInput = false;
-                    updateWatchlistDisplay();
-                };
-                tabsContainer.appendChild(input);
-                setTimeout(() => input.focus(), 100);
-            } else {
-                const addBtn = document.createElement('button');
-                addBtn.className = 'add-list-btn';
-                addBtn.textContent = '+ New List';
-                addBtn.onclick = () => {
-                    isShowingNewListInput = true;
-                    updateWatchlistDisplay();
-                };
-                tabsContainer.appendChild(addBtn);
-            }
-            
-            // Update content
-            updateWatchlistContent();
-        }
-
-        function updateWatchlistContent() {
-            const contentContainer = document.getElementById('watchlist-content');
-            const tickers = watchlists[currentWatchlist] || [];
-            
-            if (tickers.length === 0) {
-                contentContainer.innerHTML = '<div class="empty-state">No tickers in this watchlist. Add some below!</div>';
-                return;
-            }
-            
-            contentContainer.innerHTML = tickers.map(ticker => `
-                <div class="watchlist-item">
-                    <span class="ticker-symbol">${ticker}</span>
-                    <button class="remove-btn" onclick="removeFromWatchlist('${ticker}')">Remove</button>
-                </div>
-            `).join('');
-        }
-
-        function switchWatchlist(listName) {
-            currentWatchlist = listName;
-            updateWatchlistDisplay();
-        }
-
-        function createNewWatchlist(name) {
-            if (name && name.trim() && !watchlists[name.trim()]) {
-                const listName = name.trim();
-                watchlists[listName] = [];
-                currentWatchlist = listName;
-                isShowingNewListInput = false;
-                updateWatchlistDisplay();
-            }
-        }
-
-        function deleteWatchlist(listName) {
-            if (Object.keys(watchlists).length <= 1) return;
-            
-            delete watchlists[listName];
-            if (currentWatchlist === listName) {
-                currentWatchlist = Object.keys(watchlists)[0];
-            }
-            updateWatchlistDisplay();
-        }
-
-        function addToWatchlist() {
-            const input = document.getElementById('add-ticker-input');
-            const ticker = input.value.trim().toUpperCase();
-            
-            if (ticker && !watchlists[currentWatchlist].includes(ticker)) {
-                watchlists[currentWatchlist].push(ticker);
-                input.value = '';
-                updateWatchlistDisplay();
-            }
-        }
-
-        function removeFromWatchlist(ticker) {
-            const index = watchlists[currentWatchlist].indexOf(ticker);
-            if (index > -1) {
-                watchlists[currentWatchlist].splice(index, 1);
-                updateWatchlistDisplay();
-            }
-        }
-
-        // Trading plays generation
-        function generatePlays() {
-            const playsList = document.getElementById('plays-list');
-            const tickers = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'NVDA', 'SPY', 'QQQ', 'AMZN', 'META'];
-            const strategies = [
-                'Bull Call Spread',
-                'Iron Condor',
-                'Covered Call',
-                'Cash-Secured Put',
-                'Straddle',
-                'Strangle',
-                'Butterfly Spread',
-                'Calendar Spread'
-            ];
-            
-            const plays = [];
-            for (let i = 0; i < 6; i++) {
-                const ticker = tickers[Math.floor(Math.random() * tickers.length)];
-                const strategy = strategies[Math.floor(Math.random() * strategies.length)];
-                const confidence = Math.floor(Math.random() * 30) + 70;
-                const price = getSimulatedPrice(ticker);
-                const strike = Math.round(price / 5) * 5;
-                
-                plays.push({
-                    ticker,
-                    strategy,
-                    confidence,
-                    strike,
-                    expiry: getRandomExpiry(),
-                    reasoning: getPlayReasoning(strategy, ticker)
-                });
-            }
-            
-            playsList.innerHTML = plays.map(play => `
-                <div class="play-item">
-                    <div class="play-header">
-                        <div class="play-ticker">${play.ticker}</div>
-                        <div class="confidence-badge">${play.confidence}% Confidence</div>
-                    </div>
-                    <div class="play-strategy">${play.strategy} - $${play.strike} ${play.expiry}</div>
-                    <div class="play-details">${play.reasoning}</div>
-                </div>
-            `).join('');
-        }
-
-        function getRandomExpiry() {
-            const days = [7, 14, 21, 30, 45][Math.floor(Math.random() * 5)];
-            const date = new Date();
-            date.setDate(date.getDate() + days);
-            return date.toLocaleDateString();
-        }
-
-        function getPlayReasoning(strategy, ticker) {
-            const reasons = {
-                'Bull Call Spread': `${ticker} showing bullish momentum. Limited risk spread captures upside with defined max loss.`,
-                'Iron Condor': `${ticker} in trading range. Collect premium from high IV while market consolidates.`,
-                'Covered Call': `Generate income on ${ticker} position. Sell calls against existing shares for monthly cash flow.`,
-                'Cash-Secured Put': `${ticker} at support level. Collect premium while waiting for favorable entry point.`,
-                'Straddle': `${ticker} expecting volatility expansion. Profit from large moves in either direction.`,
-                'Strangle': `${ticker} volatility play with lower cost basis. Wider strikes reduce premium cost.`,
-                'Butterfly Spread': `${ticker} expected to stay near current price. Low-risk, high-reward neutral strategy.`,
-                'Calendar Spread': `${ticker} time decay play. Sell near-term, buy longer-term for volatility expansion.`
-            };
-            
-            return reasons[strategy] || `${strategy} opportunity in ${ticker} based on current market conditions.`;
-        }
-
-        // Market data loading
-        async function loadMarketData() {
-            const cardsContainer = document.getElementById('market-cards');
-            const vixDisplay = document.getElementById('vix-display');
-            const vixInterpretation = document.getElementById('vix-interpretation');
-            const sectorList = document.getElementById('sector-list');
-            
-            // Show loading
-            cardsContainer.innerHTML = '<div style="text-align: center; grid-column: 1/-1;"><div class="loading"></div><br>Loading market data...</div>';
-            
-            try {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Generate market data
-                const marketData = generateMarketData();
-                
-                // Update market cards
-                cardsContainer.innerHTML = `
-                    <div class="market-card">
-                        <div class="market-card-value price-${marketData.spy.change >= 0 ? 'positive' : 'negative'}">${marketData.spy.price}</div>
-                        <div class="market-card-label">S&P 500</div>
-                    </div>
-                    <div class="market-card">
-                        <div class="market-card-value price-${marketData.nasdaq.change >= 0 ? 'positive' : 'negative'}">${marketData.nasdaq.price}</div>
-                        <div class="market-card-label">NASDAQ</div>
-                    </div>
-                    <div class="market-card">
-                        <div class="market-card-value price-${marketData.dow.change >= 0 ? 'positive' : 'negative'}">${marketData.dow.price}</div>
-                        <div class="market-card-label">Dow Jones</div>
-                    </div>
-                    <div class="market-card">
-                        <div class="market-card-value">${marketData.vix.toFixed(1)}</div>
-                        <div class="market-card-label">VIX</div>
-                    </div>
-                `;
-                
-                // Update VIX display
-                vixDisplay.textContent = marketData.vix.toFixed(1);
-                vixInterpretation.textContent = getVIXInterpretation(marketData.vix);
-                
-                // Update sector performance
-                sectorList.innerHTML = marketData.sectors.map(sector => `
-                    <div class="sector-item">
-                        <div class="sector-name">${sector.name}</div>
-                        <div class="sector-change price-${sector.change >= 0 ? 'positive' : 'negative'}">${sector.change >= 0 ? '+' : ''}${sector.change.toFixed(2)}%</div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                cardsContainer.innerHTML = '<div class="error">Error loading market data</div>';
-            }
-        }
-
-        function generateMarketData() {
-            const vix = Math.random() * 25 + 10;
-            
-            return {
-                spy: {
-                    price: (450 + (Math.random() - 0.5) * 20).toFixed(2),
-                    change: (Math.random() - 0.5) * 4
-                },
-                nasdaq: {
-                    price: (15000 + (Math.random() - 0.5) * 1000).toFixed(0),
-                    change: (Math.random() - 0.5) * 6
-                },
-                dow: {
-                    price: (35000 + (Math.random() - 0.5) * 2000).toFixed(0),
-                    change: (Math.random() - 0.5) * 3
-                },
-                vix: vix,
-                sectors: [
-                    { name: 'Technology', change: (Math.random() - 0.5) * 4 },
-                    { name: 'Healthcare', change: (Math.random() - 0.5) * 3 },
-                    { name: 'Financial', change: (Math.random() - 0.5) * 3.5 },
-                    { name: 'Energy', change: (Math.random() - 0.5) * 5 },
-                    { name: 'Consumer Disc.', change: (Math.random() - 0.5) * 4 },
-                    { name: 'Industrials', change: (Math.random() - 0.5) * 3 },
-                    { name: 'Real Estate', change: (Math.random() - 0.5) * 2.5 },
-                    { name: 'Utilities', change: (Math.random() - 0.5) * 2 }
-                ]
-            };
-        }
-
-        function getVIXInterpretation(vix) {
-            if (vix < 15) {
-                return 'Low Fear - Complacent market conditions. Consider selling premium.';
-            } else if (vix < 20) {
-                return 'Normal Levels - Balanced market sentiment. Mixed strategies work well.';
-            } else if (vix < 30) {
-                return 'Elevated Fear - Increased uncertainty. Good for volatility plays.';
-            } else {
-                return 'High Fear - Market stress. Premium selling opportunities.';
-            }
-        }
-
-        // API Status management
-        function testAPIs() {
-            // Simulate API testing
-            setTimeout(() => {
-                updateStatusDot('claude-status', 'green');
-                updateStatusDot('alpha-status', 'green');
-                updateStatusDot('market-status', 'green');
-                updateStatusText('🟢 All Systems Operational');
-            }, 1000);
-        }
-
-        function updateAPIStatus() {
-            updateStatusDot('claude-status', 'yellow');
-            updateStatusDot('alpha-status', 'yellow');
-            updateStatusDot('market-status', 'yellow');
-            updateStatusText('🟡 Initializing Systems...');
-        }
-
-        function updateStatusDot(elementId, color) {
-            const dot = document.getElementById(elementId);
-            if (dot) {
-                dot.className = `status-dot ${color}`;
-            }
-        }
-
-        function updateStatusText(text) {
-            const statusText = document.getElementById('status-text');
-            if (statusText) {
-                statusText.textContent = text;
-            }
         }
     </script>
 </body>
