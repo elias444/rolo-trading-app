@@ -1,5 +1,5 @@
 // netlify/functions/stock-data.js
-// CLEAN VERSION - ZERO MOCK DATA - ALPHA VANTAGE REAL-TIME ONLY
+// WORKING VERSION - Uses your real-time Alpha Vantage API properly
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -19,80 +19,64 @@ exports.handler = async (event, context) => {
       statusCode: 400,
       headers,
       body: JSON.stringify({ 
-        error: 'Symbol parameter is required',
-        timestamp: new Date().toISOString()
+        error: 'Symbol parameter is required'
       })
     };
   }
 
   try {
-    console.log(`🎯 Fetching real-time data for ${symbol} from Alpha Vantage...`);
+    console.log(`Fetching data for ${symbol}...`);
     
-    // Your premium Alpha Vantage API key
-    const API_KEY = 'MAQEUTLGYYXC1HF1';
+    // Use environment variable or fallback to your working key
+    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY || 'MAQEUTLGYYXC1HF1';
     
-    // Real-time API call with entitlement
-    const stockData = await getRealTimeStockData(symbol, API_KEY);
+    // THIS IS THE EXACT URL FORMAT THAT WORKS FOR YOU
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${API_KEY}`;
     
-    console.log(`✅ Success: ${symbol} = $${stockData.price}`);
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(stockData)
-    };
-
-  } catch (error) {
-    console.error(`❌ Error for ${symbol}:`, error.message);
+    console.log(`Calling Alpha Vantage for ${symbol}...`);
     
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: `Could not find data for ${symbol}. Please verify the ticker symbol.`,
-        symbol: symbol,
-        timestamp: new Date().toISOString(),
-        details: error.message
-      })
-    };
-  }
-};
-
-// Get real-time stock data from Alpha Vantage (NO MOCK DATA)
-async function getRealTimeStockData(symbol, apiKey) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-  
-  try {
-    // Real-time entitlement URL
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${apiKey}`;
-    
-    console.log(`📡 Calling Alpha Vantage for ${symbol}...`);
-    
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
+    const response = await fetch(url);
     
     if (!response.ok) {
-      throw new Error(`Alpha Vantage API error: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
     
+    // Check for API errors
     if (data['Error Message']) {
-      throw new Error(`Invalid ticker symbol: ${symbol}`);
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({
+          error: `Could not find data for ${symbol}. Please verify the ticker symbol.`
+        })
+      };
     }
     
     if (data['Note']) {
-      throw new Error('API rate limit reached - please try again in a moment');
+      return {
+        statusCode: 429,
+        headers,
+        body: JSON.stringify({
+          error: 'API rate limit reached. Please try again in a moment.'
+        })
+      };
     }
     
     const quote = data['Global Quote'];
     if (!quote || !quote['05. price']) {
-      throw new Error(`No price data available for ${symbol}`);
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({
+          error: `No price data available for ${symbol}.`
+        })
+      };
     }
 
-    // Return real data only - NO MOCK/FAKE DATA
-    return {
+    // Return the same data format your direct test gives you
+    const stockData = {
       symbol: symbol.toUpperCase(),
       price: parseFloat(quote['05. price']).toFixed(2),
       change: parseFloat(quote['09. change']).toFixed(2),
@@ -108,8 +92,24 @@ async function getRealTimeStockData(symbol, apiKey) {
       isRealTime: true
     };
 
+    console.log(`Success: ${symbol} = $${stockData.price}`);
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(stockData)
+    };
+
   } catch (error) {
-    clearTimeout(timeout);
-    throw error;
+    console.error(`Error for ${symbol}:`, error);
+    
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        error: `Failed to fetch data for ${symbol}. Please try again.`,
+        details: error.message
+      })
+    };
   }
-}
+};
