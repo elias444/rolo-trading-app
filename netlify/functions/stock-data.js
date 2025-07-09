@@ -1,127 +1,115 @@
-// Clean Stock Data Function - ZERO Mock Data
+// netlify/functions/stock-data.js
+// CLEAN VERSION - ZERO MOCK DATA - ALPHA VANTAGE REAL-TIME ONLY
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Content-Type': 'application/json'
+    'Access-Control-Allow-Methods': 'GET, OPTIONS'
   };
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
 
-  try {
-    const symbol = event.queryStringParameters?.symbol;
-    
-    if (!symbol) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Symbol parameter required' })
-      };
-    }
+  const symbol = event.queryStringParameters?.symbol;
+  
+  if (!symbol) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Symbol parameter is required',
+        timestamp: new Date().toISOString()
+      })
+    };
+  }
 
-    // Get real stock data from Alpha Vantage ONLY
-    const stockData = await getAlphaVantageData(symbol);
+  try {
+    console.log(`🎯 Fetching real-time data for ${symbol} from Alpha Vantage...`);
     
-    if (!stockData) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({ 
-          error: `Unable to find data for ${symbol}. Please verify the ticker symbol and try again.`,
-          symbol: symbol
-        })
-      };
-    }
+    // Your premium Alpha Vantage API key
+    const API_KEY = 'MAQEUTLGYYXC1HF1';
+    
+    // Real-time API call with entitlement
+    const stockData = await getRealTimeStockData(symbol, API_KEY);
+    
+    console.log(`✅ Success: ${symbol} = $${stockData.price}`);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        price: stockData,
-        timestamp: new Date().toISOString(),
-        source: 'Alpha Vantage Premium',
-        isLive: !stockData.isDelayed
-      })
+      body: JSON.stringify(stockData)
     };
 
   } catch (error) {
-    console.error('Stock data error:', error);
+    console.error(`❌ Error for ${symbol}:`, error.message);
     
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ 
-        error: 'Unable to fetch stock data at this time. Please try again.',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      body: JSON.stringify({
+        error: `Could not find data for ${symbol}. Please verify the ticker symbol.`,
+        symbol: symbol,
+        timestamp: new Date().toISOString(),
+        details: error.message
       })
     };
   }
 };
 
-// Get Alpha Vantage stock data with premium access
-async function getAlphaVantageData(symbol) {
+// Get real-time stock data from Alpha Vantage (NO MOCK DATA)
+async function getRealTimeStockData(symbol, apiKey) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  
   try {
-    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY || 'MAQEUTLGYYXC1HF1';
+    // Real-time entitlement URL
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${apiKey}`;
     
-    // Try realtime data first (your premium access)
-    let url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${API_KEY}`;
+    console.log(`📡 Calling Alpha Vantage for ${symbol}...`);
     
-    let response = await fetch(url);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     
     if (!response.ok) {
       throw new Error(`Alpha Vantage API error: ${response.status}`);
     }
     
-    let data = await response.json();
-    let quote = data['Global Quote'];
+    const data = await response.json();
     
-    // If realtime fails, try delayed data
-    if (!quote || Object.keys(quote).length === 0) {
-      console.log(`Realtime data unavailable for ${symbol}, trying delayed...`);
-      
-      url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=delayed&apikey=${API_KEY}`;
-      response = await fetch(url);
-      data = await response.json();
-      quote = data['Global Quote'];
-      
-      if (!quote || Object.keys(quote).length === 0) {
-        console.log(`No data available for ${symbol}`);
-        return null;
-      }
-      
-      return formatQuoteData(quote, true); // Mark as delayed
+    if (data['Error Message']) {
+      throw new Error(`Invalid ticker symbol: ${symbol}`);
     }
     
-    return formatQuoteData(quote, false); // Mark as realtime
+    if (data['Note']) {
+      throw new Error('API rate limit reached - please try again in a moment');
+    }
     
-  } catch (error) {
-    console.error('Alpha Vantage error:', error);
-    return null;
-  }
-}
+    const quote = data['Global Quote'];
+    if (!quote || !quote['05. price']) {
+      throw new Error(`No price data available for ${symbol}`);
+    }
 
-// Format quote data consistently
-function formatQuoteData(quote, isDelayed) {
-  try {
+    // Return real data only - NO MOCK/FAKE DATA
     return {
-      symbol: quote['01. symbol'],
-      price: parseFloat(quote['05. price']),
-      change: parseFloat(quote['09. change']),
-      changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
-      volume: parseInt(quote['06. volume']) || 0,
-      high: parseFloat(quote['03. high']),
-      low: parseFloat(quote['04. low']),
-      open: parseFloat(quote['02. open']),
-      previousClose: parseFloat(quote['08. previous close']),
-      isDelayed: isDelayed,
-      lastUpdate: new Date().toISOString(),
-      dataSource: isDelayed ? 'Alpha Vantage (15-min delayed)' : 'Alpha Vantage (Realtime)'
+      symbol: symbol.toUpperCase(),
+      price: parseFloat(quote['05. price']).toFixed(2),
+      change: parseFloat(quote['09. change']).toFixed(2),
+      changePercent: quote['10. change percent'],
+      volume: parseInt(quote['06. volume']).toLocaleString(),
+      high: parseFloat(quote['03. high']).toFixed(2),
+      low: parseFloat(quote['04. low']).toFixed(2),
+      open: parseFloat(quote['02. open']).toFixed(2),
+      previousClose: parseFloat(quote['08. previous close']).toFixed(2),
+      lastUpdated: quote['07. latest trading day'],
+      timestamp: new Date().toISOString(),
+      source: 'Alpha Vantage Real-Time',
+      isRealTime: true
     };
+
   } catch (error) {
-    console.error('Error formatting quote data:', error);
-    return null;
+    clearTimeout(timeout);
+    throw error;
   }
 }
