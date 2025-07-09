@@ -1,10 +1,11 @@
-// Enhanced Claude Function - Intelligent Trading Assistant
+// netlify/functions/enhanced-claude-chat.js
+// ENHANCED ROLO AI - INTELLIGENT TRADING ASSISTANT
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Content-Type': 'application/json'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
   if (event.httpMethod === 'OPTIONS') {
@@ -12,7 +13,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { message } = JSON.parse(event.body || '{}');
+    const { message } = JSON.parse(event.body);
     
     if (!message) {
       return {
@@ -22,457 +23,381 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Process message and generate intelligent response
-    const response = await generateIntelligentResponse(message);
+    console.log(`🧠 Rolo AI processing: ${message}`);
+    
+    // Enhanced Rolo AI response generation
+    const response = await generateRoloAIResponse(message);
     
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ response })
     };
-    
+
   } catch (error) {
-    console.error('Enhanced Claude error:', error);
+    console.error('Enhanced Claude chat error:', error);
     
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ 
-        response: "I'm having trouble processing your request right now. Please try again in a moment."
+      body: JSON.stringify({
+        error: 'Failed to process message',
+        details: error.message
       })
     };
   }
 };
 
-// Generate intelligent responses based on user message
-async function generateIntelligentResponse(message) {
+// Enhanced Rolo AI response generator
+async function generateRoloAIResponse(message) {
   const lowerMessage = message.toLowerCase();
+  const API_KEY = 'MAQEUTLGYYXC1HF1';
   
-  // Extract ticker if present
-  const ticker = extractTicker(message);
-  
-  // TOP 10 PLAYS REQUEST
-  if (lowerMessage.includes('top 10') || lowerMessage.includes('top ten') || (lowerMessage.includes('plays') && lowerMessage.includes('tomorrow'))) {
-    return await generateTop10Plays();
-  }
-  
-  // SPECIFIC TICKER ANALYSIS
-  if (ticker) {
-    return await generateTickerAnalysis(ticker, message);
-  }
-  
-  // OPTIONS STRATEGY REQUESTS
-  if (lowerMessage.includes('options') || lowerMessage.includes('strategy')) {
-    return generateOptionsGuidance();
-  }
-  
-  // TECHNICAL ANALYSIS REQUESTS
-  if (lowerMessage.includes('technical') || lowerMessage.includes('analysis')) {
-    return generateTechnicalGuidance();
-  }
-  
-  // MARKET OVERVIEW REQUESTS
-  if (lowerMessage.includes('market') && (lowerMessage.includes('today') || lowerMessage.includes('tomorrow'))) {
-    return await generateMarketOverview();
-  }
-  
-  // BEST CALLS/PUTS REQUESTS
-  if (lowerMessage.includes('best calls') || lowerMessage.includes('best puts')) {
-    return await generateBestOptions(lowerMessage.includes('calls') ? 'calls' : 'puts');
-  }
-  
-  // DEFAULT HELPFUL RESPONSE
-  return generateDefaultResponse();
-}
-
-// Extract ticker from message
-function extractTicker(message) {
-  const words = message.toUpperCase().split(/\s+/);
-  const tickers = [
-    'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 
-    'HOOD', 'SPY', 'QQQ', 'IWM', 'DIA', 'AMD', 'INTC', 'DIS', 'JPM', 'BAC', 
-    'WMT', 'V', 'MA', 'JNJ', 'PG', 'UNH', 'HD', 'PYPL', 'ADBE', 'CRM',
-    'BABA', 'TSM', 'ASML', 'LLY', 'ABBV', 'PFE', 'KO', 'PEP', 'COST', 'AVGO'
-  ];
-  
-  for (const word of words) {
-    if (tickers.includes(word) || /^[A-Z]{1,5}$/.test(word)) {
-      return word;
+  try {
+    // Extract ticker symbol if present
+    const tickerMatch = message.match(/\b([A-Z]{1,5})\b/);
+    const ticker = tickerMatch ? tickerMatch[1] : null;
+    
+    // Get real market data if ticker is mentioned
+    let stockData = null;
+    if (ticker) {
+      try {
+        stockData = await getStockData(ticker, API_KEY);
+      } catch (error) {
+        console.log(`Could not fetch data for ${ticker}:`, error.message);
+      }
     }
+    
+    // Generate intelligent responses based on message type
+    if (lowerMessage.includes('best plays') || lowerMessage.includes('plays for tomorrow')) {
+      return generatePlaysResponse(stockData);
+    }
+    
+    if (lowerMessage.includes('strategy') && ticker) {
+      return generateStrategyResponse(ticker, stockData);
+    }
+    
+    if (lowerMessage.includes('analysis') && ticker) {
+      return generateAnalysisResponse(ticker, stockData);
+    }
+    
+    if (lowerMessage.includes('market') && (lowerMessage.includes('how') || lowerMessage.includes('doing'))) {
+      return generateMarketOverviewResponse();
+    }
+    
+    if (lowerMessage.includes('calls') || lowerMessage.includes('best calls')) {
+      return generateCallsResponse();
+    }
+    
+    if (ticker && stockData) {
+      return generateTickerResponse(ticker, stockData);
+    }
+    
+    // General trading assistance
+    return generateGeneralTradingResponse(message);
+    
+  } catch (error) {
+    console.error('Error generating Rolo AI response:', error);
+    return "I'm experiencing technical difficulties right now. Please try asking me about a specific stock ticker like AAPL, TSLA, or SPY for live analysis.";
   }
-  return null;
 }
 
-// Generate top 10 plays
-async function generateTop10Plays() {
+// Get stock data from Alpha Vantage
+async function getStockData(symbol, apiKey) {
+  const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${apiKey}`);
+  const data = await response.json();
+  
+  if (data['Error Message'] || !data['Global Quote']) {
+    throw new Error('Stock data not available');
+  }
+  
+  const quote = data['Global Quote'];
+  return {
+    symbol: symbol,
+    price: parseFloat(quote['05. price']),
+    change: parseFloat(quote['09. change']),
+    changePercent: quote['10. change percent'],
+    volume: parseInt(quote['06. volume']),
+    high: parseFloat(quote['03. high']),
+    low: parseFloat(quote['04. low'])
+  };
+}
+
+// Generate top plays response
+function generatePlaysResponse(stockData) {
   const plays = [
     {
-      rank: 1,
-      ticker: 'NVDA',
-      strategy: 'Call Debit Spread',
-      setup: 'AI momentum continuation',
-      entry: '$875',
-      target: '$920',
-      stop: '$850',
-      riskReward: '1:1.8',
-      confidence: '85%'
+      symbol: 'AAPL',
+      strategy: 'Bullish Call Spread',
+      confidence: '85%',
+      entry: '$212.00',
+      target: '$220.00',
+      reasoning: 'Strong institutional buying, RSI oversold bounce expected'
     },
     {
-      rank: 2,
-      ticker: 'SPY',
+      symbol: 'TSLA',
       strategy: 'Iron Condor',
-      setup: 'Range-bound market',
-      entry: '$580-$590',
-      target: 'Premium decay',
-      stop: 'Break of range',
-      riskReward: '1:2.5',
-      confidence: '80%'
+      confidence: '78%',
+      entry: '$245-$255 range',
+      target: 'Profit at expiration',
+      reasoning: 'High IV rank, expect range-bound trading this week'
     },
     {
-      rank: 3,
-      ticker: 'AAPL',
-      strategy: 'Put Credit Spread',
-      setup: 'Support at $210',
-      entry: '$210',
-      target: '$220',
-      stop: '$205',
-      riskReward: '1:2.0',
-      confidence: '78%'
+      symbol: 'SPY',
+      strategy: 'Bull Put Spread',
+      confidence: '82%',
+      entry: '$435/$440 spread',
+      target: '$445',
+      reasoning: 'Market momentum strong, support holding at $435'
     },
     {
-      rank: 4,
-      ticker: 'TSLA',
-      strategy: 'Straddle',
-      setup: 'High volatility expected',
-      entry: '$265',
-      target: '$285 or $245',
-      stop: '$275-$255',
-      riskReward: '1:1.5',
-      confidence: '75%'
+      symbol: 'QQQ',
+      strategy: 'Long Calls',
+      confidence: '79%',
+      entry: '$370 calls',
+      target: '$380',
+      reasoning: 'Tech sector rotation, NASDAQ showing relative strength'
     },
     {
-      rank: 5,
-      ticker: 'HOOD',
-      strategy: 'Call Options',
-      setup: 'Oversold bounce play',
-      entry: '$24.50',
-      target: '$27.00',
-      stop: '$23.00',
-      riskReward: '1:1.7',
-      confidence: '72%'
+      symbol: 'HOOD',
+      strategy: 'Covered Call',
+      confidence: '73%',
+      entry: 'Own shares + sell $15 calls',
+      target: '15% monthly income',
+      reasoning: 'High implied volatility, earnings volatility crush opportunity'
     }
   ];
   
-  let response = `🎯 **TOP 10 SMART PLAYS FOR TOMORROW** 🎯\n\n`;
-  response += `Based on live market analysis and technical indicators:\n\n`;
+  let response = "🎯 **TOP 5 SMART PLAYS FOR TOMORROW**\n\n";
   
-  plays.forEach(play => {
-    response += `**${play.rank}. ${play.ticker} - ${play.strategy}**\n`;
-    response += `📊 Setup: ${play.setup}\n`;
-    response += `🎯 Entry: ${play.entry}\n`;
-    response += `📈 Target: ${play.target}\n`;
-    response += `⛔ Stop: ${play.stop}\n`;
-    response += `💰 Risk/Reward: ${play.riskReward}\n`;
-    response += `✅ Confidence: ${play.confidence}\n\n`;
+  plays.forEach((play, index) => {
+    response += `**${index + 1}. ${play.symbol}** - ${play.strategy}\n`;
+    response += `• Confidence: ${play.confidence}\n`;
+    response += `• Entry: ${play.entry}\n`;
+    response += `• Target: ${play.target}\n`;
+    response += `• Why: ${play.reasoning}\n\n`;
   });
   
-  response += `**⚠️ Risk Management:**\n`;
-  response += `• Position size: 1-2% of portfolio per trade\n`;
-  response += `• Always use stop losses\n`;
-  response += `• Monitor market conditions closely\n`;
-  response += `• These are educational examples only\n\n`;
-  
-  response += `**🔄 Want more analysis?** Ask me about specific tickers!`;
+  response += "💡 **Risk Management**: Use 2% position sizing per trade. Set stops at 20% of premium paid for long options.";
   
   return response;
 }
 
-// Generate ticker-specific analysis
-async function generateTickerAnalysis(ticker, originalMessage) {
-  // Get live stock data
-  let stockData = null;
-  try {
-    const response = await fetch(`${process.env.URL || 'https://magenta-monstera-8d552b.netlify.app'}/.netlify/functions/stock-data?symbol=${ticker}`);
-    const data = await response.json();
-    stockData = data.price;
-  } catch (error) {
-    console.error('Error fetching stock data:', error);
-  }
-  
+// Generate strategy response for specific ticker
+function generateStrategyResponse(ticker, stockData) {
   if (!stockData) {
-    return `I'm having trouble getting live data for ${ticker} right now. Please try again in a moment, or ask me about general options strategies!`;
+    return `I couldn't fetch live data for ${ticker} right now. Here's a general strategy framework:\n\n🎯 **Options Strategy for ${ticker}:**\n• Check current IV rank vs historical\n• Look for support/resistance levels\n• Consider earnings calendar\n• Use technical indicators for timing\n\nTry asking me again in a moment for live analysis.`;
   }
   
-  const price = parseFloat(stockData.price);
-  const change = parseFloat(stockData.change);
-  const changePercent = parseFloat(stockData.changePercent);
-  const volume = parseInt(stockData.volume);
-  const high = parseFloat(stockData.high);
-  const low = parseFloat(stockData.low);
+  const price = stockData.price;
+  const change = stockData.change;
+  const isUp = change > 0;
   
-  let analysis = `📊 **${ticker} COMPREHENSIVE ANALYSIS** 📊\n\n`;
+  let strategy, reasoning;
   
-  // Current metrics
-  analysis += `💰 **Current Price:** $${price.toFixed(2)}\n`;
-  analysis += `📈 **Today's Change:** ${change >= 0 ? '+' : ''}$${change.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)\n`;
-  analysis += `📊 **Range:** $${low.toFixed(2)} - $${high.toFixed(2)}\n`;
-  analysis += `📦 **Volume:** ${formatVolume(volume)}\n\n`;
-  
-  // Price action analysis
-  const pricePosition = ((price - low) / (high - low)) * 100;
-  if (pricePosition > 75) {
-    analysis += `🚀 **Position:** Near daily highs (${pricePosition.toFixed(0)}% of range) - Strong momentum!\n`;
-  } else if (pricePosition < 25) {
-    analysis += `📉 **Position:** Near daily lows (${pricePosition.toFixed(0)}% of range) - Potential bounce opportunity\n`;
-  } else {
-    analysis += `📊 **Position:** Mid-range (${pricePosition.toFixed(0)}% of range) - Consolidating\n`;
-  }
-  
-  // Volatility assessment
-  const dailyRange = ((high - low) / price) * 100;
-  if (dailyRange > 4) {
-    analysis += `⚡ **Volatility:** High (${dailyRange.toFixed(1)}% range) - Options premium elevated\n\n`;
-  } else {
-    analysis += `📊 **Volatility:** Normal (${dailyRange.toFixed(1)}% range) - Standard conditions\n\n`;
-  }
-  
-  // Options strategy recommendation
-  analysis += generateOptionsStrategy(ticker, price, changePercent, dailyRange, pricePosition);
-  
-  // Key levels
-  const support = calculateSupport(price, low);
-  const resistance = calculateResistance(price, high);
-  
-  analysis += `\n📈 **KEY TRADING LEVELS:**\n`;
-  analysis += `🛡️ **Support:** $${support.toFixed(2)}\n`;
-  analysis += `🚧 **Resistance:** $${resistance.toFixed(2)}\n`;
-  analysis += `⚠️ **Risk Level:** ${assessRisk(changePercent, dailyRange)}\n\n`;
-  
-  analysis += `💡 **Bottom Line:** ${generateBottomLine(ticker, changePercent, pricePosition, dailyRange)}`;
-  
-  return analysis;
-}
-
-// Generate options strategy based on conditions
-function generateOptionsStrategy(ticker, price, changePercent, volatility, pricePosition) {
-  let strategy = `🎯 **SMART OPTIONS STRATEGY:**\n\n`;
-  
-  if (Math.abs(changePercent) > 3 && volatility > 4) {
-    // High momentum play
-    if (changePercent > 0) {
-      const entry = (price * 1.01).toFixed(2);
-      const target = (price * 1.08).toFixed(2);
-      const stop = (price * 0.96).toFixed(2);
-      
-      strategy += `**🚀 BULLISH MOMENTUM PLAY:**\n`;
-      strategy += `📊 Strategy: Call Debit Spread\n`;
-      strategy += `🎯 Entry: Above $${entry} (1% breakout)\n`;
-      strategy += `📈 Target: $${target} (8% move)\n`;
-      strategy += `⛔ Stop: Below $${stop} (4% risk)\n`;
-      strategy += `⏰ Expiration: 1-2 weeks for momentum\n`;
-      strategy += `💰 Risk/Reward: 1:2.0\n`;
+  // Generate strategy based on price action and ticker
+  if (ticker === 'AAPL') {
+    if (isUp) {
+      strategy = "Bullish Call Spread";
+      reasoning = `AAPL up ${stockData.changePercent} to $${price}. Momentum looks strong for continuation.`;
     } else {
-      const entry = (price * 0.99).toFixed(2);
-      const target = (price * 0.92).toFixed(2);
-      const stop = (price * 1.04).toFixed(2);
-      
-      strategy += `**📉 BEARISH MOMENTUM PLAY:**\n`;
-      strategy += `📊 Strategy: Put Debit Spread\n`;
-      strategy += `🎯 Entry: Below $${entry} (1% breakdown)\n`;
-      strategy += `📈 Target: $${target} (8% move)\n`;
-      strategy += `⛔ Stop: Above $${stop} (4% risk)\n`;
-      strategy += `⏰ Expiration: 1-2 weeks for momentum\n`;
-      strategy += `💰 Risk/Reward: 1:2.0\n`;
+      strategy = "Cash-Secured Put";
+      reasoning = `AAPL down ${stockData.changePercent} to $${price}. Good entry opportunity on dip.`;
     }
-  } else if (volatility < 2) {
-    // Low volatility play
-    const lowerRange = (price * 0.97).toFixed(2);
-    const upperRange = (price * 1.03).toFixed(2);
-    
-    strategy += `**😴 LOW VOLATILITY PLAY:**\n`;
-    strategy += `📊 Strategy: Iron Condor\n`;
-    strategy += `🎯 Target Range: $${lowerRange} - $${upperRange}\n`;
-    strategy += `📈 Profit: Premium collected if stays in range\n`;
-    strategy += `⏰ Expiration: 2-4 weeks for time decay\n`;
-    strategy += `💰 Max Profit: ~2-3% if expires in range\n`;
-  } else if (pricePosition < 30 && changePercent < -1) {
-    // Oversold bounce play
-    const entry = (price * 1.02).toFixed(2);
-    const target = (price * 1.12).toFixed(2);
-    const stop = (price * 0.95).toFixed(2);
-    
-    strategy += `**🔄 OVERSOLD BOUNCE PLAY:**\n`;
-    strategy += `📊 Strategy: Call Options\n`;
-    strategy += `🎯 Entry: Above $${entry} (2% confirmation)\n`;
-    strategy += `📈 Target: $${target} (12% bounce)\n`;
-    strategy += `⛔ Stop: Below $${stop} (5% risk)\n`;
-    strategy += `⏰ Expiration: 2-3 weeks\n`;
-    strategy += `💰 Risk/Reward: 1:2.4\n`;
+  } else if (ticker === 'TSLA') {
+    strategy = "Iron Condor";
+    reasoning = `TSLA at $${price}. High volatility makes premium selling attractive.`;
+  } else if (ticker === 'SPY') {
+    strategy = isUp ? "Bull Call Spread" : "Bull Put Spread";
+    reasoning = `SPY at $${price}. Market ${isUp ? 'strength' : 'dip'} presents ${isUp ? 'momentum' : 'value'} opportunity.`;
   } else {
-    // Neutral/wait strategy
-    const breakoutLevel = (price * 1.04).toFixed(2);
-    const breakdownLevel = (price * 0.96).toFixed(2);
-    
-    strategy += `**⏳ WAIT FOR SETUP:**\n`;
-    strategy += `📊 Current Condition: Consolidating/Neutral\n`;
-    strategy += `🚀 Bullish Above: $${breakoutLevel}\n`;
-    strategy += `📉 Bearish Below: $${breakdownLevel}\n`;
-    strategy += `📦 Volume Needed: 50%+ above average\n`;
-    strategy += `💡 Strategy: Wait for clear direction\n`;
+    strategy = isUp ? "Long Calls" : "Cash-Secured Puts";
+    reasoning = `${ticker} at $${price}, ${isUp ? 'up' : 'down'} ${stockData.changePercent}. ${isUp ? 'Ride the momentum' : 'Buy the dip'} strategy.`;
   }
   
-  return strategy;
-}
-
-// Generate market overview
-async function generateMarketOverview() {
-  return `🌍 **MARKET OVERVIEW & TOMORROW'S OUTLOOK** 🌍\n\n` +
-    `📊 **Current Conditions:**\n` +
-    `• SPY: Consolidating near highs - watch for breakout\n` +
-    `• QQQ: Tech showing strength - NVDA leading\n` +
-    `• VIX: Low volatility - range-bound strategies favored\n` +
-    `• Volume: Below average - wait for confirmation\n\n` +
-    `🎯 **Tomorrow's Focus:**\n` +
-    `• Economic data: Watch for market moving news\n` +
-    `• Tech earnings: Semiconductor sector in focus\n` +
-    `• Options flow: Unusual activity in mega-caps\n` +
-    `• Levels: SPY 580 support, 590 resistance\n\n` +
-    `💡 **Best Opportunities:**\n` +
-    `• Range-bound strategies (Iron Condors)\n` +
-    `• Momentum breakouts with volume\n` +
-    `• Oversold bounce plays in quality names\n\n` +
-    `Ask me about specific tickers for detailed analysis!`;
-}
-
-// Generate best options recommendations
-async function generateBestOptions(type) {
-  const optionsType = type === 'calls' ? 'CALLS' : 'PUTS';
-  const emoji = type === 'calls' ? '🚀' : '📉';
+  const entryPrice = (price * 1.02).toFixed(2);
+  const targetPrice = (price * 1.08).toFixed(2);
+  const stopPrice = (price * 0.95).toFixed(2);
   
-  return `${emoji} **BEST ${optionsType} FOR THIS WEEK** ${emoji}\n\n` +
-    `Based on technical analysis and momentum:\n\n` +
-    `**1. NVDA ${optionsType}**\n` +
-    `• Setup: AI momentum ${type === 'calls' ? 'continuation' : 'pullback'}\n` +
-    `• Strike: ${type === 'calls' ? '$880' : '$850'}\n` +
-    `• Expiration: This Friday\n` +
-    `• Confidence: 85%\n\n` +
-    `**2. SPY ${optionsType}**\n` +
-    `• Setup: Index ${type === 'calls' ? 'breakout' : 'rejection'} play\n` +
-    `• Strike: ${type === 'calls' ? '$585' : '$575'}\n` +
-    `• Expiration: Next week\n` +
-    `• Confidence: 78%\n\n` +
-    `**3. AAPL ${optionsType}**\n` +
-    `• Setup: Earnings ${type === 'calls' ? 'run-up' : 'fade'}\n` +
-    `• Strike: ${type === 'calls' ? '$215' : '$205'}\n` +
-    `• Expiration: 2 weeks\n` +
-    `• Confidence: 75%\n\n` +
-    `⚠️ **Risk Management:**\n` +
-    `• Never risk more than 2% per trade\n` +
-    `• Use stop losses at 50% premium loss\n` +
-    `• Take profits at 100-200% gain\n\n` +
-    `Want specific entry/exit points? Ask about individual tickers!`;
+  return `🎯 **${ticker} OPTIONS STRATEGY**
+
+**Current Price:** $${price} (${change >= 0 ? '+' : ''}${change} / ${stockData.changePercent})
+**Strategy:** ${strategy}
+**Confidence:** 78%
+
+📊 **Trade Setup:**
+• Entry: Around $${entryPrice}
+• Target: $${targetPrice} 
+• Stop Loss: $${stopPrice}
+• Risk/Reward: 1:2.5
+
+🧠 **Analysis:** ${reasoning}
+
+📈 **Volume:** ${stockData.volume.toLocaleString()} (${stockData.volume > 1000000 ? 'High' : 'Normal'} volume)
+**Range:** $${stockData.low} - $${stockData.high}
+
+💡 **Tip:** Monitor for volume confirmation and consider scaling into position.`;
 }
 
-// Generate options guidance
-function generateOptionsGuidance() {
-  return `📚 **SMART OPTIONS TRADING GUIDE** 📚\n\n` +
-    `🎯 **Best Strategies by Market Condition:**\n\n` +
-    `📈 **Trending Markets:**\n` +
-    `• Call/Put Debit Spreads\n` +
-    `• Momentum plays with volume\n` +
-    `• Breakout strategies\n\n` +
-    `😴 **Range-Bound Markets:**\n` +
-    `• Iron Condors\n` +
-    `• Credit Spreads\n` +
-    `• Theta decay strategies\n\n` +
-    `⚡ **High Volatility:**\n` +
-    `• Straddles/Strangles\n` +
-    `• Calendar Spreads\n` +
-    `• Volatility plays\n\n` +
-    `🛡️ **Risk Management Rules:**\n` +
-    `• Position size: 1-2% of portfolio\n` +
-    `• Stop loss: 50% of premium\n` +
-    `• Take profits: 100-200% gain\n` +
-    `• Time decay: Close <7 days to expiry\n\n` +
-    `💡 **Ask me about specific tickers for detailed strategies!**`;
-}
-
-// Generate technical guidance
-function generateTechnicalGuidance() {
-  return `📊 **TECHNICAL ANALYSIS ESSENTIALS** 📊\n\n` +
-    `🔍 **Key Indicators I Monitor:**\n\n` +
-    `📈 **Trend Analysis:**\n` +
-    `• Moving averages (20, 50, 200 day)\n` +
-    `• Trend lines and channels\n` +
-    `• Support/resistance levels\n\n` +
-    `⚡ **Momentum Indicators:**\n` +
-    `• RSI (oversold <30, overbought >70)\n` +
-    `• MACD (bullish/bearish crossovers)\n` +
-    `• Volume confirmation\n\n` +
-    `📊 **Price Action Signals:**\n` +
-    `• Breakouts with volume\n` +
-    `• Reversal patterns\n` +
-    `• Gap analysis\n\n` +
-    `🎯 **Entry/Exit Rules:**\n` +
-    `• Buy: Breakout + volume confirmation\n` +
-    `• Sell: Profit target or stop loss hit\n` +
-    `• Risk/Reward: Minimum 1:2 ratio\n\n` +
-    `💡 **Want technical analysis on a specific stock? Just ask!**`;
-}
-
-// Generate default helpful response
-function generateDefaultResponse() {
-  return `🧠 **Hi! I'm Rolo AI - Your Intelligent Trading Assistant** 🧠\n\n` +
-    `I specialize in providing detailed options strategies with specific entry/exit points. Here's what I can help you with:\n\n` +
-    `🎯 **Popular Requests:**\n` +
-    `• "Top 10 plays for tomorrow"\n` +
-    `• "HOOD options strategy"\n` +
-    `• "SPY technical analysis"\n` +
-    `• "Best calls for this week"\n\n` +
-    `📊 **What I Analyze:**\n` +
-    `• Real-time price action and volume\n` +
-    `• Technical indicators and levels\n` +
-    `• Options strategies with entry/exit points\n` +
-    `• Risk management and position sizing\n\n` +
-    `💡 **Just mention any ticker symbol** (AAPL, TSLA, NVDA, etc.) and I'll give you:\n` +
-    `✅ Current technical analysis\n` +
-    `✅ Smart options strategies\n` +
-    `✅ Specific entry and exit points\n` +
-    `✅ Risk/reward calculations\n\n` +
-    `**Ready to find some winning trades? Ask me anything!** 🚀`;
-}
-
-// Utility functions
-function formatVolume(volume) {
-  if (volume >= 1000000000) return (volume / 1000000000).toFixed(1) + 'B';
-  if (volume >= 1000000) return (volume / 1000000).toFixed(1) + 'M';
-  if (volume >= 1000) return (volume / 1000).toFixed(1) + 'K';
-  return volume.toString();
-}
-
-function calculateSupport(price, low) {
-  return Math.min(low, price * 0.95);
-}
-
-function calculateResistance(price, high) {
-  return Math.max(high, price * 1.05);
-}
-
-function assessRisk(changePercent, volatility) {
-  const totalRisk = Math.abs(changePercent) + volatility;
-  if (totalRisk > 8) return 'High';
-  if (totalRisk > 4) return 'Medium';
-  return 'Low';
-}
-
-function generateBottomLine(ticker, changePercent, pricePosition, volatility) {
-  if (Math.abs(changePercent) > 3) {
-    return `Strong momentum in ${ticker} - excellent for directional plays with proper risk management.`;
-  } else if (pricePosition < 25) {
-    return `${ticker} oversold - watch for bounce opportunity with volume confirmation.`;
-  } else if (volatility < 2) {
-    return `${ticker} in low volatility mode - perfect for range-bound strategies.`;
-  } else {
-    return `${ticker} consolidating - wait for clear breakout/breakdown with volume.`;
+// Generate technical analysis response
+function generateAnalysisResponse(ticker, stockData) {
+  if (!stockData) {
+    return `I couldn't fetch live data for ${ticker}. Please try again in a moment for real-time technical analysis.`;
   }
+  
+  const price = stockData.price;
+  const change = stockData.change;
+  const changePercent = stockData.changePercent;
+  const volume = stockData.volume;
+  
+  // Calculate basic technical levels
+  const support = (stockData.low * 0.995).toFixed(2);
+  const resistance = (stockData.high * 1.005).toFixed(2);
+  const midpoint = ((stockData.high + stockData.low) / 2).toFixed(2);
+  
+  // Determine trend
+  const trend = change > 0 ? "Bullish" : "Bearish";
+  const momentum = Math.abs(parseFloat(changePercent.replace('%', ''))) > 2 ? "Strong" : "Moderate";
+  
+  return `📊 **${ticker} TECHNICAL ANALYSIS**
+
+**Current Price:** $${price}
+**Change:** ${change >= 0 ? '+' : ''}$${change} (${changePercent})
+**Volume:** ${volume.toLocaleString()}
+
+🎯 **Key Levels:**
+• Resistance: $${resistance}
+• Midpoint: $${midpoint}
+• Support: $${support}
+
+📈 **Technical Picture:**
+• Trend: ${trend}
+• Momentum: ${momentum}
+• Volume: ${volume > 1000000 ? 'Above Average' : 'Below Average'}
+
+🔍 **Options Signals:**
+• IV Rank: Moderate (estimated)
+• Flow: ${change > 0 ? 'Call heavy' : 'Put heavy'} 
+• Gamma: ${Math.abs(change) > 1 ? 'High' : 'Low'} exposure
+
+💡 **Trading Plan:**
+• Entry: Break above $${resistance} or bounce off $${support}
+• Stop: Below $${support} for longs, above $${resistance} for shorts
+• Target: Next major level +/- 5%
+
+⚠️ **Risk Management:** Position size 1-2% of portfolio, use stops religiously.`;
+}
+
+// Generate market overview response
+function generateMarketOverviewResponse() {
+  return `🌍 **MARKET OVERVIEW**
+
+📊 **Major Indices Status:**
+• SPY: Testing key support at $435, watch for bounce
+• QQQ: Tech showing relative strength, NASDAQ leading
+• DJI: Industrial rotation in play, defensive positioning
+• VIX: Elevated but declining, fear subsiding
+
+🎯 **Market Sentiment:**
+• Overall: Cautiously Optimistic
+• Options Flow: Balanced call/put activity
+• Institutional: Moderate buying in dips
+
+📈 **Sector Rotation:**
+• Hot: Technology, Healthcare
+• Cool: Energy, Utilities
+• Watch: Financials (rate sensitive)
+
+💡 **Trading Environment:**
+• Volatility: Moderate (VIX 15-20 range)
+• Best Plays: Momentum trades in tech, value plays in finance
+• Risk Level: Medium - use proper position sizing
+
+🔔 **This Week's Focus:**
+• Earnings reactions in tech sector
+• Fed policy expectations
+• Technical levels holding/breaking
+
+**Bottom Line:** Market in consolidation phase. Look for breakouts above key resistance or bounces off major support for directional trades.`;
+}
+
+// Generate calls recommendations
+function generateCallsResponse() {
+  return `🚀 **BEST CALLS THIS WEEK**
+
+**1. AAPL** - $215 calls expiring Friday
+• Confidence: 85%
+• Entry: $2.50-$3.00
+• Target: $4.50-$5.00
+• Why: iPhone 15 momentum, technical breakout
+
+**2. TSLA** - $250 calls expiring next week  
+• Confidence: 78%
+• Entry: $8.00-$10.00
+• Target: $15.00-$18.00
+• Why: Model 3 refresh catalyst, oversold bounce
+
+**3. QQQ** - $375 calls expiring Friday
+• Confidence: 82%
+• Entry: $1.80-$2.20
+• Target: $3.50-$4.00  
+• Why: Tech sector strength, NASDAQ momentum
+
+**4. SPY** - $445 calls expiring Wednesday
+• Confidence: 74%
+• Entry: $1.00-$1.50
+• Target: $2.50-$3.00
+• Why: Market breakout above resistance
+
+**5. NVDA** - $450 calls expiring Friday
+• Confidence: 88%
+• Entry: $12.00-$15.00
+• Target: $25.00-$30.00
+• Why: AI hype continues, strong technical setup
+
+💡 **Risk Management:**
+• Max 2% of portfolio per trade
+• Set stops at 50% loss
+• Take profits at 100% gain
+• Don't hold through earnings unless specified`;
+}
+
+// Generate specific ticker response
+function generateTickerResponse(ticker, stockData) {
+  const price = stockData.price;
+  const change = stockData.change;
+  const changePercent = stockData.changePercent;
+  
+  return `📊 **${ticker} LIVE ANALYSIS**
+
+**Current Price:** $${price}
+**Change:** ${change >= 0 ? '+' : ''}$${change} (${changePercent})
+**Volume:** ${stockData.volume.toLocaleString()}
+**Range:** $${stockData.low} - $${stockData.high}
+
+🎯 **Quick Assessment:**
+${change > 0 ? 
+  `• Bullish momentum - up ${changePercent}\n• Consider call options or long position\n• Watch for continuation above $${stockData.high}` :
+  `• Bearish pressure - down ${changePercent}\n• Potential buy-the-dip opportunity\n• Key support at $${stockData.low}`
+}
+
+💡 **Trading Ideas:**
+• Options: ${change > 0 ? 'Bullish spreads' : 'Cash-secured puts'}
+• Shares: ${change > 0 ? 'Momentum buy' : 'Value accumulation'}
+• Risk Level: ${Math.abs(parseFloat(changePercent.replace('%', ''))) > 3 ? 'High' : 'Medium'}
+
+Ask me for a specific "strategy" or "analysis" for more detailed insights!`;
+}
+
+// Generate general trading response
+function generateGeneralTradingResponse(message) {
+  const responses = [
+    "💡 I'm Rolo AI, your intelligent trading assistant! I can help you with:\n\n• Live stock analysis (just mention a ticker like AAPL)\n• Options strategies and recommendations\n• Market overview and sentiment\n• Top plays and best calls\n• Technical analysis\n\nWhat would you like to analyze today?",
+    
+    "🎯 Ready to help you make smarter trades! Try asking me:\n\n• 'Analyze TSLA' for live stock data\n• 'Best plays for tomorrow' for top opportunities\n• 'HOOD strategy' for options recommendations\n• 'How is the market doing?' for overview\n\nI use real-time Alpha Vantage data for accurate analysis.",
+    
+    "📊 I specialize in options trading and technical analysis. Some things I can help with:\n\n• Real-time price data and analysis\n• Options strategies (spreads, straddles, etc.)\n• Entry/exit points with risk management\n• Market sentiment and sector rotation\n\nWhat ticker or strategy interests you?"
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
 }
