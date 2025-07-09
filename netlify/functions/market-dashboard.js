@@ -1,6 +1,8 @@
 // netlify/functions/market-dashboard.js
 // WORKING VERSION - Loads real NASDAQ, Dow Jones, VIX, Futures data
 
+const fetch = require('node-fetch'); // Required for server-side fetch
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -15,71 +17,64 @@ exports.handler = async (event, context) => {
   try {
     console.log('Loading market dashboard...');
     
-    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY || 'MAQEUTLGYYXC1HF1';
+    const API_KEY = process.env.ALPHA_VANTAGE_API_KEY; // Get key from environment variables
+
+    if (!API_KEY) {
+        throw new Error('Alpha Vantage API key not configured in Netlify environment variables.');
+    }
     
     // Market symbols that actually work with Alpha Vantage
     const marketSymbols = {
-      'SPY': 'S&P 500',
-      'QQQ': 'NASDAQ', 
-      'DIA': 'DOW JONES',
-      'VIX': 'VIX'
+      'SPY': 'S&P 500 ETF', // SPY is an ETF tracking S&P 500
+      'QQQ': 'NASDAQ 100 ETF', // QQQ is an ETF tracking NASDAQ 100
+      'DIA': 'DOW JONES ETF', // DIA is an ETF tracking DOW JONES
+      'VIX': 'VIX Volatility Index' // VIX is the volatility index
     };
     
+    // For "futures" data, Alpha Vantage typically provides these via GLOBAL_QUOTE for the ETFs
+    // We'll use the same symbols for simplicity, representing the index sentiment
     const futuresSymbols = {
-      'SPY': 'ES (S&P FUTURES)',
-      'QQQ': 'NQ (NASDAQ FUTURES)'
+      'SPY': 'ES (S&P FUTURES)', // Representing S&P futures sentiment
+      'QQQ': 'NQ (NASDAQ FUTURES)' // Representing NASDAQ futures sentiment
     };
     
-    // Load all market data
     const marketData = {};
     const futuresData = {};
     
-    // Load major indices
-    console.log('Loading major indices...');
+    // Load major indices/ETFs
+    console.log('Loading major indices/ETFs...');
     for (const [symbol, name] of Object.entries(marketSymbols)) {
       try {
         const data = await getMarketQuote(symbol, API_KEY);
         marketData[symbol] = { ...data, name };
-        console.log(`✅ ${name}: $${data.price}`);
-      } catch (error) {
-        console.error(`❌ Error loading ${name}:`, error.message);
-        marketData[symbol] = {
-          name,
-          error: 'Data unavailable',
-          symbol
-        };
+        console.log(`Fetched ${symbol}`);
+      } catch (e) {
+        console.warn(`Could not fetch data for ${symbol}: ${e.message}`);
+        // Optionally, include a placeholder or specific error for this symbol
+        marketData[symbol] = { error: `Failed to load ${name} data: ${e.message}` };
       }
     }
-    
-    // Load futures (using ETF proxies since direct futures may not be available)
-    console.log('Loading futures...');
+
+    // Load futures data (using same ETFs for representation)
+    console.log('Loading futures data...');
     for (const [symbol, name] of Object.entries(futuresSymbols)) {
       try {
         const data = await getMarketQuote(symbol, API_KEY);
-        futuresData[symbol] = { 
-          ...data, 
-          name,
-          note: 'ETF-based futures proxy'
-        };
-        console.log(`✅ ${name}: $${data.price}`);
-      } catch (error) {
-        console.error(`❌ Error loading ${name}:`, error.message);
-        futuresData[symbol] = {
-          name,
-          error: 'Data unavailable',
-          symbol
-        };
+        futuresData[symbol] = { ...data, name };
+        console.log(`Fetched ${symbol} (futures proxy)`);
+      } catch (e) {
+        console.warn(`Could not fetch futures proxy data for ${symbol}: ${e.message}`);
+        futuresData[symbol] = { error: `Failed to load ${name} data: ${e.message}` };
       }
     }
 
     const result = {
-      indices: marketData,
-      futures: futuresData,
-      timestamp: new Date().toISOString(),
-      source: 'Alpha Vantage Real-Time'
+      spy: marketData['SPY'],
+      qqq: marketData['QQQ'],
+      dia: marketData['DIA'],
+      vix: marketData['VIX'],
+      futures: futuresData
     };
-
-    console.log('✅ Market dashboard loaded successfully');
 
     return {
       statusCode: 200,
@@ -90,11 +85,20 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error('❌ Market dashboard error:', error);
     
+    let errorMessage = 'Failed to load market data.';
+    if (error.message.includes('API rate limit reached')) {
+        errorMessage = `Alpha Vantage API rate limit reached. Please try again in a moment.`;
+    } else if (error.message.includes('API key not valid')) {
+        errorMessage = `Invalid Alpha Vantage API key. Please check your Netlify environment variables.`;
+    } else if (error.message.includes('Alpha Vantage API key not configured')) {
+        errorMessage = `Alpha Vantage API key not found. Please add ALPHA_VANTAGE_API_KEY to Netlify environment variables.`;
+    }
+
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: 'Failed to load market data',
+        error: errorMessage,
         details: error.message
       })
     };
@@ -105,12 +109,12 @@ exports.handler = async (event, context) => {
 async function getMarketQuote(symbol, apiKey) {
   const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${apiKey}`;
   
-  console.log(`📡 Fetching ${symbol}...`);
+  console.log(`📡 Fetching ${symbol} for market dashboard...`);
   
   const response = await fetch(url);
   
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`HTTP error! status: ${response.status} for ${symbol}`);
   }
   
   const data = await response.json();
@@ -134,9 +138,6 @@ async function getMarketQuote(symbol, apiKey) {
     change: parseFloat(quote['09. change']).toFixed(2),
     changePercent: quote['10. change percent'],
     volume: parseInt(quote['06. volume']).toLocaleString(),
-    high: parseFloat(quote['03. high']).toFixed(2),
-    low: parseFloat(quote['04. low']).toFixed(2),
     lastUpdated: quote['07. latest trading day'],
-    isRealTime: true
   };
 }
