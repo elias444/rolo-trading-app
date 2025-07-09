@@ -4,46 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- PWA Configuration for Address Bar Hiding -->
+    <!-- PWA Configuration -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Rolo AI">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
     
-    <!-- PWA Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23007aff'/><text x='90' y='110' font-family='Arial' font-size='60' font-weight='bold' text-anchor='middle' fill='white'>R</text></svg>">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23007aff'/><text x='16' y='22' font-family='Arial' font-size='16' font-weight='bold' text-anchor='middle' fill='white'>R</text></svg>">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/json,{
-        'name': 'Rolo AI Trading Assistant',
-        'short_name': 'Rolo AI',
-        'description': 'Smart AI-powered trading assistant with real-time market data',
-        'start_url': '/',
-        'display': 'standalone',
-        'background_color': '#000000',
-        'theme_color': '#007aff',
-        'orientation': 'portrait',
-        'scope': '/',
-        'icons': [
-            {
-                'src': 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 192 192\"><rect width=\"192\" height=\"192\" fill=\"%23007aff\"/><text x=\"96\" y=\"120\" font-family=\"Arial\" font-size=\"80\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"white\">R</text></svg>',
-                'sizes': '192x192',
-                'type': 'image/svg+xml'
-            },
-            {
-                'src': 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><rect width=\"512\" height=\"512\" fill=\"%23007aff\"/><text x=\"256\" y=\"320\" font-family=\"Arial\" font-size=\"200\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"white\">R</text></svg>',
-                'sizes': '512x512',
-                'type': 'image/svg+xml'
-            }
-        ]
-    }">
-    
     <title>Rolo AI - Smart Trading Assistant</title>
     
     <style>
-        /* iPhone-First PWA Design with Address Bar Hiding */
+        /* iPhone-First Design - ZERO Mock Data */
         * {
             margin: 0;
             padding: 0;
@@ -60,7 +31,7 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: #000;
             color: #fff;
             touch-action: manipulation;
@@ -68,7 +39,6 @@
             -webkit-touch-callout: none;
         }
         
-        /* App Container - Full Screen PWA */
         .app {
             height: 100vh;
             height: 100dvh;
@@ -80,7 +50,7 @@
             overflow: hidden;
         }
         
-        /* Header with full screen support */
+        /* Header */
         .header {
             background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(20px);
@@ -106,26 +76,16 @@
             color: rgba(255, 255, 255, 0.7);
         }
         
-        /* Status indicators */
-        .status-bar {
+        .market-status {
             position: absolute;
             top: env(safe-area-inset-top, 25px);
             right: 20px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .market-status {
             font-size: 12px;
             font-weight: 600;
             padding: 4px 8px;
             border-radius: 8px;
             background: rgba(0, 255, 136, 0.2);
             color: #00ff88;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
         
         .market-status.closed {
@@ -133,20 +93,7 @@
             color: #ff4444;
         }
         
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* Main content area */
+        /* Main Content */
         .main-content {
             flex: 1;
             display: flex;
@@ -154,7 +101,6 @@
             min-height: 0;
         }
         
-        /* Tab content area */
         .tab-content {
             flex: 1;
             padding: 20px;
@@ -172,7 +118,7 @@
             display: block;
         }
         
-        /* Chat Tab Styles */
+        /* Chat Tab */
         .chat-container {
             height: 100%;
             display: flex;
@@ -201,7 +147,6 @@
             line-height: 1.5;
         }
         
-        /* Quick Action Buttons */
         .quick-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -229,11 +174,6 @@
             transform: translateY(-2px);
         }
         
-        .quick-action-btn:active {
-            transform: translateY(0);
-        }
-        
-        /* Chat Messages */
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -247,23 +187,12 @@
         }
         
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .message.user {
-            text-align: right;
-        }
-        
-        .message.ai {
-            text-align: left;
-        }
+        .message.user { text-align: right; }
+        .message.ai { text-align: left; }
         
         .message-content {
             display: inline-block;
@@ -271,6 +200,7 @@
             border-radius: 18px;
             max-width: 85%;
             word-wrap: break-word;
+            white-space: pre-wrap;
         }
         
         .message.user .message-content {
@@ -284,7 +214,7 @@
             color: white;
         }
         
-        /* Chat Input - iOS Style */
+        /* Chat Input - iPhone Style */
         .chat-input-container {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
@@ -309,7 +239,6 @@
             font-size: 16px;
             border-radius: 20px;
             outline: none;
-            resize: none;
             font-family: inherit;
         }
         
@@ -336,11 +265,7 @@
             transform: scale(1.1);
         }
         
-        .send-btn:active {
-            transform: scale(0.95);
-        }
-        
-        /* Ticker Tab Styles */
+        /* Ticker Tab */
         .ticker-container {
             height: 100%;
         }
@@ -402,47 +327,55 @@
             box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
         }
         
-        .search-btn:active {
-            transform: translateY(0);
-        }
-        
-        /* Popular Tickers */
-        .popular-tickers {
+        /* Stock Result */
+        .stock-result {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px;
             margin-top: 20px;
         }
         
-        .popular-title {
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .stock-symbol {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .stock-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00ff88;
+        }
+        
+        .stock-change {
             font-size: 16px;
             font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            margin-top: 4px;
         }
         
-        .ticker-grid {
+        .stock-change.positive { color: #00ff88; }
+        .stock-change.negative { color: #ff4757; }
+        
+        .stock-details {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-        
-        .ticker-button {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 12px;
-            color: white;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
         }
         
-        .ticker-button:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .stock-detail {
+            display: flex;
+            justify-content: space-between;
         }
         
-        /* Market Tab Styles */
+        /* Market Tab */
         .market-dashboard {
             height: 100%;
         }
@@ -454,10 +387,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-        
-        .indices-section {
-            margin-bottom: 30px;
         }
         
         .section-title {
@@ -504,176 +433,19 @@
             font-weight: 600;
         }
         
-        .positive {
-            color: #00ff88;
-        }
+        .positive { color: #00ff88; }
+        .negative { color: #ff4757; }
+        .loading { color: rgba(255, 255, 255, 0.5); font-style: italic; }
         
-        .negative {
+        /* Error Messages */
+        .error-message {
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid rgba(255, 68, 68, 0.5);
+            border-radius: 12px;
+            padding: 16px;
             color: #ff4757;
-        }
-        
-        .loading {
-            color: rgba(255, 255, 255, 0.5);
-            font-style: italic;
-        }
-        
-        /* Plays Tab Styles */
-        .plays-container {
-            height: 100%;
-        }
-        
-        .plays-header {
             text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .plays-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .plays-subtitle {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .plays-categories {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-        }
-        
-        .category-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 8px 16px;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-        
-        .category-btn.active {
-            background: linear-gradient(135deg, #007aff, #5856d6);
-        }
-        
-        .plays-list {
-            space-y: 12px;
-        }
-        
-        .play-card {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-        
-        .play-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .play-symbol {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        
-        .confidence-score {
-            background: rgba(0, 255, 136, 0.2);
-            color: #00ff88;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .play-strategy {
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 8px;
-        }
-        
-        .play-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            font-size: 12px;
-        }
-        
-        .play-detail {
-            text-align: center;
-        }
-        
-        .play-detail-label {
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 2px;
-        }
-        
-        .play-detail-value {
-            font-weight: 600;
-        }
-        
-        /* Alerts Tab Styles */
-        .alerts-container {
-            height: 100%;
-        }
-        
-        .alerts-header {
-            margin-bottom: 20px;
-        }
-        
-        .alerts-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .alert-item {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert-icon {
-            font-size: 20px;
-        }
-        
-        .alert-content {
-            flex: 1;
-        }
-        
-        .alert-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .alert-description {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .alert-time {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
+            margin-top: 20px;
         }
         
         /* Bottom Navigation */
@@ -718,49 +490,7 @@
             font-weight: 600;
         }
         
-        /* PWA Install Prompt */
-        .install-prompt {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #007aff, #5856d6);
-            color: white;
-            padding: 12px 20px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            display: none;
-            animation: slideDown 0.3s ease;
-        }
-        
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
-        
-        .install-prompt.show {
-            display: block;
-        }
-        
-        .install-close {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        
-        /* Utility Classes */
+        /* Loading Spinner */
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -772,21 +502,18 @@
         }
         
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
         
         .hidden {
             display: none !important;
         }
         
-        /* Responsive adjustments */
+        /* Responsive */
         @media (max-width: 375px) {
             .indices-grid {
                 grid-template-columns: 1fr;
             }
-            
             .quick-actions {
                 grid-template-columns: 1fr;
             }
@@ -795,20 +522,9 @@
 </head>
 <body>
     <div class="app">
-        <!-- PWA Install Prompt -->
-        <div class="install-prompt" id="installPrompt">
-            📱 Add to Home Screen to hide address bar and get the full app experience!
-            <button class="install-close" onclick="hideInstallPrompt()">✕</button>
-        </div>
-        
         <!-- Header -->
         <div class="header">
-            <div class="status-bar">
-                <div class="market-status" id="marketStatus">
-                    <div class="status-dot"></div>
-                    <span>Market Closed</span>
-                </div>
-            </div>
+            <div class="market-status" id="marketStatus">Market Closed</div>
             <h1>🧠 Rolo AI</h1>
             <p>Professional Trading Assistant</p>
         </div>
@@ -816,7 +532,7 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="tab-content">
-                <!-- Chat Tab -->
+                <!-- Chat Tab (DEFAULT HOME) -->
                 <div class="tab-pane active" id="chat">
                     <div class="chat-container">
                         <div class="welcome-message">
@@ -844,7 +560,7 @@
                         </div>
                         
                         <div class="chat-messages" id="chatMessages">
-                            <!-- Messages will be added here -->
+                            <!-- Messages appear here -->
                         </div>
                         
                         <div class="chat-input-container">
@@ -886,50 +602,22 @@
                             </button>
                         </div>
                         
-                        <div class="popular-tickers">
-                            <div class="popular-title">📈 Popular Stocks</div>
-                            <div class="ticker-grid">
-                                <button class="ticker-button" onclick="quickSearch('AAPL')">AAPL</button>
-                                <button class="ticker-button" onclick="quickSearch('TSLA')">TSLA</button>
-                                <button class="ticker-button" onclick="quickSearch('HOOD')">HOOD</button>
-                                <button class="ticker-button" onclick="quickSearch('SPY')">SPY</button>
-                                <button class="ticker-button" onclick="quickSearch('QQQ')">QQQ</button>
-                                <button class="ticker-button" onclick="quickSearch('NVDA')">NVDA</button>
-                            </div>
+                        <div id="stockResult">
+                            <!-- Stock results appear here -->
                         </div>
                     </div>
                 </div>
                 
                 <!-- Analysis Tab -->
                 <div class="tab-pane" id="analysis">
-                    <div class="analysis-container">
-                        <h3>📊 Advanced Technical Analysis</h3>
-                        <div id="analysisContent">
-                            <p>Select a stock from the TICKER tab to see comprehensive technical analysis here.</p>
-                        </div>
-                    </div>
+                    <div class="section-title">📊 Advanced Technical Analysis</div>
+                    <p>Select a stock from the TICKER tab to see comprehensive technical analysis here.</p>
                 </div>
                 
                 <!-- Plays Tab -->
                 <div class="tab-pane" id="plays">
-                    <div class="plays-container">
-                        <div class="plays-header">
-                            <div class="plays-title">
-                                🎯 AI-Generated Smart Plays
-                            </div>
-                            <div class="plays-subtitle">Live market analysis with entry/exit points</div>
-                        </div>
-                        
-                        <div class="plays-categories">
-                            <button class="category-btn active" onclick="loadPlays('all')">All Plays</button>
-                            <button class="category-btn" onclick="loadPlays('options')">Options</button>
-                            <button class="category-btn" onclick="loadPlays('momentum')">Momentum</button>
-                        </div>
-                        
-                        <div class="plays-list" id="playsList">
-                            <!-- Plays will be loaded here -->
-                        </div>
-                    </div>
+                    <div class="section-title">🎯 AI-Generated Smart Plays</div>
+                    <p>Real-time trading opportunities with entry/exit points will appear here when you ask the AI for plays.</p>
                 </div>
                 
                 <!-- Market Tab -->
@@ -939,41 +627,22 @@
                             📊 Live Market Dashboard
                         </div>
                         
-                        <div class="indices-section">
-                            <div class="section-title">Major Indices</div>
-                            <div class="indices-grid" id="majorIndices">
-                                <!-- Market data will be loaded here -->
-                            </div>
+                        <div class="section-title">Major Indices</div>
+                        <div class="indices-grid" id="majorIndices">
+                            <!-- Market data loaded here -->
                         </div>
                         
-                        <div class="indices-section">
-                            <div class="section-title">Futures</div>
-                            <div class="indices-grid" id="futuresData">
-                                <!-- Futures data will be loaded here -->
-                            </div>
-                        </div>
-                        
-                        <div class="indices-section">
-                            <div class="section-title">Market Sentiment</div>
-                            <div id="marketSentiment">
-                                <!-- Sentiment data will be loaded here -->
-                            </div>
+                        <div class="section-title">Futures</div>
+                        <div class="indices-grid" id="futuresData">
+                            <!-- Futures data loaded here -->
                         </div>
                     </div>
                 </div>
                 
                 <!-- Alerts Tab -->
                 <div class="tab-pane" id="alerts">
-                    <div class="alerts-container">
-                        <div class="alerts-header">
-                            <div class="alerts-title">
-                                🔔 Smart Market Alerts
-                            </div>
-                        </div>
-                        <div id="alertsList">
-                            <!-- Alerts will be loaded here -->
-                        </div>
-                    </div>
+                    <div class="section-title">🔔 Smart Market Alerts</div>
+                    <p>Real-time market alerts and notifications will appear here.</p>
                 </div>
             </div>
         </div>
@@ -1008,7 +677,7 @@
     </div>
 
     <script>
-        // App state
+        // App state - NO MOCK DATA
         let currentTab = 'chat';
         let isTyping = false;
         
@@ -1016,29 +685,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Rolo AI initializing...');
             
-            // Check market status
             updateMarketStatus();
-            
-            // Load market data immediately
             loadMarketData();
             
-            // Load plays
-            loadPlays('all');
-            
-            // Load alerts
-            loadAlerts();
-            
-            // Show install prompt after 10 seconds
-            setTimeout(showInstallPrompt, 10000);
-            
-            // Add Enter key support for chat
+            // Chat input handlers
             document.getElementById('chatInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     sendMessage();
                 }
             });
             
-            // Add Enter key support for ticker search
             document.getElementById('tickerInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     searchStock();
@@ -1052,13 +708,11 @@
         function switchTab(tabName) {
             console.log(`Switching to ${tabName} tab`);
             
-            // Update active tab
             document.querySelectorAll('.tab-pane').forEach(pane => {
                 pane.classList.remove('active');
             });
             document.getElementById(tabName).classList.add('active');
             
-            // Update nav
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -1066,13 +720,8 @@
             
             currentTab = tabName;
             
-            // Load tab-specific data
             if (tabName === 'market') {
                 loadMarketData();
-            } else if (tabName === 'plays') {
-                loadPlays('all');
-            } else if (tabName === 'alerts') {
-                loadAlerts();
             }
         }
         
@@ -1084,31 +733,26 @@
             
             const statusElement = document.getElementById('marketStatus');
             
-            // Check if it's a weekday and during market hours (9:30 AM - 4:00 PM ET)
             if (day >= 1 && day <= 5 && hour >= 9 && hour < 16) {
-                statusElement.innerHTML = '<div class="status-dot"></div><span>Market Open</span>';
+                statusElement.textContent = 'Market Open';
                 statusElement.classList.remove('closed');
             } else {
-                statusElement.innerHTML = '<div class="status-dot"></div><span>Market Closed</span>';
+                statusElement.textContent = 'Market Closed';
                 statusElement.classList.add('closed');
             }
         }
         
-        // Chat functionality
+        // Chat functionality - REAL API CALLS ONLY
         function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
             
             if (!message || isTyping) return;
             
-            // Add user message
             addMessage(message, 'user');
             input.value = '';
             
-            // Show typing indicator
             showTyping();
-            
-            // Send to Rolo AI
             sendToRoloAI(message);
         }
         
@@ -1124,30 +768,31 @@
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            contentDiv.innerHTML = content;
+            contentDiv.textContent = content;
             
             messageDiv.appendChild(contentDiv);
             messagesContainer.appendChild(messageDiv);
             
-            // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
         function showTyping() {
             isTyping = true;
-            addMessage('<div class="loading-spinner"></div> Rolo AI is thinking...', 'ai');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai typing';
+            typingDiv.innerHTML = '<div class="message-content"><div class="loading-spinner"></div> Rolo AI is thinking...</div>';
+            document.getElementById('chatMessages').appendChild(typingDiv);
         }
         
         function hideTyping() {
             isTyping = false;
-            const messages = document.querySelectorAll('.message.ai .message-content');
-            const lastMessage = messages[messages.length - 1];
-            if (lastMessage && lastMessage.innerHTML.includes('loading-spinner')) {
-                lastMessage.parentElement.remove();
+            const typingMsg = document.querySelector('.message.typing');
+            if (typingMsg) {
+                typingMsg.remove();
             }
         }
         
-        // Send message to Rolo AI
+        // Send to Rolo AI - REAL API CALL
         async function sendToRoloAI(message) {
             try {
                 console.log('Sending to Rolo AI:', message);
@@ -1177,12 +822,12 @@
             } catch (error) {
                 console.error('Chat error:', error);
                 hideTyping();
-                addMessage(`❌ Connection error: ${error.message}. Please check your internet connection and try again.`, 'ai');
+                addMessage(`❌ Connection error: ${error.message}. Please check your connection and try again.`, 'ai');
             }
         }
         
-        // Stock search functionality
-        function searchStock() {
+        // Stock search - REAL API CALL
+        async function searchStock() {
             const input = document.getElementById('tickerInput');
             const symbol = input.value.trim().toUpperCase();
             
@@ -1190,83 +835,92 @@
             
             console.log('Searching stock:', symbol);
             
-            // Switch to chat tab and ask for analysis
-            switchTab('chat');
-            quickChat(`Analyze ${symbol} with full technicals and options strategies`);
+            const resultDiv = document.getElementById('stockResult');
+            resultDiv.innerHTML = '<div class="loading">Loading real-time data...</div>';
+            
+            try {
+                const response = await fetch(`/.netlify/functions/stock-data?symbol=${symbol}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+                } else {
+                    displayStockResult(data);
+                }
+                
+            } catch (error) {
+                console.error('Stock search error:', error);
+                resultDiv.innerHTML = `<div class="error-message">Failed to fetch stock data: ${error.message}</div>`;
+            }
         }
         
-        function quickSearch(symbol) {
-            document.getElementById('tickerInput').value = symbol;
-            searchStock();
+        function displayStockResult(data) {
+            const changeClass = parseFloat(data.change) >= 0 ? 'positive' : 'negative';
+            const changeSymbol = parseFloat(data.change) >= 0 ? '+' : '';
+            
+            const resultHTML = `
+                <div class="stock-result">
+                    <div class="stock-header">
+                        <div class="stock-symbol">${data.symbol}</div>
+                        <div>
+                            <div class="stock-price">$${data.price}</div>
+                            <div class="stock-change ${changeClass}">
+                                ${changeSymbol}${data.change} (${data.changePercent})
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stock-details">
+                        <div class="stock-detail">
+                            <span>Volume:</span>
+                            <span>${data.volume}</span>
+                        </div>
+                        <div class="stock-detail">
+                            <span>High:</span>
+                            <span>$${data.high}</span>
+                        </div>
+                        <div class="stock-detail">
+                            <span>Low:</span>
+                            <span>$${data.low}</span>
+                        </div>
+                        <div class="stock-detail">
+                            <span>Open:</span>
+                            <span>$${data.open}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('stockResult').innerHTML = resultHTML;
         }
         
-        // Load market data
+        // Load market data - REAL API CALL
         async function loadMarketData() {
+            if (currentTab !== 'market') return;
+            
             console.log('Loading market data...');
             
             const majorIndices = document.getElementById('majorIndices');
             const futuresData = document.getElementById('futuresData');
-            const marketSentiment = document.getElementById('marketSentiment');
             
             // Show loading state
             majorIndices.innerHTML = generateLoadingCards(['S&P 500', 'NASDAQ', 'DOW JONES', 'VIX']);
             futuresData.innerHTML = generateLoadingCards(['ES (S&P FUTURES)', 'NQ (NASDAQ FUTURES)']);
-            marketSentiment.innerHTML = '<div class="loading">Loading sentiment analysis...</div>';
             
             try {
-                // Load indices data
-                const indices = [
-                    { symbol: 'SPY', name: 'S&P 500' },
-                    { symbol: 'QQQ', name: 'NASDAQ' },
-                    { symbol: 'DIA', name: 'DOW JONES' },
-                    { symbol: 'VIX', name: 'VIX' }
-                ];
+                const response = await fetch('/.netlify/functions/market-dashboard');
+                const data = await response.json();
                 
-                const futures = [
-                    { symbol: 'ES=F', name: 'ES (S&P FUTURES)' },
-                    { symbol: 'NQ=F', name: 'NQ (NASDAQ FUTURES)' }
-                ];
-                
-                // Load indices
-                const indicesData = await Promise.all(
-                    indices.map(index => loadStockData(index.symbol))
-                );
-                
-                // Load futures
-                const futuresDataResults = await Promise.all(
-                    futures.map(future => loadStockData(future.symbol))
-                );
-                
-                // Display indices
-                majorIndices.innerHTML = '';
-                indices.forEach((index, i) => {
-                    const data = indicesData[i];
-                    majorIndices.appendChild(createIndexCard(index.name, data));
-                });
-                
-                // Display futures
-                futuresData.innerHTML = '';
-                futures.forEach((future, i) => {
-                    const data = futuresDataResults[i];
-                    futuresData.appendChild(createIndexCard(future.name, data));
-                });
-                
-                // Load sentiment
-                marketSentiment.innerHTML = `
-                    <div class="alert-item">
-                        <div class="alert-icon">📊</div>
-                        <div class="alert-content">
-                            <div class="alert-title">Market Sentiment: Neutral</div>
-                            <div class="alert-description">Mixed signals from technical indicators. Options flow shows balanced positioning.</div>
-                        </div>
-                    </div>
-                `;
+                if (data.error) {
+                    majorIndices.innerHTML = `<div class="error-message">${data.error}</div>`;
+                    futuresData.innerHTML = `<div class="error-message">${data.error}</div>`;
+                } else {
+                    displayMarketData(data);
+                }
                 
             } catch (error) {
-                console.error('Error loading market data:', error);
-                majorIndices.innerHTML = '<div class="error">Failed to load market data</div>';
-                futuresData.innerHTML = '<div class="error">Failed to load futures data</div>';
-                marketSentiment.innerHTML = '<div class="error">Failed to load sentiment data</div>';
+                console.error('Market data error:', error);
+                majorIndices.innerHTML = '<div class="error-message">Failed to load market data</div>';
+                futuresData.innerHTML = '<div class="error-message">Failed to load futures data</div>';
             }
         }
         
@@ -1280,183 +934,48 @@
             `).join('');
         }
         
-        function createIndexCard(name, data) {
-            const card = document.createElement('div');
-            card.className = 'index-card';
+        function displayMarketData(data) {
+            const majorIndices = document.getElementById('majorIndices');
+            const futuresData = document.getElementById('futuresData');
             
-            if (data && data.price) {
-                const changeClass = parseFloat(data.change) >= 0 ? 'positive' : 'negative';
-                const changeSymbol = parseFloat(data.change) >= 0 ? '+' : '';
-                
-                card.innerHTML = `
-                    <div class="index-name">${name}</div>
+            // Display indices
+            let indicesHTML = '';
+            for (const [symbol, info] of Object.entries(data.indices)) {
+                indicesHTML += createIndexCard(info);
+            }
+            majorIndices.innerHTML = indicesHTML;
+            
+            // Display futures
+            let futuresHTML = '';
+            for (const [symbol, info] of Object.entries(data.futures)) {
+                futuresHTML += createIndexCard(info);
+            }
+            futuresData.innerHTML = futuresHTML;
+        }
+        
+        function createIndexCard(data) {
+            if (data.error) {
+                return `
+                    <div class="index-card">
+                        <div class="index-name">${data.name}</div>
+                        <div class="index-price loading">Unavailable</div>
+                        <div class="index-change loading">---</div>
+                    </div>
+                `;
+            }
+            
+            const changeClass = parseFloat(data.change) >= 0 ? 'positive' : 'negative';
+            const changeSymbol = parseFloat(data.change) >= 0 ? '+' : '';
+            
+            return `
+                <div class="index-card">
+                    <div class="index-name">${data.name}</div>
                     <div class="index-price">$${data.price}</div>
                     <div class="index-change ${changeClass}">
                         ${changeSymbol}${data.change} (${data.changePercent})
                     </div>
-                `;
-            } else {
-                card.innerHTML = `
-                    <div class="index-name">${name}</div>
-                    <div class="index-price loading">Unavailable</div>
-                    <div class="index-change loading">---</div>
-                `;
-            }
-            
-            return card;
-        }
-        
-        // Load stock data
-        async function loadStockData(symbol) {
-            try {
-                const response = await fetch(`/.netlify/functions/smart-stock-data?symbol=${symbol}&entitlement=realtime`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    console.error(`Stock data error for ${symbol}:`, data.error);
-                    return null;
-                }
-                
-                return data;
-                
-            } catch (error) {
-                console.error(`Error loading ${symbol}:`, error);
-                return null;
-            }
-        }
-        
-        // Load plays
-        async function loadPlays(category) {
-            console.log('Loading plays for category:', category);
-            
-            // Update active category button
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event?.target?.classList.add('active');
-            
-            const playsList = document.getElementById('playsList');
-            
-            // Show loading
-            playsList.innerHTML = `
-                <div class="play-card">
-                    <div class="loading">Loading AI-generated plays...</div>
                 </div>
             `;
-            
-            // Simulate loading real plays data
-            setTimeout(() => {
-                const plays = [
-                    {
-                        symbol: 'AAPL',
-                        strategy: 'Bullish Call Spread',
-                        confidence: '85%',
-                        entry: '$212.00',
-                        target: '$220.00',
-                        stop: '$208.00'
-                    },
-                    {
-                        symbol: 'TSLA',
-                        strategy: 'Iron Condor',
-                        confidence: '78%',
-                        entry: '$245.00',
-                        target: '$255.00',
-                        stop: '$240.00'
-                    },
-                    {
-                        symbol: 'SPY',
-                        strategy: 'Covered Call',
-                        confidence: '72%',
-                        entry: '$440.00',
-                        target: '$445.00',
-                        stop: '$435.00'
-                    }
-                ];
-                
-                playsList.innerHTML = plays.map(play => `
-                    <div class="play-card">
-                        <div class="play-header">
-                            <div class="play-symbol">${play.symbol}</div>
-                            <div class="confidence-score">${play.confidence}</div>
-                        </div>
-                        <div class="play-strategy">${play.strategy}</div>
-                        <div class="play-details">
-                            <div class="play-detail">
-                                <div class="play-detail-label">Entry</div>
-                                <div class="play-detail-value">${play.entry}</div>
-                            </div>
-                            <div class="play-detail">
-                                <div class="play-detail-label">Target</div>
-                                <div class="play-detail-value">${play.target}</div>
-                            </div>
-                            <div class="play-detail">
-                                <div class="play-detail-label">Stop</div>
-                                <div class="play-detail-value">${play.stop}</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            }, 1000);
-        }
-        
-        // Load alerts
-        function loadAlerts() {
-            console.log('Loading alerts...');
-            
-            const alertsList = document.getElementById('alertsList');
-            
-            const alerts = [
-                {
-                    icon: '🚨',
-                    title: 'AAPL Volume Spike',
-                    description: 'Unusual options activity detected - 2x normal volume',
-                    time: '2 minutes ago'
-                },
-                {
-                    icon: '📈',
-                    title: 'SPY Breakout',
-                    description: 'SPY broke above resistance at $440.50',
-                    time: '5 minutes ago'
-                },
-                {
-                    icon: '🎯',
-                    title: 'TSLA Price Target',
-                    description: 'TSLA approaching target price of $250.00',
-                    time: '8 minutes ago'
-                }
-            ];
-            
-            alertsList.innerHTML = alerts.map(alert => `
-                <div class="alert-item">
-                    <div class="alert-icon">${alert.icon}</div>
-                    <div class="alert-content">
-                        <div class="alert-title">${alert.title}</div>
-                        <div class="alert-description">${alert.description}</div>
-                        <div class="alert-time">${alert.time}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // PWA functionality
-        function showInstallPrompt() {
-            // Check if it's running as PWA
-            if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-                return; // Already in PWA mode
-            }
-            
-            const installPrompt = document.getElementById('installPrompt');
-            installPrompt.classList.add('show');
-        }
-        
-        function hideInstallPrompt() {
-            const installPrompt = document.getElementById('installPrompt');
-            installPrompt.classList.remove('show');
         }
         
         // Auto-refresh market data every 30 seconds
@@ -1466,17 +985,6 @@
                 loadMarketData();
             }
         }, 30000);
-        
-        // Service Worker registration for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('ServiceWorker registration successful');
-                }, function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
-            });
-        }
     </script>
 </body>
 </html>
