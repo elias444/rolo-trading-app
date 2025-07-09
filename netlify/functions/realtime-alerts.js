@@ -2,6 +2,8 @@
 // ADD THIS AS A NEW FILE - restores your real-time alerts functionality
 // Monitors market for unusual activity and generates smart alerts
 
+const fetch = require('node-fetch'); // Required for server-side fetch
+
 exports.handler = async (event, context) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
@@ -21,158 +23,176 @@ exports.handler = async (event, context) => {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: 'Alpha Vantage API key not configured' })
+                body: JSON.stringify({ error: 'Alpha Vantage API key not configured in Netlify environment variables.' })
             };
         }
 
-        // Watchlist of stocks to monitor for alerts
-        const watchlist = ['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'HOOD'];
+        // Watchlist of stocks to monitor for alerts (can be expanded)
+        const watchlist = ['SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'MSFT'];
         const alerts = [];
 
         // Get current VIX level for market fear indicator
+        let vixLevel = null;
         try {
             const vixResponse = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=VIX&apikey=${ALPHA_VANTAGE_API_KEY}`);
             const vixData = await vixResponse.json();
             
-            if (vixData['Global Quote']) {
-                const vixPrice = parseFloat(vixData['Global Quote']['05. price']);
-                const vixChange = parseFloat(vixData['Global Quote']['09. change']);
-                
-                if (vixPrice > 25) {
-                    alerts.push({
-                        type: 'market_fear',
-                        title: '📈 VIX Spike Alert',
-                        description: `VIX spiked to ${vixPrice.toFixed(2)} - elevated market fear detected`,
-                        priority: 'high',
-                        timestamp: new Date().toLocaleString(),
-                        action: 'Consider defensive positions or volatility plays'
-                    });
-                } else if (vixPrice < 15) {
-                    alerts.push({
-                        type: 'market_complacency',
-                        title: '😴 Low VIX Alert',
-                        description: `VIX at ${vixPrice.toFixed(2)} - market complacency detected`,
-                        priority: 'medium',
-                        timestamp: new Date().toLocaleString(),
-                        action: 'Watch for potential volatility expansion'
-                    });
-                }
+            if (vixData && vixData['Global Quote'] && vixData['Global Quote']['05. price']) {
+                vixLevel = parseFloat(vixData['Global Quote']['05. price']);
+            } else if (vixData['Note']) {
+                console.warn('VIX API rate limit or other note:', vixData['Note']);
             }
-        } catch (error) {
-            console.log('VIX check failed:', error.message);
+        } catch (e) {
+            console.error('Error fetching VIX:', e.message);
         }
 
-        // Check for unusual volume and price movements
-        for (const symbol of watchlist.slice(0, 5)) { // Check first 5 to avoid rate limits
+        // Generate market-wide alerts based on VIX
+        if (vixLevel) {
+            if (vixLevel > 25) {
+                alerts.push({
+                    type: 'market_volatility',
+                    title: '🚨 High Volatility Alert',
+                    description: `Market volatility (VIX: ${vixLevel.toFixed(2)}) is high. Expect choppy price action.`,
+                    priority: 'high',
+                    timestamp: new Date().toISOString(),
+                    action: 'Consider smaller position sizes or defensive strategies.'
+                });
+            } else if (vixLevel < 15) {
+                alerts.push({
+                    type: 'market_calm',
+                    title: '🧘 Market Calm Alert',
+                    description: `Market volatility (VIX: ${vixLevel.toFixed(2)}) is low. Could precede a breakout or increased complacency.`,
+                    priority: 'low',
+                    timestamp: new Date().toISOString(),
+                    action: 'Monitor for unusual volume spikes or news events.'
+                });
+            }
+        }
+
+        // Simulate real-time stock-specific alerts for watchlist
+        for (const symbol of watchlist) {
             try {
-                await new Promise(resolve => setTimeout(resolve, 200)); // Rate limit protection
-                
-                const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`);
-                const data = await response.json();
-                
-                if (data['Global Quote']) {
-                    const quote = data['Global Quote'];
-                    const price = parseFloat(quote['05. price']);
-                    const change = parseFloat(quote['09. change']);
-                    const changePercent = parseFloat(quote['10. change percent'].replace('%', ''));
-                    const volume = parseInt(quote['06. volume']);
-                    
-                    // Alert for significant price moves
-                    if (Math.abs(changePercent) > 5) {
+                const stockResponse = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`);
+                const stockData = await stockResponse.json();
+
+                if (stockData && stockData['Global Quote'] && stockData['Global Quote']['10. change percent']) {
+                    const changePercent = parseFloat(stockData['Global Quote']['10. change percent']);
+                    const price = parseFloat(stockData['Global Quote']['05. price']);
+                    const volume = parseInt(stockData['Global Quote']['06. volume']);
+
+                    // Example: Significant price movement
+                    if (Math.abs(changePercent) > 3) { // More than 3% change
+                        const direction = changePercent > 0 ? 'up' : 'down';
                         alerts.push({
                             type: 'price_movement',
-                            title: `🚀 ${symbol} ${changePercent > 0 ? 'Surge' : 'Drop'}`,
-                            description: `${symbol} moved ${changePercent.toFixed(2)}% to $${price.toFixed(2)}`,
-                            priority: Math.abs(changePercent) > 10 ? 'high' : 'medium',
-                            timestamp: new Date().toLocaleString(),
-                            action: changePercent > 0 ? 'Check for momentum continuation' : 'Look for bounce opportunity'
+                            title: `📈 ${symbol} Price Alert`,
+                            description: `${symbol} is moving significantly (${changePercent}% ${direction}). Current price: $${price.toFixed(2)}`,
+                            priority: 'high',
+                            timestamp: new Date().toISOString(),
+                            action: `Investigate news and technical levels for ${symbol}.`
                         });
                     }
-                    
-                    // Alert for unusual volume (simplified check)
-                    if (symbol === 'SPY' && volume > 100000000) { // 100M+ volume for SPY
+
+                    // Example: High volume alert (simple threshold)
+                    if (volume > 50000000 && symbol === 'SPY') { // SPY often has very high volume
+                         alerts.push({
+                            type: 'volume_spike',
+                            title: `📊 ${symbol} Volume Spike`,
+                            description: `${symbol} showing unusually high volume (${volume.toLocaleString()}).`,
+                            priority: 'medium',
+                            timestamp: new Date().toISOString(),
+                            action: `Analyze ${symbol}'s price action and market context.`
+                        });
+                    } else if (volume > 10000000 && symbol !== 'SPY') { // Other stocks
                         alerts.push({
                             type: 'volume_spike',
-                            title: '📊 High Volume Alert',
-                            description: `${symbol} trading ${(volume / 1000000).toFixed(1)}M shares - above normal`,
+                            title: `📊 ${symbol} Volume Spike`,
+                            description: `${symbol} showing unusually high volume (${volume.toLocaleString()}).`,
                             priority: 'medium',
-                            timestamp: new Date().toLocaleString(),
-                            action: 'Monitor for institutional activity'
+                            timestamp: new Date().toISOString(),
+                            action: `Analyze ${symbol}'s price action and market context.`
                         });
                     }
+
+                } else if (stockData['Note']) {
+                    console.warn(`Alpha Vantage note for ${symbol}:`, stockData['Note']);
                 }
-            } catch (error) {
-                console.log(`Alert check failed for ${symbol}:`, error.message);
+            } catch (e) {
+                console.error(`Error fetching real-time data for ${symbol}:`, e.message);
+                // Don't push an alert, just log the warning
             }
         }
 
-        // Check for market gaps (pre-market/after-hours activity)
+        // Market open/close alerts (based on server's time, adjust for EST market hours if needed)
         const now = new Date();
-        const hour = now.getHours();
-        const isPreMarket = hour >= 4 && hour < 9;
-        const isAfterHours = hour >= 16 && hour < 20;
-        
-        if (isPreMarket || isAfterHours) {
-            alerts.push({
+        const hour = now.getHours(); // 0-23
+        const day = now.getDay(); // 0 (Sunday) - 6 (Saturday)
+        const isMarketOpen = (day >= 1 && day <= 5) && (hour >= 9 && hour < 16); // Mon-Fri, 9am-4pm EST (adjust for UTC if Netlify function is not EST)
+        const isPreMarket = (day >= 1 && day <= 5) && (hour >= 4 && hour < 9);
+        const isAfterHours = (day >= 1 && day <= 5) && (hour >= 16 && hour < 20);
+
+        if (isMarketOpen) {
+            // Check for significant market open/close events
+            if (hour === 9 && now.getMinutes() < 10) { // Just after market open
+                alerts.push({
+                    type: 'market_open',
+                    title: '🔔 Market Open',
+                    description: 'The US stock market is now open. Expect initial volatility.',
+                    priority: 'low',
+                    timestamp: new Date().toISOString(),
+                    action: 'Observe opening trends and price action.'
+                });
+            } else if (hour === 15 && now.getMinutes() > 50) { // Near market close
+                alerts.push({
+                    type: 'market_close_approach',
+                    title: '🕒 Market Close Approaching',
+                    description: 'Less than 10 minutes until market close. Watch for end-of-day moves.',
+                    priority: 'low',
+                    timestamp: new Date().toISOString(),
+                    action: 'Prepare for market close and after-hours trading.'
+                });
+            }
+        } else if (!isMarketOpen && (isPreMarket || isAfterHours)) {
+             alerts.push({
                 type: 'extended_hours',
-                title: `🌙 ${isPreMarket ? 'Pre-Market' : 'After-Hours'} Activity`,
-                description: 'Extended hours trading active - monitor for gaps at open',
+                title: '⏰ Extended Hours',
+                description: `Market is in ${isPreMarket ? 'pre-market' : 'after-hours'} trading. Volume may be low.`,
                 priority: 'low',
-                timestamp: new Date().toLocaleString(),
-                action: 'Review overnight news and futures'
+                timestamp: new Date().toISOString(),
+                action: 'Monitor for news or earnings reactions.'
             });
         }
 
-        // Add some market structure alerts based on time
-        const isMarketOpen = hour >= 9 && hour < 16 && now.getDay() >= 1 && now.getDay() <= 5;
-        
-        if (isMarketOpen) {
-            // Opening hour volatility
-            if (hour === 9) {
-                alerts.push({
-                    type: 'market_open',
-                    title: '🔔 Market Open Alert',
-                    description: 'First hour of trading - heightened volatility expected',
-                    priority: 'medium',
-                    timestamp: new Date().toLocaleString(),
-                    action: 'Monitor for opening gaps and momentum plays'
-                });
-            }
-            
-            // Power hour
-            if (hour === 15) {
-                alerts.push({
-                    type: 'power_hour',
-                    title: '⚡ Power Hour Alert',
-                    description: 'Final trading hour - increased volume and volatility',
-                    priority: 'medium',
-                    timestamp: new Date().toLocaleString(),
-                    action: 'Watch for end-of-day positioning moves'
-                });
-            }
-        }
 
-        // If no real alerts, return empty array (NO MOCK ALERTS)
+        // If no real alerts, and if the API key check passed, return empty array with a message
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
-                alerts: alerts,
+                alerts: alerts.length > 0 ? alerts : [], // Ensure it's an array
                 timestamp: new Date().toISOString(),
                 source: 'real-time-monitoring',
-                market_status: isMarketOpen ? 'open' : (isPreMarket || isAfterHours) ? 'extended' : 'closed'
+                market_status: isMarketOpen ? 'open' : (isPreMarket || isAfterHours) ? 'extended' : 'closed',
+                message: alerts.length === 0 ? "No real-time alerts at the moment. The market might be calm, or your watchlist is empty." : undefined
             })
         };
 
     } catch (error) {
         console.error('Real-time alerts error:', error);
         
+        let errorMessage = `Alert system error: ${error.message}`;
+        if (error.message.includes('API key not configured')) {
+            errorMessage = `Alpha Vantage API key not found. Please add ALPHA_VANTAGE_API_KEY to Netlify environment variables.`;
+        } else if (error.message.includes('API rate limit reached')) {
+            errorMessage = `Alpha Vantage API rate limit reached. Please try again in a moment.`;
+        }
+
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({ 
-                error: `Alert system error: ${error.message}`,
-                alerts: [] // Return empty alerts array on error, NO MOCK DATA
+                error: errorMessage,
+                alerts: [] // Always return alerts as an array on error
             })
         };
     }
