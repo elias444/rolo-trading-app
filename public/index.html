@@ -99,6 +99,10 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
 
+    #chat-input::placeholder {
+      color: #aaa;
+    }
+
     button {
       padding: 12px 16px;
       background: #007bff;
@@ -119,17 +123,40 @@
       border-radius: 12px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
+
+    .sentiment-item {
+      margin-bottom: 12px;
+      padding: 10px;
+      border-left: 6px solid #ccc;
+      background: #f9f9f9;
+      border-radius: 6px;
+    }
+
+    .sentiment-positive {
+      border-color: #4caf50;
+    }
+
+    .sentiment-neutral {
+      border-color: #ff9800;
+    }
+
+    .sentiment-negative {
+      border-color: #f44336;
+    }
+
+    .ticker {
+      font-weight: bold;
+    }
   </style>
 </head>
-
 <body>
   <h1>📊 Rolo AI Stock Assistant</h1>
-
   <div class="tabs">
     <button class="tab-button active" onclick="showTab('chat')">Chat</button>
     <button class="tab-button" onclick="showTab('ticker')">Ticker</button>
     <button class="tab-button" onclick="showTab('options')">Options</button>
     <button class="tab-button" onclick="showTab('plays')">Smart Plays</button>
+    <button class="tab-button" onclick="showTab('sentiment')">Sentiment</button>
   </div>
 
   <!-- Chat Tab -->
@@ -140,70 +167,143 @@
       <button type="submit">Send</button>
     </form>
   </div>
-
   <!-- Ticker Tab -->
-  <div id="ticker" class="tab-content section">
-    <h2>Ticker Info</h2>
-    <p>Coming soon: Real-time stock data, charts, and sentiment analysis.</p>
+  <div id="ticker" class="tab-content">
+    <div class="section">
+      <h2>📈 Ticker Info</h2>
+      <p>Loading stock data…</p>
+      <!-- Add data from smart-stock-data.js and enhanced-stock-data.js here -->
+    </div>
   </div>
 
   <!-- Options Tab -->
-  <div id="options" class="tab-content section">
-    <h2>Options Chain</h2>
-    <p>Coming soon: Options data and strategy suggestions.</p>
+  <div id="options" class="tab-content">
+    <div class="section">
+      <h2>🧠 Options</h2>
+      <p>Coming soon: Strike prices, volatility, and more!</p>
+    </div>
   </div>
 
   <!-- Smart Plays Tab -->
-  <div id="plays" class="tab-content section">
-    <h2>Smart Plays</h2>
-    <p>Coming soon: AI-generated trading ideas with confidence scores.</p>
+  <div id="plays" class="tab-content">
+    <div class="section">
+      <h2>💡 Smart Plays</h2>
+      <div id="smart-plays-output">
+        <p>Generating confidence-based trading ideas…</p>
+        <!-- Hook up smart-plays-generator.js here -->
+      </div>
+    </div>
   </div>
 
-  <script>
-    function showTab(tabId) {
-      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-      document.getElementById(tabId).classList.add("active");
-      event.target.classList.add("active");
-    }
-
-    const chatForm = document.getElementById("chat-form");
-    const chatInput = document.getElementById("chat-input");
-    const chatWindow = document.getElementById("chat-window");
-
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const userMessage = chatInput.value.trim();
-      if (!userMessage) return;
-
-      const userBubble = document.createElement("div");
-      userBubble.className = "chat-bubble user";
-      userBubble.textContent = userMessage;
-      chatWindow.appendChild(userBubble);
-
-      chatInput.value = "";
-
-      try {
-        const response = await fetch("/.netlify/functions/chatgpt-rolo-chat", {
-          method: "POST",
-          body: JSON.stringify({ message: userMessage })
-        });
-        const data = await response.json();
-        const aiReply = data.reply || "Sorry, Rolo didn’t respond.";
-
-        const aiBubble = document.createElement("div");
-        aiBubble.className = "chat-bubble ai";
-        aiBubble.textContent = aiReply;
-        chatWindow.appendChild(aiBubble);
-
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-      } catch (error) {
-        const errorBubble = document.createElement("div");
-        errorBubble.className = "chat-bubble ai";
-        errorBubble.textContent = "Error reaching Rolo AI. Try again soon.";
-        chatWindow.appendChild(errorBubble);
+  <!-- Sentiment Tab -->
+  <div id="sentiment" class="tab-content">
+    <div class="section">
+      <h2>📰 Market Sentiment</h2>
+      <div id="sentiment-feed">
+        <p>Loading news and social buzz…</p>
+        <!-- Fetched headlines and StockTwits content will appear here -->
+      </div>
+    </div>
+  </div>
+<script>
+// 🚀 Tab Switching
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.getElementById(tabId).classList.add('active');
+  Array.from(document.getElementsByClassName('tab-button'))
+    .forEach(btn => {
+      if (btn.textContent.toLowerCase().includes(tabId)) {
+        btn.classList.add('active');
       }
     });
-  </script>
+}
+
+// 💬 GPT-4 Chat Logic
+document.getElementById('chat-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+
+  appendBubble(message, 'user');
+  input.value = '';
+  
+  try {
+    const response = await fetch('/.netlify/functions/chatgpt-rolo-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const result = await response.json();
+    appendBubble(result.reply, 'ai');
+  } catch (err) {
+    console.error(err);
+    appendBubble("Rolo hit a snag. Try again soon.", 'ai');
+  }
+});
+
+function appendBubble(text, type) {
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${type}`;
+  bubble.textContent = text;
+  document.getElementById('chat-window').appendChild(bubble);
+}
+
+// 📰 Sentiment Fetching (mocked structure)
+async function loadSentiment() {
+  const container = document.getElementById('sentiment-feed');
+  container.innerHTML = '<p>Fetching market headlines…</p>';
+
+  try {
+    // Replace this with your API call to Marketaux or StockNewsAPI
+    const headlines = [
+      {
+        title: "Apple stock surges after strong earnings",
+        source: "Reuters",
+        sentiment: "positive",
+        ticker: "AAPL"
+      },
+      {
+        title: "Tesla faces investigation over autopilot crash",
+        source: "CNBC",
+        sentiment: "negative",
+        ticker: "TSLA"
+      },
+      {
+        title: "NVIDIA maintains momentum with AI chips",
+        source: "Bloomberg",
+        sentiment: "positive",
+        ticker: "NVDA"
+      }
+    ];
+
+    container.innerHTML = '';
+    headlines.forEach(item => {
+      const div = document.createElement('div');
+      div.className = `sentiment-item sentiment-${item.sentiment}`;
+      div.innerHTML = `<span class="ticker">${item.ticker}:</span> ${item.title} <br><em>Source:</em> ${item.source} ${emoji(item.sentiment)}`;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = '<p>Unable to load sentiment data.</p>';
+  }
+}
+
+function emoji(sentiment) {
+  if (sentiment === 'positive') return '👍';
+  if (sentiment === 'neutral') return '😐';
+  return '👎';
+}
+
+// Auto-load sentiment when tab is clicked
+document.querySelector('[onclick*="sentiment"]').addEventListener('click', loadSentiment);
+</script>
 </body>
 </html>
+
