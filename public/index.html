@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Rolo AI</title>
     
-    <!-- PWA Meta Tags for Address Bar Hiding -->
+    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Rolo AI">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
-    <meta name="apple-touch-fullscreen" content="yes">
-    <link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Rolo AI&quot;,&quot;short_name&quot;:&quot;Rolo&quot;,&quot;start_url&quot;:&quot;/&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#000000&quot;,&quot;theme_color&quot;:&quot;#000000&quot;,&quot;scope&quot;:&quot;/&quot;}">
+    <link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Rolo AI&quot;,&quot;short_name&quot;:&quot;Rolo&quot;,&quot;start_url&quot;:&quot;/&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#000000&quot;,&quot;theme_color&quot;:&quot;#000000&quot;}">
     
     <style>
         * {
@@ -482,7 +481,7 @@
         .index-change.positive { color: var(--success-green); }
         .index-change.negative { color: var(--danger-red); }
         
-        /* Chat Input - iOS Style (Smooth, No Black Box) */
+        /* Chat Input - iOS Style */
         .chat-input-container {
             position: fixed;
             bottom: 80px;
@@ -630,7 +629,48 @@
             display: none;
         }
         
-        /* PWA optimizations for address bar hiding */
+        /* List styles */
+        .smart-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .list-item {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .list-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .list-item-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+        
+        .list-item-badge {
+            background: var(--primary-blue);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .list-item-content {
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        /* PWA optimizations */
         @media (display-mode: standalone) {
             .header {
                 padding-top: env(safe-area-inset-top, 40px);
@@ -662,8 +702,8 @@
                 <div class="chat-container">
                     <div class="welcome-message">
                         <h3>🧠 Welcome to Rolo AI</h3>
-                        <p>Your intelligent trading assistant with real-time market access!</p>
-                        <p>Ask me anything about stocks, options, or market analysis.</p>
+                        <p>Your intelligent trading assistant powered by real-time Alpha Vantage data!</p>
+                        <p>I can analyze any stock and provide smart trading insights.</p>
                     </div>
 
                     <div class="quick-actions">
@@ -712,7 +752,7 @@
                         <div class="message assistant">
                             <div class="message-avatar">🧠</div>
                             <div class="message-content">
-                                Hi! I'm Rolo AI, your intelligent trading assistant. I can analyze any stock and provide detailed options strategies with specific entry/exit points. Try asking me "What are the best plays for tomorrow?" or search for any stock above!
+                                Hi! I'm Rolo AI, your intelligent trading assistant. I analyze stocks using real-time data and provide smart trading insights. Try asking me "What are the best plays for tomorrow?" or search for any stock above!
                             </div>
                         </div>
                     </div>
@@ -749,8 +789,9 @@
                     🎯 Smart Plays
                 </h2>
                 <div id="playsContent">
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-                        Ask Rolo AI "What are the best plays for tomorrow?" to see intelligent trading opportunities
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Generating smart plays from live market data...
                     </div>
                 </div>
             </div>
@@ -784,14 +825,15 @@
                     🔔 Market Alerts
                 </h2>
                 <div id="alertsContent">
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-                        Live market alerts will appear here based on unusual activity and significant moves
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Monitoring market for unusual activity...
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Chat Input - iOS Style (No Black Box) -->
+        <!-- Chat Input - iOS Style -->
         <div class="chat-input-container" id="chatInputContainer">
             <input type="text" class="chat-input" id="chatInput" 
                    placeholder="Ask Rolo: 'What are the best plays for tomorrow?'" 
@@ -834,18 +876,20 @@
         // Global variables
         let currentTab = 'chat';
         let isTyping = false;
+        let stockData = {};
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             updateChatInputVisibility();
-            loadMarketData();
             updateMarketStatus();
+            
+            // Load initial data
+            loadMarketData();
+            generateSmartPlays();
+            loadAlerts();
             
             // Set up event listeners
             setupEventListeners();
-            
-            // Show PWA install prompt after 10 seconds
-            setTimeout(showInstallPrompt, 10000);
         });
 
         function setupEventListeners() {
@@ -870,25 +914,6 @@
             });
         }
 
-        // Show PWA install prompt for address bar hiding
-        function showInstallPrompt() {
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                const banner = document.createElement('div');
-                banner.style.cssText = `
-                    position: fixed; top: 0; left: 0; right: 0; 
-                    background: #007AFF; color: white; padding: 12px 16px; 
-                    text-align: center; z-index: 10000; font-size: 14px;
-                `;
-                banner.innerHTML = `
-                    📱 Add to Home Screen to hide address bar and get the full app experience! 
-                    <button onclick="this.parentElement.remove()" style="background: none; border: 1px solid white; color: white; padding: 4px 8px; border-radius: 4px; margin-left: 8px;">×</button>
-                `;
-                document.body.prepend(banner);
-                
-                setTimeout(() => banner.remove(), 10000);
-            }
-        }
-
         // Tab switching
         function switchTab(tab) {
             // Update navigation
@@ -909,6 +934,10 @@
             // Load tab-specific content
             if (tab === 'market') {
                 loadMarketData();
+            } else if (tab === 'plays') {
+                generateSmartPlays();
+            } else if (tab === 'alerts') {
+                loadAlerts();
             }
         }
 
@@ -924,7 +953,7 @@
             }
         }
 
-        // Chat functionality
+        // Chat functionality - NO ANTHROPIC, Smart AI built in
         async function sendMessage() {
             if (isTyping) return;
             
@@ -940,14 +969,14 @@
             const typingMessage = addChatMessage('🧠 Analyzing...', 'assistant');
             
             try {
-                // Use Alpha Vantage data for intelligent responses
-                const response = await generateIntelligentResponse(message);
+                // Built-in intelligent response - NO external AI needed
+                const response = await generateSmartResponse(message);
                 typingMessage.remove();
                 addChatMessage(response, 'assistant');
             } catch (error) {
                 console.error('Chat error:', error);
                 typingMessage.remove();
-                addChatMessage('I\'m having trouble processing that right now. Please try again!', 'assistant');
+                addChatMessage('I encountered an error. Please try again!', 'assistant');
             } finally {
                 isTyping = false;
             }
@@ -982,13 +1011,13 @@
             sendMessage();
         }
 
-        // Intelligent response generation
-        async function generateIntelligentResponse(message) {
+        // Smart AI response generation - NO ANTHROPIC
+        async function generateSmartResponse(message) {
             const lowerMessage = message.toLowerCase();
             
             // Check for specific requests
             if (lowerMessage.includes('best plays') || lowerMessage.includes('plays for tomorrow')) {
-                return await generateBestPlays();
+                return await generateBestPlaysResponse();
             }
             
             if (lowerMessage.includes('market') && (lowerMessage.includes('how') || lowerMessage.includes('doing'))) {
@@ -1006,63 +1035,100 @@
                 return generateOptionsGuidance();
             }
             
-            return generateHelpfulResponse(message);
+            return generateHelpfulResponse();
         }
 
         function extractTicker(message) {
             const words = message.toUpperCase().split(/\s+/);
-            const tickers = ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ', 'HOOD', 'AMD', 'META', 'GOOGL', 'MSFT'];
+            const commonTickers = ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ', 'HOOD', 'AMD', 'META', 'GOOGL', 'MSFT', 'AMZN', 'DIS', 'NFLX'];
             
             for (const word of words) {
-                if (tickers.includes(word) || /^[A-Z]{1,5}$/.test(word)) {
+                if (commonTickers.includes(word) || /^[A-Z]{1,5}$/.test(word)) {
                     return word;
                 }
             }
             return null;
         }
 
-        async function generateBestPlays() {
-            return `🎯 **BEST PLAYS FOR TOMORROW**\n\n**Top Opportunities Based on Live Analysis:**\n\n**1. NVDA - Call Debit Spread**\n📊 Setup: AI momentum continuation\n🎯 Entry: $875 strike\n📈 Target: $920 (5% move)\n⛔ Stop: Below $850\n💰 Risk/Reward: 1:1.8\n✅ Confidence: 85%\n\n**2. SPY - Iron Condor**\n📊 Setup: Range-bound market\n🎯 Range: $580-$590\n📈 Target: Premium decay\n💰 Max Profit: 2-3%\n✅ Confidence: 80%\n\n**3. HOOD - Oversold Bounce**\n📊 Setup: Support at $24\n🎯 Entry: $24.50\n📈 Target: $27.00\n⛔ Stop: $23.00\n✅ Confidence: 75%\n\n**⚠️ Risk Management:**\n• Position size: 1-2% per trade\n• Always use stop losses\n• Monitor volume for confirmation\n\nWant detailed analysis on any of these? Just ask!`;
+        async function generateBestPlaysResponse() {
+            try {
+                // Get real market data for analysis
+                const tickers = ['NVDA', 'AAPL', 'TSLA', 'SPY', 'QQQ'];
+                const plays = [];
+                
+                for (const ticker of tickers) {
+                    try {
+                        const data = await getAlphaVantageData(ticker);
+                        if (data) {
+                            const analysis = analyzeForPlays(ticker, data);
+                            plays.push(analysis);
+                        }
+                    } catch (error) {
+                        console.error(`Error analyzing ${ticker}:`, error);
+                    }
+                }
+                
+                // Sort by confidence
+                plays.sort((a, b) => b.confidence - a.confidence);
+                
+                let response = `🎯 **BEST PLAYS FOR TOMORROW** (Based on Live Data)\n\n`;
+                
+                plays.slice(0, 3).forEach((play, index) => {
+                    response += `**${index + 1}. ${play.ticker} - ${play.strategy}**\n`;
+                    response += `📊 Setup: ${play.reason}\n`;
+                    response += `🎯 Entry: $${play.entry}\n`;
+                    response += `📈 Target: $${play.target}\n`;
+                    response += `⛔ Stop: $${play.stop}\n`;
+                    response += `✅ Confidence: ${play.confidence}%\n\n`;
+                });
+                
+                response += `**⚠️ Risk Management:**\n• Position size: 1-2% per trade\n• Use stop losses\n• Monitor volume\n\nWant detailed analysis on any ticker? Just ask!`;
+                
+                return response;
+            } catch (error) {
+                return `🎯 **SMART TRADING OPPORTUNITIES**\n\nI'm analyzing live market data to find the best plays. Here are some general strategies:\n\n**High Probability Setups:**\n• Look for stocks breaking above key resistance with volume\n• Consider oversold bounces in quality names\n• Monitor VIX for volatility opportunities\n\nAsk me about specific tickers for detailed analysis!`;
+            }
         }
 
         async function generateMarketOverview() {
             try {
-                // Get live market data
-                const spyData = await getStockData('SPY');
-                const vixData = await getStockData('VIX');
+                const spyData = await getAlphaVantageData('SPY');
+                const vixData = await getAlphaVantageData('VIX');
                 
                 let overview = `🌍 **LIVE MARKET OVERVIEW**\n\n`;
                 
                 if (spyData) {
                     const spyChange = parseFloat(spyData.changePercent);
                     overview += `📊 **SPY**: $${spyData.price.toFixed(2)} (${spyChange >= 0 ? '+' : ''}${spyChange.toFixed(2)}%)\n`;
+                    
+                    if (spyChange > 1) {
+                        overview += `🚀 **Market Sentiment**: Strong bullish momentum\n`;
+                    } else if (spyChange < -1) {
+                        overview += `📉 **Market Sentiment**: Bearish pressure\n`;
+                    } else {
+                        overview += `📊 **Market Sentiment**: Neutral/consolidating\n`;
+                    }
                 }
                 
                 if (vixData) {
-                    overview += `⚡ **VIX**: ${vixData.price.toFixed(2)} (Fear/Greed indicator)\n`;
+                    overview += `⚡ **VIX**: ${vixData.price.toFixed(2)} `;
+                    if (vixData.price > 25) overview += `(High fear - opportunity)\n`;
+                    else if (vixData.price < 15) overview += `(Low fear - cautious)\n`;
+                    else overview += `(Normal volatility)\n`;
                 }
                 
-                overview += `\n🎯 **Market Sentiment**: `;
-                if (spyData && parseFloat(spyData.changePercent) > 1) {
-                    overview += `Bullish momentum - growth strategies favored`;
-                } else if (spyData && parseFloat(spyData.changePercent) < -1) {
-                    overview += `Defensive mode - protective strategies recommended`;
-                } else {
-                    overview += `Neutral/consolidating - range-bound strategies optimal`;
-                }
-                
-                overview += `\n\n💡 **Best Approach**: Ask me about specific tickers for detailed strategies!`;
+                overview += `\n💡 **Best Approach**: Ask me about specific tickers for detailed strategies!`;
                 return overview;
             } catch (error) {
-                return `🌍 **MARKET OVERVIEW**\n\nMarkets are active with mixed signals. The best approach is to focus on individual stock setups with proper risk management.\n\nAsk me about specific tickers like AAPL, TSLA, or SPY for detailed analysis!`;
+                return `🌍 **MARKET OVERVIEW**\n\nMarkets are active with mixed signals. Focus on:\n\n• Quality stocks with volume\n• Technical breakouts\n• Risk management\n\nAsk me about specific tickers for analysis!`;
             }
         }
 
         async function generateTickerAnalysis(ticker) {
             try {
-                const data = await getStockData(ticker);
+                const data = await getAlphaVantageData(ticker);
                 if (!data) {
-                    return `I couldn't get live data for ${ticker} right now. Please verify the ticker symbol and try again.`;
+                    return `I couldn't get live data for ${ticker}. Please verify the ticker symbol.`;
                 }
                 
                 const change = parseFloat(data.changePercent);
@@ -1071,39 +1137,73 @@
                 analysis += `📈 **Change**: ${change >= 0 ? '+' : ''}${change.toFixed(2)}%\n`;
                 analysis += `📦 **Volume**: ${formatVolume(data.volume)}\n\n`;
                 
-                // Smart analysis based on movement
+                // Smart analysis based on price action
                 if (Math.abs(change) > 3) {
                     analysis += `🚀 **Strong ${change > 0 ? 'Bullish' : 'Bearish'} Momentum**\n`;
-                    analysis += `Strategy: ${change > 0 ? 'Call' : 'Put'} options with momentum\n`;
-                    analysis += `Entry: Wait for ${change > 0 ? 'pullback' : 'bounce'} confirmation\n`;
+                    analysis += `Strategy: ${change > 0 ? 'Call' : 'Put'} options on momentum\n`;
                 } else if (Math.abs(change) < 1) {
-                    analysis += `😴 **Low Volatility Day**\n`;
+                    analysis += `😴 **Low Volatility**\n`;
                     analysis += `Strategy: Range-bound plays or wait for breakout\n`;
                 } else {
-                    analysis += `📊 **Normal Trading Activity**\n`;
+                    analysis += `📊 **Normal Activity**\n`;
                     analysis += `Strategy: Technical levels and volume confirmation\n`;
                 }
                 
                 analysis += `\n🎯 **Key Levels**:\n`;
                 analysis += `• Support: $${(data.price * 0.97).toFixed(2)}\n`;
                 analysis += `• Resistance: $${(data.price * 1.03).toFixed(2)}\n\n`;
-                analysis += `Want specific options strategies? Ask me!`;
+                analysis += `Want specific options strategies? Just ask!`;
                 
                 return analysis;
             } catch (error) {
-                return `I'm having trouble analyzing ${ticker} right now. Please try again or ask about general market strategies!`;
+                return `I'm having trouble analyzing ${ticker}. Please try again!`;
             }
         }
 
         function generateOptionsGuidance() {
-            return `📚 **SMART OPTIONS STRATEGIES**\n\n🎯 **By Market Condition**:\n\n**📈 Trending Markets:**\n• Debit spreads for direction\n• Momentum plays with volume\n\n**😴 Range-Bound:**\n• Iron Condors\n• Credit spreads\n• Theta decay strategies\n\n**⚡ High Volatility:**\n• Straddles/Strangles\n• Volatility plays\n\n**🛡️ Risk Rules:**\n• 1-2% position sizing\n• 50% stop loss on premium\n• 100-200% profit targets\n\nAsk about specific tickers for detailed strategies!`;
+            return `📚 **SMART OPTIONS STRATEGIES**\n\n🎯 **By Market Condition**:\n\n**📈 Trending:**\n• Debit spreads for direction\n• Momentum plays with volume\n\n**😴 Range-bound:**\n• Iron Condors\n• Credit spreads\n\n**⚡ High volatility:**\n• Straddles/Strangles\n\n**🛡️ Risk Rules:**\n• 1-2% position sizing\n• 50% stop loss\n• 100-200% profit targets\n\nAsk about specific tickers!`;
         }
 
-        function generateHelpfulResponse(message) {
-            return `🧠 **I'm here to help with intelligent trading analysis!**\n\nI can provide:\n• Live stock analysis for any ticker\n• Options strategies with entry/exit points\n• Market sentiment and overview\n• Best plays and opportunities\n\n**Try asking:**\n• "What are the best plays for tomorrow?"\n• "Analyze AAPL options strategy"\n• "How is the market doing?"\n• Or just mention any stock ticker!\n\nWhat would you like to explore? 🚀`;
+        function generateHelpfulResponse() {
+            return `🧠 **I'm Rolo AI - Your Smart Trading Assistant!**\n\nI can help with:\n• Live stock analysis\n• Options strategies\n• Market insights\n• Trading opportunities\n\n**Try asking:**\n• "What are the best plays for tomorrow?"\n• "Analyze AAPL"\n• "How is the market doing?"\n\nWhat would you like to explore? 🚀`;
         }
 
-        // Stock search functionality - FIXED
+        function analyzeForPlays(ticker, data) {
+            const change = parseFloat(data.changePercent);
+            const price = parseFloat(data.price);
+            
+            let confidence = 60;
+            let strategy = 'Hold';
+            let reason = 'Neutral conditions';
+            
+            if (Math.abs(change) > 2) {
+                confidence += 20;
+                if (change > 2) {
+                    strategy = 'Call Options';
+                    reason = `Bullish momentum (+${change.toFixed(2)}%)`;
+                } else {
+                    strategy = 'Put Options';
+                    reason = `Bearish momentum (${change.toFixed(2)}%)`;
+                }
+            }
+            
+            if (data.volume > 50000000) {
+                confidence += 15;
+                reason += ' with high volume';
+            }
+            
+            return {
+                ticker,
+                strategy,
+                confidence: Math.min(confidence, 95),
+                reason,
+                entry: (price * (change > 0 ? 1.01 : 0.99)).toFixed(2),
+                target: (price * (change > 0 ? 1.08 : 0.92)).toFixed(2),
+                stop: (price * (change > 0 ? 0.96 : 1.04)).toFixed(2)
+            };
+        }
+
+        // Stock search functionality - WORKING
         async function searchStock() {
             const input = document.getElementById('tickerInput');
             const ticker = input.value.trim().toUpperCase();
@@ -1133,14 +1233,15 @@
 
         async function performStockSearch(ticker) {
             const resultsContainer = document.getElementById('stockResults');
-            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading stock data...</div>';
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading real-time data...</div>';
             
             try {
-                const data = await getStockData(ticker);
+                const data = await getAlphaVantageData(ticker);
                 
-                if (data && data.price) {
+                if (data) {
                     displayStockCard(data);
                     updateAnalysisTab(ticker, data);
+                    stockData[ticker] = data;
                 } else {
                     showStockError(`Could not find data for ${ticker}. Please verify the ticker symbol.`);
                 }
@@ -1150,19 +1251,19 @@
             }
         }
 
-        // Get stock data using YOUR Alpha Vantage real-time API
-        async function getStockData(symbol) {
+        // Get Alpha Vantage data with real-time entitlement
+        async function getAlphaVantageData(symbol) {
             try {
-                const API_KEY = 'MAQEUTLGYYXC1HF1'; // Your real-time enabled key
+                const API_KEY = 'MAQEUTLGYYXC1HF1';
                 
-                // Try realtime first, then delayed
+                // Use your real-time entitlement
                 let url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=realtime&apikey=${API_KEY}`;
                 let response = await fetch(url);
                 let data = await response.json();
                 let quote = data['Global Quote'];
                 
+                // Fallback to delayed if realtime fails
                 if (!quote || Object.keys(quote).length === 0) {
-                    // Fallback to delayed
                     url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&entitlement=delayed&apikey=${API_KEY}`;
                     response = await fetch(url);
                     data = await response.json();
@@ -1185,7 +1286,7 @@
                     previousClose: parseFloat(quote['08. previous close'])
                 };
             } catch (error) {
-                console.error('Stock data error:', error);
+                console.error('Alpha Vantage error:', error);
                 return null;
             }
         }
@@ -1241,7 +1342,6 @@
             resultsContainer.innerHTML = cardHTML;
         }
 
-        // Get AI Analysis - FIXED
         async function getAIAnalysis(ticker) {
             const button = event.target;
             const originalText = button.innerHTML;
@@ -1249,18 +1349,11 @@
             button.disabled = true;
             
             try {
-                const message = `Analyze ${ticker} and provide comprehensive options strategies`;
-                
-                // Switch to chat and send analysis
+                // Switch to chat and get analysis
                 switchTab('chat');
-                addChatMessage(message, 'user');
-                
                 const response = await generateTickerAnalysis(ticker);
+                addChatMessage(`Analyze ${ticker}`, 'user');
                 addChatMessage(response, 'assistant');
-                
-            } catch (error) {
-                console.error('AI Analysis error:', error);
-                addChatMessage('Sorry, I encountered an error analyzing this stock. Please try again.', 'assistant');
             } finally {
                 button.innerHTML = originalText;
                 button.disabled = false;
@@ -1302,10 +1395,9 @@
             analysisContent.innerHTML = technicalHTML;
         }
 
-        // Load market data - FIXED with your real Alpha Vantage API
+        // Load market data - WORKING
         async function loadMarketData() {
             try {
-                // Major indices
                 const indices = [
                     {symbol: 'SPY', name: 'S&P 500'},
                     {symbol: 'QQQ', name: 'NASDAQ'},
@@ -1318,7 +1410,7 @@
                 
                 for (const index of indices) {
                     try {
-                        const data = await getStockData(index.symbol);
+                        const data = await getAlphaVantageData(index.symbol);
                         if (data) {
                             const change = data.change;
                             const changeClass = change >= 0 ? 'positive' : 'negative';
@@ -1341,12 +1433,14 @@
                 
                 if (indicesHTML) {
                     indicesContainer.innerHTML = indicesHTML;
+                } else {
+                    indicesContainer.innerHTML = '<div class="error">Unable to load market data at this time</div>';
                 }
                 
-                // Futures (using ETF proxies since Alpha Vantage doesn't have direct futures)
+                // Load futures (using ETF proxies)
                 const futures = [
-                    {symbol: 'ES=F', name: 'ES (S&P FUTURES)', proxy: 'SPY'},
-                    {symbol: 'NQ=F', name: 'NQ (NASDAQ FUTURES)', proxy: 'QQQ'}
+                    {symbol: 'SPY', name: 'ES (S&P FUTURES)'},
+                    {symbol: 'QQQ', name: 'NQ (NASDAQ FUTURES)'}
                 ];
                 
                 const futuresContainer = document.getElementById('futuresData');
@@ -1354,7 +1448,7 @@
                 
                 for (const future of futures) {
                     try {
-                        const data = await getStockData(future.proxy);
+                        const data = await getAlphaVantageData(future.symbol);
                         if (data) {
                             const change = data.change;
                             const changeClass = change >= 0 ? 'positive' : 'negative';
@@ -1382,6 +1476,118 @@
             } catch (error) {
                 console.error('Market data error:', error);
                 document.getElementById('majorIndices').innerHTML = '<div class="error">Unable to load market data</div>';
+            }
+        }
+
+        // Generate smart plays - WORKING
+        async function generateSmartPlays() {
+            const playsContent = document.getElementById('playsContent');
+            
+            try {
+                const tickers = ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ', 'HOOD'];
+                const plays = [];
+                
+                for (const ticker of tickers) {
+                    try {
+                        const data = await getAlphaVantageData(ticker);
+                        if (data) {
+                            const analysis = analyzeForPlays(ticker, data);
+                            if (analysis.confidence >= 70) {
+                                plays.push(analysis);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error analyzing ${ticker}:`, error);
+                    }
+                }
+                
+                plays.sort((a, b) => b.confidence - a.confidence);
+                
+                if (plays.length > 0) {
+                    let playsHTML = '<div class="smart-list">';
+                    
+                    plays.forEach((play, index) => {
+                        playsHTML += `
+                            <div class="list-item">
+                                <div class="list-item-header">
+                                    <div class="list-item-title">#${index + 1} ${play.ticker} - ${play.strategy}</div>
+                                    <div class="list-item-badge">${play.confidence}%</div>
+                                </div>
+                                <div class="list-item-content">
+                                    <strong>Setup:</strong> ${play.reason}<br>
+                                    <strong>Entry:</strong> $${play.entry} | <strong>Target:</strong> $${play.target} | <strong>Stop:</strong> $${play.stop}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    playsHTML += '</div>';
+                    playsContent.innerHTML = playsHTML;
+                } else {
+                    playsContent.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">No high-confidence plays available right now. Market conditions may be uncertain.</div>';
+                }
+            } catch (error) {
+                console.error('Smart plays error:', error);
+                playsContent.innerHTML = '<div class="error">Error generating plays. Please try again.</div>';
+            }
+        }
+
+        // Load alerts - WORKING
+        async function loadAlerts() {
+            const alertsContent = document.getElementById('alertsContent');
+            
+            try {
+                const watchTickers = ['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ'];
+                const alerts = [];
+                
+                for (const ticker of watchTickers) {
+                    try {
+                        const data = await getAlphaVantageData(ticker);
+                        if (data) {
+                            const changePercent = Math.abs(parseFloat(data.changePercent));
+                            
+                            if (changePercent > 3) {
+                                alerts.push({
+                                    title: `📊 ${ticker} Unusual Movement`,
+                                    content: `${changePercent.toFixed(1)}% move detected - ${data.changePercent > 0 ? 'Strong bullish' : 'Strong bearish'} momentum`
+                                });
+                            }
+                            
+                            if (data.volume > 100000000) {
+                                alerts.push({
+                                    title: `📈 ${ticker} Volume Spike`,
+                                    content: `High volume detected: ${formatVolume(data.volume)} - Institutional activity possible`
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error checking ${ticker}:`, error);
+                    }
+                }
+                
+                if (alerts.length > 0) {
+                    let alertsHTML = '<div class="smart-list">';
+                    
+                    alerts.forEach(alert => {
+                        alertsHTML += `
+                            <div class="list-item">
+                                <div class="list-item-header">
+                                    <div class="list-item-title">${alert.title}</div>
+                                    <div class="list-item-badge">LIVE</div>
+                                </div>
+                                <div class="list-item-content">${alert.content}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    alertsHTML += '</div>';
+                    alertsContent.innerHTML = alertsHTML;
+                } else {
+                    alertsContent.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">No unusual market activity detected at this time. Monitoring continues...</div>';
+                }
+            } catch (error) {
+                console.error('Alerts error:', error);
+                alertsContent.innerHTML = '<div class="error">Error loading alerts. Please try again.</div>';
             }
         }
 
@@ -1429,10 +1635,16 @@
             deferredPrompt = e;
         });
 
-        // Prevent zoom on iOS
+        // Prevent zoom and bounce on iOS
         document.addEventListener('gesturestart', function (e) {
             e.preventDefault();
         });
+        
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
