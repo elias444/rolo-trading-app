@@ -1,205 +1,813 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rolo AI – Stock Assistant</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 16px; color: #333; }
-    h1 { text-align: center; margin-bottom: 20px; }
-    .tabs { display: flex; justify-content: space-around; flex-wrap: wrap; margin-bottom: 16px; }
-    .tab-button { padding: 10px 16px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; margin: 4px; cursor: pointer; }
-    .tab-button.active { background: #0056b3; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .section { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 12px; }
-    .chat-window { max-height: 60vh; overflow-y: auto; background: white; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 12px; }
-    .chat-bubble { padding: 12px; margin: 8px; border-radius: 12px; max-width: 80%; font-size: 16px; word-wrap: break-word; }
-    .chat-bubble.user { background: #d1eaff; align-self: flex-end; }
-    .chat-bubble.ai { background: #eaeaea; align-self: flex-start; }
-    form { display: flex; gap: 10px; }
-    #chat-input { flex-grow: 1; padding: 12px; border: none; border-radius: 12px; background: white; font-size: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    button { padding: 12px 16px; background: #007bff; color: white; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; }
-    button:hover { background: #0056b3; }
-    .sentiment-item { margin-bottom: 12px; padding: 10px; border-left: 6px solid #ccc; background: #f9f9f9; border-radius: 6px; }
-    .sentiment-bullish { border-color: #4caf50; }
-    .sentiment-neutral { border-color: #ff9800; }
-    .sentiment-bearish { border-color: #f44336; }
-    .ticker { font-weight: bold; }
-    #extended-hours-indicator { color: purple; font-weight: bold; margin-bottom: 10px; display: none; }
-  </style>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Rolo AI">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <meta name="application-name" content="Rolo AI">
+
+    <link rel="manifest" href="data:application/json,{
+        'name': 'Rolo AI Trading Assistant',
+        'short_name': 'Rolo AI',
+        'description': 'Professional AI Trading Assistant with Real-time Market Data',
+        'start_url': '/?pwa=1',
+        'scope': '/',
+        'display': 'standalone',
+        'orientation': 'portrait',
+        'background_color': '#000000',
+        'theme_color': '#007aff',
+        'categories': ['finance', 'business', 'productivity'],
+        'icons': [
+            {
+                'src': 'data:image/svg+xml,<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" viewBox=\\\"0 0 100 100\\\"><text x=\\\"50%\\\" y=\\\"50%\\\" style=\\\"dominant-baseline:central;text-anchor:middle;font-family:Arial;font-size:80px;fill:%23007aff;\\\">📈</text></svg>',
+                'sizes': 'any',
+                'type': 'image/svg+xml'
+            }
+        ]
+    }">
+
+    <title>Rolo AI – Stock Assistant</title>
+    <style>
+        body { font-family: 'SF Pro Display', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; background: #0a0a0a; margin: 0; padding: 0; color: #f0f0f0; display: flex; flex-direction: column; min-height: 100vh; font-size: 16px; -webkit-font-smoothing: antialiased; }
+        h1, h2, h3, h4, h5, h6 { color: #ffffff; }
+        .container { max-width: 900px; margin: 0 auto; padding: 15px; width: 100%; box-sizing: border-box; }
+        .tabs { display: flex; justify-content: space-around; flex-wrap: wrap; background: #1c1c1e; border-radius: 12px; margin-bottom: 15px; padding: 5px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); }
+        .tab-button {
+            flex-grow: 1;
+            padding: 12px 0;
+            background: transparent;
+            color: #8e8e93;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 80px; /* Ensure buttons don't collapse too much */
+        }
+        .tab-button.active { background: #007aff; color: white; box-shadow: 0 2px 5px rgba(0, 122, 255, 0.4); }
+        .tab-button:hover:not(.active) { color: #d1d1d6; }
+        .tab-content { display: none; padding: 15px; background: #1c1c1e; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); flex-grow: 1; overflow-y: auto; }
+        .tab-content.active { display: flex; flex-direction: column; } /* Added flex for content layout */
+        .section { background: #2c2c2e; border-radius: 10px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); }
+        .section h3 { margin-top: 0; color: #ffffff; font-size: 18px; border-bottom: 1px solid #3a3a3c; padding-bottom: 8px; margin-bottom: 12px; }
+
+        /* Chat Specific Styles */
+        .chat-window {
+            flex-grow: 1; /* Allows chat window to take available height */
+            height: calc(100vh - 250px); /* Adjust height based on header/footer */
+            max-height: calc(100vh - 250px); /* Max height for overflow */
+            overflow-y: auto;
+            background: #1c1c1e;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Space between messages */
+            scroll-behavior: smooth; /* Smooth scrolling for new messages */
+        }
+        .message-bubble {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            white-space: pre-wrap; /* Preserve whitespace for code/preformatted text */
+        }
+        .message-bubble.user {
+            background-color: #007aff;
+            color: white;
+            align-self: flex-end; /* Align to right */
+            border-bottom-right-radius: 4px; /* Taper corner */
+        }
+        .message-bubble.assistant {
+            background-color: #3a3a3c;
+            color: white;
+            align-self: flex-start; /* Align to left */
+            border-bottom-left-radius: 4px; /* Taper corner */
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 10px;
+            background: #1c1c1e;
+            border-radius: 12px;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+            margin-top: auto; /* Push to bottom of content area */
+        }
+        #chatInput {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #3a3a3c;
+            border-radius: 20px;
+            background: #2c2c2e;
+            color: white;
+            font-size: 16px;
+            margin-right: 10px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        #chatInput::placeholder { color: #8e8e93; }
+        .send-button {
+            padding: 12px 20px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .send-button:hover { background: #0056b3; }
+        .typing-indicator {
+            align-self: flex-start;
+            background-color: #3a3a3c;
+            color: #8e8e93;
+            padding: 8px 12px;
+            border-radius: 18px;
+            font-style: italic;
+            margin-top: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .typing-indicator.active {
+            opacity: 1;
+        }
+
+        /* Ticker Tab Specific Styles */
+        .search-area { display: flex; margin-bottom: 15px; }
+        #tickerInput {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #3a3a3c;
+            border-radius: 10px;
+            background: #2c2c2e;
+            color: white;
+            font-size: 16px;
+            margin-right: 10px;
+            outline: none;
+            box-sizing: border-box;
+            text-transform: uppercase; /* Ensure ticker input is always uppercase */
+        }
+        #tickerInput::placeholder { color: #8e8e93; }
+        .search-button {
+            padding: 12px 20px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .search-button:hover { background: #0056b3; }
+        #stockDataLoader {
+            text-align: center;
+            padding: 20px;
+            color: #8e8e93;
+        }
+        #stockDataOutput {
+            white-space: pre-wrap; /* Preserve formatting from backend */
+            word-wrap: break-word;
+            line-height: 1.5;
+            color: #f0f0f0;
+        }
+        #stockDataOutput .price { font-size: 2em; font-weight: bold; }
+        #stockDataOutput .change.positive { color: #34c759; }
+        #stockDataOutput .change.negative { color: #ff3b30; }
+
+        /* Market Tab Specific Styles */
+        .market-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .market-card {
+            background: #2c2c2e;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .market-card .symbol { font-size: 1.2em; font-weight: bold; color: #007aff; }
+        .market-card .price { font-size: 1.1em; font-weight: bold; margin-top: 5px; }
+        .market-card .change { font-size: 0.9em; }
+        .market-card .status { font-size: 0.8em; color: #8e8e93; margin-top: 5px; }
+        .market-status {
+            background-color: #3a3a3c;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .market-status .status-circle {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .market-status .status-circle.open { background-color: #34c759; }
+        .market-status .status-circle.closed { background-color: #ff3b30; }
+        .market-status .status-circle.extended { background-color: #ffcc00; }
+
+        /* Plays Tab Specific Styles */
+        #smart-plays-output .play-card {
+            background: #2c2c2e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #smart-plays-output .play-card h4 {
+            color: #007aff;
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        #smart-plays-output .play-card p {
+            margin-bottom: 5px;
+            font-size: 0.95em;
+            color: #d1d1d6;
+        }
+        #smart-plays-output .play-card .label {
+            font-weight: bold;
+            color: #8e8e93;
+            margin-right: 5px;
+        }
+        #smart-plays-output .play-card .confidence {
+            font-weight: bold;
+            color: #34c759; /* Green for high confidence */
+        }
+
+        /* Alerts Tab Specific Styles */
+        #alertsOutput .alert-item {
+            background: #2c2c2e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-left: 5px solid; /* For alert priority visual */
+        }
+        #alertsOutput .alert-item.high { border-color: #ff3b30; } /* Red for high priority */
+        #alertsOutput .alert-item.medium { border-color: #ffcc00; } /* Yellow for medium */
+        #alertsOutput .alert-item.low { border-color: #34c759; } /* Green for low */
+        #alertsOutput .alert-item h4 {
+            color: #ffffff;
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        #alertsOutput .alert-item p {
+            margin-bottom: 5px;
+            font-size: 0.95em;
+            color: #d1d1d6;
+        }
+        #alertsOutput .alert-item .timestamp {
+            font-size: 0.8em;
+            color: #8e8e93;
+            text-align: right;
+            margin-top: 8px;
+        }
+        .refresh-button {
+            display: block;
+            width: fit-content;
+            margin: 15px auto 0;
+            padding: 10px 20px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .refresh-button:hover { background: #0056b3; }
+
+        /* iPhone Specific Adjustments */
+        @media only screen and (max-width: 768px) {
+            body { font-size: 15px; }
+            .tabs { border-radius: 0; margin-bottom: 10px; padding: 0; background: #0a0a0a; box-shadow: none; border-bottom: 1px solid #2c2c2e; }
+            .tab-button { border-radius: 0; font-size: 16px; padding: 15px 0; }
+            .tab-button.active { border-bottom: 3px solid #007aff; background: transparent; } /* Underline effect */
+            .tab-button:hover:not(.active) { background: #1c1c1e; }
+
+            .chat-window, .tab-content {
+                height: calc(100vh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); /* Adjust for PWA nav */
+                max-height: calc(100vh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                border-radius: 0;
+                box-shadow: none;
+                margin-bottom: 0;
+                padding: 10px;
+            }
+            .chat-input-area {
+                border-radius: 0;
+                padding: env(safe-area-inset-right) 10px env(safe-area-inset-bottom) 10px; /* Safe area insets */
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+                background: #0a0a0a; /* Match body background */
+            }
+            #chatInput, .send-button {
+                height: 44px; /* Standard iOS input height */
+                font-size: 17px;
+            }
+            .section { border-radius: 0; box-shadow: none; margin-bottom: 10px; }
+            .market-summary-grid { grid-template-columns: 1fr; } /* Stack on small screens */
+            .market-card { border-radius: 0; }
+            .search-area { flex-direction: column; }
+            #tickerInput { margin-right: 0; margin-bottom: 10px; }
+            .search-button { width: 100%; }
+        }
+
+        /* Loader Animation */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007aff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-  <h1>📊 Rolo AI Stock Assistant</h1>
-  <div class="tabs">
-    <button class="tab-button active" onclick="showTab('chat')">Chat</button>
-    <button class="tab-button" onclick="showTab('ticker')">Ticker</button>
-    <button class="tab-button" onclick="showTab('options')">Options</button>
-    <button class="tab-button" onclick="showTab('plays')">Smart Plays</button>
-    <button class="tab-button" onclick="showTab('sentiment')">Sentiment</button>
-  </div>
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('chat')">Chat</button>
+            <button class="tab-button" onclick="openTab('ticker')">Ticker</button>
+            <button class="tab-button" onclick="openTab('analysis')">Analysis</button>
+            <button class="tab-button" onclick="openTab('plays')">Plays</button>
+            <button class="tab-button" onclick="openTab('market')">Market</button>
+            <button class="tab-button" onclick="openTab('alerts')">Alerts</button>
+        </div>
 
-  <div id="chat" class="tab-content active">
-    <div id="chat-window" class="chat-window"></div>
-    <form id="chat-form">
-      <input id="chat-input" type="text" placeholder="Ask Rolo something…" autocomplete="off" />
-      <button type="submit">Send</button>
-    </form>
-  </div>
+        <div id="chat" class="tab-content active">
+            <div id="chatWindow" class="chat-window">
+                <div class="message-bubble assistant">
+                    Hello! I'm Rolo AI, your intelligent trading assistant. I'm ready to help you analyze stocks, find options plays, and understand market trends. What would you like to explore today?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Ask Rolo AI anything..." />
+                <button class="send-button" onclick="sendMessage()">Send</button>
+            </div>
+            <div id="typingIndicator" class="typing-indicator hidden">Rolo AI is typing...</div>
+        </div>
 
-  <div id="ticker" class="tab-content">
-    <div class="section">
-      <h2>📈 Ticker Info</h2>
-      <div id="extended-hours-indicator">🔮 Extended Hours Pricing</div>
-      <p>Live data coming soon.</p>
+        <div id="ticker" class="tab-content">
+            <div class="section">
+                <h3>Stock Search</h3>
+                <div class="search-area">
+                    <input type="text" id="tickerInput" placeholder="Enter stock symbol (e.g., AAPL)" maxlength="5" />
+                    <button class="search-button" onclick="searchStock()">Search</button>
+                </div>
+                <div id="stockDataLoader" class="loader hidden"></div>
+                <div id="stockDataOutput">
+                    <p>Enter a stock symbol to get real-time data and analysis.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="analysis" class="tab-content">
+            <div class="section">
+                <h3>Enhanced Analysis</h3>
+                <div id="analysisContent">
+                    <p>Detailed technical, fundamental, and sentiment analysis for selected stocks will appear here.</p>
+                    <p>Example: Ask Rolo AI "Analyze AAPL" in the Chat tab or search for a ticker in the Ticker tab for a summary.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="plays" class="tab-content">
+            <div class="section">
+                <h3>Smart Trading Plays</h3>
+                <div id="smart-plays-output">
+                    <p>Generating intelligent trading opportunities based on market conditions, momentum, and volatility...</p>
+                    <div class="loader"></div>
+                </div>
+                <button class="refresh-button" onclick="loadSmartPlays()">Refresh Plays</button>
+            </div>
+        </div>
+
+        <div id="market" class="tab-content">
+            <div class="section">
+                <h3>Market Summary</h3>
+                <div id="marketStatus" class="market-status">
+                    <span id="marketStatusCircle" class="status-circle open"></span> <span id="marketStatusText">Market data loading...</span>
+                </div>
+                <div id="marketSummary" class="market-summary-grid">
+                    </div>
+            </div>
+            <div class="section">
+                <h3>Market News & Sentiment</h3>
+                <div id="marketNews">
+                    <p>Loading latest market news and sentiment indicators...</p>
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="alerts" class="tab-content">
+            <div class="section">
+                <h3>Real-time Alerts</h3>
+                <div id="alertsOutput">
+                    <p>Monitoring market for unusual activity and generating smart alerts...</p>
+                    <div class="loader"></div>
+                </div>
+                <button class="refresh-button" onclick="refreshAlerts()">Refresh Alerts</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div id="options" class="tab-content">
-    <div class="section">
-      <h2>🧠 Options</h2>
-      <p>Smart strike suggestions based on volatility and sentiment.</p>
-    </div>
-  </div>
+    <script>
+        // Global state for chat history
+        const messages = []; // This will store user and assistant messages for context
+        const chatWindow = document.getElementById('chatWindow');
+        const typingIndicator = document.getElementById('typingIndicator');
 
-  <div id="plays" class="tab-content">
-    <div class="section">
-      <h2>💡 Smart Plays</h2>
-      <div id="smart-plays-output"><p>Loading plays…</p></div>
-    </div>
-  </div>
+        // Function to add a message to the chat window
+        function addMessage(type, content) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', type);
+            messageBubble.innerHTML = content; // Use innerHTML to allow for basic formatting (bold, italics)
+            chatWindow.appendChild(messageBubble);
+            messages.push({ type, content }); // Store for history
+            scrollToBottom();
+        }
 
-  <div id="sentiment" class="tab-content">
-    <div class="section">
-      <h2>📰 Market Sentiment</h2>
-      <div id="sentiment-feed"><p>Loading headlines…</p></div>
-    </div>
-  </div>
+        function scrollToBottom() {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
 
-<script>
-// Tab switching
-function showTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  [...document.querySelectorAll('.tab-button')].forEach(btn => {
-    if (btn.textContent.toLowerCase().includes(tabId)) btn.classList.add('active');
-  });
-  if (tabId === "sentiment") loadSentiment();
-  if (tabId === "plays") loadSmartPlays();
-}
+        function setIsTyping(isTyping) {
+            if (isTyping) {
+                typingIndicator.classList.remove('hidden');
+                scrollToBottom();
+            } else {
+                typingIndicator.classList.add('hidden');
+            }
+        }
 
-// GPT Chat logic
-document.getElementById('chat-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  appendBubble(msg, 'user');
-  input.value = '';
-  try {
-    const res = await fetch('/.netlify/functions/chatgpt-rolo-chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ message: msg })
-    });
-    const data = await res.json();
-    appendBubble(data.reply, 'ai');
-  } catch {
-    appendBubble("Rolo hit a snag. Try again later.", 'ai');
-  }
-});
+        // --- Core Send Message Function (UPDATED FOR GEMINI) ---
+        async function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            if (!message) return; // Don't send empty messages
 
-function appendBubble(text, type) {
-  const bubble = document.createElement('div');
-  bubble.className = `chat-bubble ${type}`;
-  bubble.textContent = text;
-  document.getElementById('chat-window').appendChild(bubble);
-}
+            addMessage('user', message); // Add user message to UI
+            setIsTyping(true); // Show typing indicator
+            chatInput.value = ''; // Clear input
 
-// Replace this with your real Alpha Vantage API key
-const ALPHA_VANTAGE_API_KEY = "YOUR_ALPHA_VANTAGE_API_KEY";
+            try {
+                // Prepare conversation history for Gemini
+                // Gemini's API expects roles 'user' and 'model'
+                const historyForGemini = messages.map(msg => ({
+                    role: msg.type === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.content }]
+                }));
 
-// Sentiment Headlines
-async function loadSentiment() {
-  const container = document.getElementById('sentiment-feed');
-  container.innerHTML = '<p>Loading…</p>';
-  try {
-    const response = await fetch(`https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=AAPL,TSLA,NVDA&apikey=${ALPHA_VANTAGE_API_KEY}`);
-    const data = await response.json();
-    const headlines = data?.feed?.slice(0, 5) || [];
-    container.innerHTML = '';
-    headlines.forEach(item => {
-      const div = document.createElement('div');
-      div.className = `sentiment-item sentiment-${item.overall_sentiment_label.toLowerCase()}`;
-      div.innerHTML = `<span class="ticker">${item.ticker}:</span> <a href="${item.url}" target="_blank">${item.title}</a><br><em>${item.source}</em> | ${item.overall_sentiment_label} (${Math.round(item.relevance_score * 100)}%)`;
-      container.appendChild(div);
-    });
-  } catch {
-    container.innerHTML = '<p>Failed to load sentiment data.</p>';
-  }
-}
+                // Ensure the last message in historyForGemini is the *current* user message for proper context
+                // The gemini-chat.js function will then take this array and use it to start the chat.
+                
+                const response = await fetch('/.netlify/functions/gemini-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message, // The new user message
+                        history: historyForGemini.slice(0, -1) // All previous messages, excluding the current user message which is sent separately
+                    })
+                });
 
-// Smart Play Engine
-async function fetchRSI(symbol) {
-  const url = `https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=15min&time_period=14&series_type=close&apikey=${ALPHA_VANTAGE_API_KEY}`;
-  const res = await fetch(url
-const data = await res.json();
-  const rsiData = data["Technical Analysis: RSI"];
-  const latestTime = Object.keys(rsiData)[0];
-  return parseFloat(rsiData[latestTime]["RSI"]);
-}
+                const data = await response.json();
+                if (response.ok) {
+                    addMessage('assistant', data.response); // Add assistant response to UI
+                } else {
+                    console.error("AI API Error:", data.error || "Unknown error");
+                    addMessage('assistant', `Error: ${data.error || 'Sorry, I encountered an error. Please try again.'}`);
+                }
+            } catch (error) {
+                console.error('Error sending message to Gemini:', error);
+                addMessage('assistant', 'Sorry, I could not connect to the AI. Please try again later.');
+            } finally {
+                setIsTyping(false); // Hide typing indicator
+                scrollToBottom(); // Ensure scroll to bottom after AI response
+            }
+        }
 
-async function fetchMACD(symbol) {
-  const url = `https://www.alphavantage.co/query?function=MACD&symbol=${symbol}&interval=15min&series_type=close&apikey=${ALPHA_VANTAGE_API_KEY}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  const macdData = data["Technical Analysis: MACD"];
-  const latestTime = Object.keys(macdData)[0];
-  const histogram = parseFloat(macdData[latestTime]["MACD_Histogram"]);
-  return histogram;
-}
+        // --- Tab Switching Logic ---
+        let currentActiveTab = 'chat';
+        function openTab(tabName) {
+            // Deactivate current tab button and content
+            document.querySelector(`.tab-button.active`).classList.remove('active');
+            document.getElementById(currentActiveTab).classList.remove('active');
 
-async function fetchSentimentScore(symbol) {
-  const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  const score = data?.feed?.[0]?.relevance_score || 0.5;
-  return Math.round(score * 100);
-}
+            // Activate new tab button and content
+            document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            currentActiveTab = tabName;
 
-function calculateConfidence(rsi, macd, sentiment) {
-  let score = 0;
-  if (rsi < 30) score += 30;
-  if (macd > 0) score += 30;
-  score += sentiment * 0.4;
-  return Math.min(100, Math.round(score));
-}
+            // Load data for specific tabs when opened
+            if (tabName === 'ticker') {
+                // Optionally clear previous stock data or pre-fill input
+                document.getElementById('tickerInput').focus();
+            } else if (tabName === 'market') {
+                loadMarketDashboard();
+            } else if (tabName === 'plays') {
+                loadSmartPlays();
+            } else if (tabName === 'alerts') {
+                loadSmartAlerts(); // Now calling the real alerts function
+            }
+            scrollToBottom(); // In case chat was active and then switched back
+        }
 
-async function loadSmartPlays() {
-  const output = document.getElementById("smart-plays-output");
-  output.innerHTML = "<p>Scanning tickers: AAPL, TSLA, NVDA…</p>";
-  const tickers = ["AAPL", "TSLA", "NVDA"];
-  let html = "";
+        // --- Ticker Tab Functions ---
+        async function searchStock() {
+            const tickerInput = document.getElementById('tickerInput');
+            const symbol = tickerInput.value.trim().toUpperCase();
+            const stockDataLoader = document.getElementById('stockDataLoader');
+            const stockDataOutput = document.getElementById('stockDataOutput');
 
-  for (const symbol of tickers) {
-    const [rsi, macd, sentiment] = await Promise.all([
-      fetchRSI(symbol),
-      fetchMACD(symbol),
-      fetchSentimentScore(symbol)
-    ]);
+            if (!symbol) {
+                stockDataOutput.innerHTML = '<p style="color: #ff3b30;">Please enter a stock symbol (e.g., AAPL).</p>';
+                return;
+            }
 
-    const confidence = calculateConfidence(rsi, macd, sentiment);
-    html += `
-      <div class="section">
-        <strong>${symbol}</strong>: RSI ${rsi.toFixed(2)}, MACD ${macd.toFixed(2)}, Sentiment ${sentiment}%<br>
-        Confidence Score: <span style="color:${confidence>80?'green':confidence>60?'orange':'red'}">${confidence}%</span>
-      </div>
-    `;
-  }
+            stockDataOutput.innerHTML = ''; // Clear previous data
+            stockDataLoader.classList.remove('hidden'); // Show loader
 
-  output.innerHTML = html;
-}
-</script>
+            try {
+                // Call your enhanced-stock-data Netlify function
+                const response = await fetch(`/.netlify/functions/enhanced-stock-data?symbol=${symbol}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.symbol && data.price) {
+                        let changeClass = data.change > 0 ? 'positive' : 'negative';
+                        let changeSign = data.change > 0 ? '+' : '';
+
+                        stockDataOutput.innerHTML = `
+                            <div class="section">
+                                <h3>${data.symbol} Live Data</h3>
+                                <p class="price">$${data.price}</p>
+                                <p class="change ${changeClass}">${changeSign}${data.change} (${data.changePercent})</p>
+                                <p>Volume: ${data.volume}</p>
+                                <p>High: $${data.high} | Low: $${data.low}</p>
+                                <p>Open: $${data.open} | Prev. Close: $${data.previousClose}</p>
+                                <p>Last Updated: ${data.lastUpdated} (${data.isRealTime ? 'Real-Time' : 'Delayed'})</p>
+                            </div>
+                        `;
+                        // Also update analysis tab with basic info
+                        updateAnalysisTab(data.symbol, data);
+                    } else {
+                        stockDataOutput.innerHTML = `<p style="color: #ffcc00;">No detailed data available for ${symbol}. Please try another symbol or check the console for API errors.</p>`;
+                    }
+                } else {
+                    stockDataOutput.innerHTML = `<p style="color: #ff3b30;">Error fetching data: ${data.error || 'Unknown error'}.</p>`;
+                    console.error("Stock data API error:", data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+                stockDataOutput.innerHTML = '<p style="color: #ff3b30;">Failed to connect to stock data service. Please check your network or API keys.</p>';
+            } finally {
+                stockDataLoader.classList.add('hidden'); // Hide loader
+            }
+        }
+
+        // --- Analysis Tab Functions ---
+        function updateAnalysisTab(ticker, data) {
+            const content = document.getElementById('analysisContent');
+            if (!data || !data.price) {
+                content.innerHTML = '<p>No enhanced data available for analysis. Search for a stock first.</p>';
+                return;
+            }
+
+            let analysisHtml = `<h3>${ticker} Enhanced Analysis</h3>`;
+            analysisHtml += `<p><strong>Live Price:</strong> <span class="${data.change > 0 ? 'positive' : 'negative'}">$${data.price} (${data.changePercent})</span></p>`;
+            analysisHtml += `<p><strong>Volume:</strong> ${data.volume}</p>`;
+
+            // Placeholder for real technical analysis
+            analysisHtml += `
+                <div class="section" style="margin-top: 15px;">
+                    <h4>Technical Indicators (Mock/Placeholder)</h4>
+                    <p><strong>RSI:</strong> 65 (Neutral)</p>
+                    <p><strong>MACD:</strong> Bullish Crossover</p>
+                    <p><strong>SMA(50):</strong> Above 50-day moving average</p>
+                    <p><strong>Support:</strong> $${(data.price * 0.95).toFixed(2)} | <strong>Resistance:</strong> $${(data.price * 1.05).toFixed(2)}</p>
+                </div>
+            `;
+
+            // Placeholder for real sentiment analysis
+            analysisHtml += `
+                <div class="section">
+                    <h4>Sentiment Analysis (Mock/Placeholder)</h4>
+                    <p><strong>Overall Sentiment:</strong> Positive (Based on news and social media)</p>
+                    <p><strong>Key Topics:</strong> Earnings, Product Launch, Market Expansion</p>
+                </div>
+            `;
+
+            content.innerHTML = analysisHtml;
+        }
+
+        // --- Plays Tab Functions ---
+        async function loadSmartPlays() {
+            const output = document.getElementById('smart-plays-output');
+            output.innerHTML = '<p>Generating intelligent trading opportunities...</p><div class="loader"></div>';
+
+            try {
+                // Call your smart-plays-generator Netlify function
+                const response = await fetch('/.netlify/functions/smart-plays-generator');
+                const data = await response.json();
+
+                if (response.ok && data.plays && data.plays.length > 0) {
+                    let playsHtml = '';
+                    data.plays.forEach(play => {
+                        playsHtml += `
+                            <div class="play-card">
+                                <h4>${play.emoji || '🎯'} ${play.title} ${play.ticker ? `(${play.ticker})` : ''}</h4>
+                                <p><span class="label">Strategy:</span> ${play.strategy}</p>
+                                <p><span class="label">Description:</span> ${play.description}</p>
+                                <p><span class="label">Confidence:</span> <span class="confidence">${play.confidence}%</span></p>
+                                ${play.entry ? `<p><span class="label">Entry:</span> ${play.entry}</p>` : ''}
+                                ${play.target ? `<p><span class="label">Target:</span> ${play.target}</p>` : ''}
+                                ${play.risk_level ? `<p><span class="label">Risk:</span> ${play.risk_level}</p>` : ''}
+                                ${play.timeframe ? `<p><span class="label">Timeframe:</span> ${play.timeframe}</p>` : ''}
+                            </div>
+                        `;
+                    });
+                    output.innerHTML = playsHtml;
+                } else {
+                    output.innerHTML = '<p>No new smart plays generated at this time. Check back later!</p>';
+                }
+            } catch (error) {
+                console.error('Error loading smart plays:', error);
+                output.innerHTML = '<p style="color: #ff3b30;">Failed to load smart plays. Please try again later.</p>';
+            }
+        }
+
+        // --- Market Tab Functions ---
+        async function loadMarketDashboard() {
+            const marketSummary = document.getElementById('marketSummary');
+            const marketNews = document.getElementById('marketNews');
+            const marketStatusText = document.getElementById('marketStatusText');
+            const marketStatusCircle = document.getElementById('marketStatusCircle');
+
+            marketSummary.innerHTML = '<div class="loader"></div>';
+            marketNews.innerHTML = '<p>Loading latest market news and sentiment indicators...</p><div class="loader"></div>';
+            marketStatusText.textContent = 'Loading market status...';
+            marketStatusCircle.classList.remove('open', 'closed', 'extended');
+
+            try {
+                // Call your market-dashboard Netlify function
+                const response = await fetch('/.netlify/functions/market-dashboard');
+                const data = await response.json();
+
+                if (response.ok) {
+                    let indicesHtml = '';
+                    for (const symbol in data.marketData) {
+                        const index = data.marketData[symbol];
+                        const changeClass = parseFloat(index.change) > 0 ? 'positive' : 'negative';
+                        const changeSign = parseFloat(index.change) > 0 ? '+' : '';
+                        indicesHtml += `
+                            <div class="market-card">
+                                <div class="symbol">${index.symbol}</div>
+                                <div class="name">${index.name}</div>
+                                <div class="price">$${index.price}</div>
+                                <div class="change ${changeClass}">${changeSign}${index.change} (${index.changePercent})</div>
+                            </div>
+                        `;
+                    }
+                    marketSummary.innerHTML = indicesHtml;
+
+                    let newsHtml = '<h3>Latest Market News</h3>';
+                    if (data.news && data.news.length > 0) {
+                        data.news.forEach(item => {
+                            newsHtml += `<p><strong>${item.title}</strong><br>${item.summary.substring(0, 150)}... <a href="${item.url}" target="_blank" style="color: #007aff; text-decoration: none;">Read More</a></p>`;
+                        });
+                    } else {
+                        newsHtml += '<p>No recent news available.</p>';
+                    }
+                    marketNews.innerHTML = newsHtml;
+
+                    // Update market status
+                    marketStatusText.textContent = `Market is ${data.marketStatus}.`;
+                    marketStatusCircle.classList.add(data.marketStatus === 'Open' ? 'open' : (data.marketStatus === 'Extended Hours' ? 'extended' : 'closed'));
+
+                } else {
+                    marketSummary.innerHTML = `<p style="color: #ff3b30;">Error loading market data: ${data.error || 'Unknown error'}.</p>`;
+                    marketNews.innerHTML = `<p style="color: #ff3b30;">Error loading market news.</p>`;
+                    marketStatusText.textContent = 'Failed to load status.';
+                    console.error("Market dashboard API error:", data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching market dashboard:', error);
+                marketSummary.innerHTML = '<p style="color: #ff3b30;">Failed to connect to market dashboard service.</p>';
+                marketNews.innerHTML = '<p style="color: #ff3b30;">Failed to connect to market news service.</p>';
+                marketStatusText.textContent = 'Offline.';
+            }
+        }
+
+
+        // --- Alerts Tab Functions ---
+        async function loadSmartAlerts() {
+            const alertsOutput = document.getElementById('alertsOutput');
+            alertsOutput.innerHTML = '<p>Checking for real-time alerts...</p><div class="loader"></div>';
+
+            try {
+                // Call your smart-alerts Netlify function (which internally uses realtime-alerts.js)
+                const response = await fetch('/.netlify/functions/smart-alerts');
+                const data = await response.json();
+
+                if (response.ok && data.alerts && data.alerts.length > 0) {
+                    let alertsHtml = '';
+                    data.alerts.forEach(alert => {
+                        alertsHtml += `
+                            <div class="alert-item ${alert.priority || 'medium'}">
+                                <h4>${alert.title}</h4>
+                                <p>${alert.description}</p>
+                                ${alert.action ? `<p><strong>Action:</strong> ${alert.action}</p>` : ''}
+                                <p class="timestamp">${alert.timestamp}</p>
+                            </div>
+                        `;
+                    });
+                    alertsOutput.innerHTML = alertsHtml;
+                } else {
+                    alertsOutput.innerHTML = '<p>No active alerts at this moment.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading smart alerts:', error);
+                alertsOutput.innerHTML = '<p style="color: #ff3b30;">Failed to load real-time alerts. Please try again later.</p>';
+            }
+        }
+
+        async function refreshAlerts() {
+            await loadSmartAlerts();
+        }
+
+
+        // Event listeners (ensure these are present and correct)
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.getElementById('tickerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchStock();
+            }
+        });
+
+        document.getElementById('tickerInput').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase(); // Auto-uppercase for ticker input
+        });
+
+        // Initialize (load default tab and data)
+        document.addEventListener('DOMContentLoaded', () => {
+            openTab('chat'); // Open Chat tab by default
+            // Pre-load data for other tabs in background if desired, or load on tab switch
+            loadMarketDashboard(); // Load market data on page load
+            loadSmartPlays(); // Load plays on page load
+            loadSmartAlerts(); // Load alerts on page load
+        });
+
+        // PWA Installation Prompt (Optional, for advanced PWA setup)
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Optionally, show a custom install button here
+        });
+
+        // Example how to use if you had an install button:
+        // function installPWA() {
+        //     if (deferredPrompt) {
+        //         deferredPrompt.prompt();
+        //         deferredPrompt.userChoice.then((choiceResult) => {
+        //             if (choiceResult.outcome === 'accepted') {
+        //                 console.log('User accepted the A2HS prompt');
+        //             } else {
+        //                 console.log('User dismissed the A2HS prompt');
+        //             }
+        //             deferredPrompt = null;
+        //         });
+        //     }
+        // }
+    </script>
 </body>
 </html>
