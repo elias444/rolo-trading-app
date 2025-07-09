@@ -1,5 +1,3 @@
-const fetch = require("node-fetch");
-
 exports.handler = async (event) => {
   const body = JSON.parse(event.body);
   const userMessage = body.message || "Hello from Rolo AI";
