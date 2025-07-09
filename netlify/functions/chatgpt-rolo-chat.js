@@ -4,7 +4,7 @@ exports.handler = async (event) => {
   const body = JSON.parse(event.body);
   const userMessage = body.message || "Hello from Rolo AI";
 
-  const apiKey = process.env.rolo_ai_key; // ← pulls your ChatGPT key from Netlify
+  const apiKey = process.env.rolo_ai_key;
   const endpoint = "https://api.openai.com/v1/chat/completions";
 
   const messages = [
@@ -48,4 +48,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
