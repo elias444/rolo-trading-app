@@ -1,37 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rolo AI – Stock Assistant</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 16px; color: #333; }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .tabs { display: flex; justify-content: space-around; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab-button { padding: 10px 16px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; margin: 4px; cursor: pointer; }
+    .tab-button.active { background: #0056b3; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .section { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 12px; }
+    .chat-window { max-height: 60vh; overflow-y: auto; background: white; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 12px; }
+    .chat-bubble { padding: 12px; margin: 8px; border-radius: 12px; max-width: 80%; font-size: 16px; word-wrap: break-word; }
+    .chat-bubble.user { background: #d1eaff; align-self: flex-end; }
+    .chat-bubble.ai { background: #eaeaea; align-self: flex-start; }
+    form { display: flex; gap: 10px; }
+    #chat-input { flex-grow: 1; padding: 12px; border: none; border-radius: 12px; background: white; font-size: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    button { padding: 12px 16px; background: #007bff; color: white; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .sentiment-item { margin-bottom: 12px; padding: 10px; border-left: 6px solid #ccc; background: #f9f9f9; border-radius: 6px; }
+    .sentiment-bullish { border-color: #4caf50; }
+    .sentiment-neutral { border-color: #ff9800; }
+    .sentiment-bearish { border-color: #f44336; }
+    .ticker { font-weight: bold; }
+    #extended-hours-indicator { color: purple; font-weight: bold; margin-bottom: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <h1>📊 Rolo AI Stock Assistant</h1>
+  <div class="tabs">
+    <button class="tab-button active" onclick="showTab('chat')">Chat</button>
+    <button class="tab-button" onclick="showTab('ticker')">Ticker</button>
+    <button class="tab-button" onclick="showTab('options')">Options</button>
+    <button class="tab-button" onclick="showTab('plays')">Smart Plays</button>
+    <button class="tab-button" onclick="showTab('sentiment')">Sentiment</button>
+  </div>
+
+  <div id="chat" class="tab-content active">
+    <div id="chat-window" class="chat-window"></div>
+    <form id="chat-form">
+      <input id="chat-input" type="text" placeholder="Ask Rolo something…" autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
   <div id="ticker" class="tab-content">
     <div class="section">
       <h2>📈 Ticker Info</h2>
       <div id="extended-hours-indicator">🔮 Extended Hours Pricing</div>
-      <p>Coming soon: Live stock data with sentiment overlays.</p>
+      <p>Live data coming soon.</p>
     </div>
   </div>
 
   <div id="options" class="tab-content">
     <div class="section">
       <h2>🧠 Options</h2>
-      <p>Best strike suggestions based on volatility and play confidence.</p>
+      <p>Smart strike suggestions based on volatility and sentiment.</p>
     </div>
   </div>
 
   <div id="plays" class="tab-content">
     <div class="section">
       <h2>💡 Smart Plays</h2>
-      <div id="smart-plays-output">
-        <p>Scanning opportunities across RSI, MACD, and news…</p>
-      </div>
+      <div id="smart-plays-output"><p>Loading plays…</p></div>
     </div>
   </div>
 
   <div id="sentiment" class="tab-content">
     <div class="section">
       <h2>📰 Market Sentiment</h2>
-      <div id="sentiment-feed">
-        <p>Loading sentiment headlines…</p>
-      </div>
+      <div id="sentiment-feed"><p>Loading headlines…</p></div>
     </div>
   </div>
+
 <script>
-// Tab Switching
+// Tab switching
 function showTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
   document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -43,7 +89,7 @@ function showTab(tabId) {
   if (tabId === "plays") loadSmartPlays();
 }
 
-// GPT Chat
+// GPT Chat logic
 document.getElementById('chat-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = document.getElementById('chat-input');
@@ -71,6 +117,9 @@ function appendBubble(text, type) {
   document.getElementById('chat-window').appendChild(bubble);
 }
 
+// Replace this with your real Alpha Vantage API key
+const ALPHA_VANTAGE_API_KEY = "YOUR_ALPHA_VANTAGE_API_KEY";
+
 // Sentiment Headlines
 async function loadSentiment() {
   const container = document.getElementById('sentiment-feed');
@@ -83,7 +132,7 @@ async function loadSentiment() {
     headlines.forEach(item => {
       const div = document.createElement('div');
       div.className = `sentiment-item sentiment-${item.overall_sentiment_label.toLowerCase()}`;
-      div.innerHTML = `<span class="ticker">${item.ticker}:</span> <a href="${item.url}" target="_blank">${item.title}</a><br><em>Source:</em> ${item.source} | Sentiment: ${item.overall_sentiment_label} (${Math.round(item.relevance_score * 100)}%)`;
+      div.innerHTML = `<span class="ticker">${item.ticker}:</span> <a href="${item.url}" target="_blank">${item.title}</a><br><em>${item.source}</em> | ${item.overall_sentiment_label} (${Math.round(item.relevance_score * 100)}%)`;
       container.appendChild(div);
     });
   } catch {
@@ -91,11 +140,11 @@ async function loadSentiment() {
   }
 }
 
-// Smart Play Scanner (Starter Logic)
-async function loadSmartPlays
+// Smart Play Engine
 async function fetchRSI(symbol) {
   const url = `https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=15min&time_period=14&series_type=close&apikey=${ALPHA_VANTAGE_API_KEY}`;
-  const res = await fetch(url); const data = await res.json();
+  const res = await fetch(url
+const data = await res.json();
   const rsiData = data["Technical Analysis: RSI"];
   const latestTime = Object.keys(rsiData)[0];
   return parseFloat(rsiData[latestTime]["RSI"]);
@@ -103,7 +152,8 @@ async function fetchRSI(symbol) {
 
 async function fetchMACD(symbol) {
   const url = `https://www.alphavantage.co/query?function=MACD&symbol=${symbol}&interval=15min&series_type=close&apikey=${ALPHA_VANTAGE_API_KEY}`;
-  const res = await fetch(url); const data = await res.json();
+  const res = await fetch(url);
+  const data = await res.json();
   const macdData = data["Technical Analysis: MACD"];
   const latestTime = Object.keys(macdData)[0];
   const histogram = parseFloat(macdData[latestTime]["MACD_Histogram"]);
@@ -112,7 +162,8 @@ async function fetchMACD(symbol) {
 
 async function fetchSentimentScore(symbol) {
   const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
-  const res = await fetch(url); const data = await res.json();
+  const res = await fetch(url);
+  const data = await res.json();
   const score = data?.feed?.[0]?.relevance_score || 0.5;
   return Math.round(score * 100);
 }
@@ -141,7 +192,7 @@ async function loadSmartPlays() {
     const confidence = calculateConfidence(rsi, macd, sentiment);
     html += `
       <div class="section">
-        <strong>${symbol}</strong>: RSI ${rsi}, MACD ${macd.toFixed(2)}, Sentiment ${sentiment}%<br>
+        <strong>${symbol}</strong>: RSI ${rsi.toFixed(2)}, MACD ${macd.toFixed(2)}, Sentiment ${sentiment}%<br>
         Confidence Score: <span style="color:${confidence>80?'green':confidence>60?'orange':'red'}">${confidence}%</span>
       </div>
     `;
