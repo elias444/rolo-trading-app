@@ -24,6 +24,12 @@ const RoloApp = () => {
   const [popularStocks, setPopularStocks] = useState(['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ', 'META', 'AMD', 'GOOGL', 'MSFT']);
   const [isEditingStocks, setIsEditingStocks] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [settings, setSettings] = useState({
+    enableSmartPlays: true,
+    enableRealTimeAlerts: true,
+    enableAIChat: true,
+    playConfidenceLevel: 75
+  });
 
   // Enhanced market status detection
   const checkMarketStatus = useCallback(() => {
@@ -83,6 +89,24 @@ const RoloApp = () => {
     const statusInterval = setInterval(checkMarketStatus, 60000); // Check every minute
     return () => clearInterval(statusInterval);
   }, [checkMarketStatus]);
+
+  // Load settings from localStorage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('roloSettings');
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings));
+    }
+    const savedStocks = localStorage.getItem('roloPopularStocks');
+    if (savedStocks) {
+      setPopularStocks(JSON.parse(savedStocks));
+    }
+  }, []);
+
+  // Save settings to localStorage
+  const saveSettings = (newSettings) => {
+    localStorage.setItem('roloSettings', JSON.stringify(newSettings));
+    setSettings(newSettings);
+  };
 
   // Enhanced stock data fetching with session awareness
   const fetchStockData = useCallback(async (symbol) => {
@@ -177,7 +201,7 @@ const RoloApp = () => {
 
   // Enhanced market dashboard with futures and pre-market
   const fetchMarketDashboard = useCallback(async () => {
-    setIsLoading(prev => ({ ...prev, market: false }));
+    setIsLoading(prev => ({ ...prev, market: true }));
     try {
       const response = await fetch('/.netlify/functions/market-dashboard');
       if (response.ok) {
