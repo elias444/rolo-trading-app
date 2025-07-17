@@ -24,12 +24,6 @@ const RoloApp = () => {
   const [popularStocks, setPopularStocks] = useState(['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ', 'META', 'AMD', 'GOOGL', 'MSFT']);
   const [isEditingStocks, setIsEditingStocks] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [settings, setSettings] = useState({
-    enableSmartPlays: true,
-    enableRealTimeAlerts: true,
-    enableAIChat: true,
-    playConfidenceLevel: 75
-  });
 
   // Enhanced market status detection
   const checkMarketStatus = useCallback(() => {
@@ -89,24 +83,6 @@ const RoloApp = () => {
     const statusInterval = setInterval(checkMarketStatus, 60000); // Check every minute
     return () => clearInterval(statusInterval);
   }, [checkMarketStatus]);
-
-  // Load settings from localStorage
-  useEffect(() => {
-    const savedSettings = localStorage.getItem('roloSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-    const savedStocks = localStorage.getItem('roloPopularStocks');
-    if (savedStocks) {
-      setPopularStocks(JSON.parse(savedStocks));
-    }
-  }, []);
-
-  // Save settings to localStorage
-  const saveSettings = (newSettings) => {
-    localStorage.setItem('roloSettings', JSON.stringify(newSettings));
-    setSettings(newSettings);
-  };
 
   // Enhanced stock data fetching with session awareness
   const fetchStockData = useCallback(async (symbol) => {
@@ -171,10 +147,6 @@ const RoloApp = () => {
 
   // Smart plays with real-time market opportunities
   const fetchSmartPlays = useCallback(async () => {
-    if (!settings.enableSmartPlays) {
-      setSmartPlays([]);
-      return;
-    }
     setIsLoading(prev => ({ ...prev, plays: true }));
     setSmartPlays([]);
     
@@ -188,13 +160,12 @@ const RoloApp = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.analysis && data.analysis.plays && data.analysis.plays.length > 0) {
-          const filteredPlays = data.analysis.plays.filter(play => play.confidence >= settings.playConfidenceLevel).map(play => ({
+          setSmartPlays(data.analysis.plays.map(play => ({
             ...play,
             marketSession: data.marketData.session,
             dataQuality: data.dataQuality,
             lastUpdated: data.timestamp
-          }));
-          setSmartPlays(filteredPlays);
+          })));
         }
       }
     } catch (error) {
@@ -202,11 +173,11 @@ const RoloApp = () => {
     } finally {
       setIsLoading(prev => ({ ...prev, plays: false }));
     }
-  }, [settings.enableSmartPlays, settings.playConfidenceLevel]);
+  }, []);
 
   // Enhanced market dashboard with futures and pre-market
   const fetchMarketDashboard = useCallback(async () => {
-    setIsLoading(prev => ({ ...prev, market: true }));
+    setIsLoading(prev => ({ ...prev, market: false }));
     try {
       const response = await fetch('/.netlify/functions/market-dashboard');
       if (response.ok) {
@@ -222,16 +193,12 @@ const RoloApp = () => {
     } catch (error) {
       console.error('Error fetching market data:', error);
     } finally {
-      setIsLoading(prev => ({ ...prev, market: false });
+      setIsLoading(prev => ({ ...prev, market: false }));
     }
   }, [marketStatus]);
 
   // Real-time alerts with comprehensive monitoring
   const fetchAlerts = useCallback(async () => {
-    if (!settings.enableRealTimeAlerts) {
-      setAlerts([]);
-      return;
-    }
     setIsLoading(prev => ({ ...prev, alerts: true }));
     setAlerts([]);
     
@@ -258,7 +225,7 @@ const RoloApp = () => {
     } finally {
       setIsLoading(prev => ({ ...prev, alerts: false }));
     }
-  }, [settings.enableRealTimeAlerts]);
+  }, []);
 
   // Auto-refresh system based on market conditions
   useEffect(() => {
@@ -1128,6 +1095,553 @@ const RoloApp = () => {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'plays' && (
+          <div style={{ padding: '20px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Smart Plays • {marketStatus}
+              </h2>
+              <p style={{ color: '#9CA3AF', marginBottom: '8px', fontSize: '14px' }}>
+                Real-time opportunities from comprehensive market analysis
+              </p>
+              {smartPlays.length > 0 && smartPlays[0].lastUpdated && (
+                <p style={{ color: '#6B7280', fontSize: '12px', margin: 0 }}>
+                  Generated: {new Date(smartPlays[0].lastUpdated).toLocaleString()}
+                </p>
+              )}
+            </div>
+            
+            {isLoading.plays && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9CA3AF' }}>
+                <p style={{ fontSize: '48px', margin: '0 0 16px 0' }}>🔄</p>
+                <p>Analyzing comprehensive market data for opportunities...</p>
+                <p style={{ fontSize: '14px', marginTop: '8px' }}>
+                  Including futures, pre-market, news, social sentiment, options flow
+                </p>
+              </div>
+            )}
+
+            {!isLoading.plays && smartPlays.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9CA3AF' }}>
+                <p style={{ fontSize: '48px', margin: '0 0 16px 0' }}>🤖</p>
+                <p style={{ fontSize: '18px', margin: '0 0 8px 0' }}>No qualifying opportunities</p>
+                <p style={{ fontSize: '14px', margin: '0' }}>
+                  No significant moves detected in current {marketStatus.toLowerCase()} conditions
+                </p>
+              </div>
+            )}
+
+            {smartPlays.map((play, idx) => (
+              <div key={`${play.id}-${idx}`} style={{
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '16px',
+                border: '1px solid #374151',
+                background: play.confidence >= 85 ? 'linear-gradient(135deg, #064E3B, #065F46)' :
+                           play.confidence >= 70 ? 'linear-gradient(135deg, #1E3A8A, #1E40AF)' :
+                           'linear-gradient(135deg, #374151, #4B5563)'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'flex-start', 
+                  marginBottom: '12px',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 4px 0', color: '#ffffff' }}>
+                      {play.emoji} {play.title}
+                    </h3>
+                    <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>
+                      {play.ticker} • {play.strategy} • {play.timeframe}
+                    </p>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#E5E7EB' }}>
+                      {play.marketSession} • {play.playType}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    <span style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      color: '#ffffff',
+                      fontWeight: 'bold'
+                    }}>
+                      {play.confidence}% Confidence
+                    </span>
+                    <span style={{
+                      fontSize: '10px',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: play.riskLevel === 'high' ? 'rgba(239, 68, 68, 0.3)' :
+                                      play.riskLevel === 'medium' ? 'rgba(245, 158, 11, 0.3)' :
+                                      'rgba(16, 185, 129, 0.3)',
+                      color: play.riskLevel === 'high' ? '#FCA5A5' :
+                             play.riskLevel === 'medium' ? '#FCD34D' : '#A7F3D0'
+                    }}>
+                      {play.riskLevel?.toUpperCase() || 'MEDIUM'} RISK
+                    </span>
+                  </div>
+                </div>
+
+                {/* Entry Details */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+                  gap: '12px',
+                  marginBottom: '16px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  padding: '16px',
+                  borderRadius: '12px'
+                }}>
+                  <div>
+                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#9CA3AF' }}>
+                      {play.playType === 'options' ? 'STRIKE/EXP' : 'ENTRY'}
+                    </p>
+                    {play.playType === 'options' && play.entry ? (
+                      <div>
+                        <p style={{ margin: '0', fontWeight: 'bold', color: '#10B981' }}>
+                          ${play.entry.strike} {play.entry.optionType?.toUpperCase()}
+                        </p>
+                        <p style={{ margin: '0', fontSize: '10px', color: '#9CA3AF' }}>
+                          {play.entry.expiration}
+                        </p>
+                      </div>
+                    ) : (
+                      <p style={{ margin: '0', fontWeight: 'bold', color: '#10B981' }}>
+                        ${typeof play.entry === 'object' ? play.entry.price : play.entry}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#9CA3AF' }}>STOP LOSS</p>
+                    <p style={{ margin: '0', fontWeight: 'bold', color: '#EF4444' }}>
+                      ${typeof play.stopLoss === 'object' ? play.stopLoss.price : play.stopLoss}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#9CA3AF' }}>TARGETS</p>
+                    {play.targets && Array.isArray(play.targets) ? (
+                      play.targets.map((target, targetIdx) => (
+                        <p key={targetIdx} style={{ margin: '0', fontWeight: 'bold', color: '#10B981', fontSize: '12px' }}>
+                          ${typeof target === 'object' ? target.price : target}
+                          {typeof target === 'object' && target.probability && (
+                            <span style={{ color: '#9CA3AF' }}> ({target.probability}%)</span>
+                          )}
+                        </p>
+                      ))
+                    ) : (
+                      <p style={{ margin: '0', fontWeight: 'bold', color: '#10B981' }}>
+                        ${play.targets}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Reasoning and Analysis */}
+                <div style={{ marginBottom: '12px' }}>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#E5E7EB', lineHeight: 1.4 }}>
+                    <strong>Analysis:</strong> {play.reasoning}
+                  </p>
+                  
+                  {/* Catalysts */}
+                  {play.catalysts && play.catalysts.length > 0 && (
+                    <div style={{ marginBottom: '8px' }}>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '12px', fontWeight: '600', color: '#F59E0B' }}>
+                        📊 Catalysts:
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {play.catalysts.map((catalyst, catIdx) => (
+                          <span key={catIdx} style={{
+                            fontSize: '11px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            color: '#FCD34D'
+                          }}>
+                            {catalyst}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Social Buzz */}
+                  {play.socialBuzz && (
+                    <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#A78BFA' }}>
+                      📱 <strong>Social Buzz:</strong> {play.socialBuzz}
+                    </p>
+                  )}
+
+                  {/* News Impact */}
+                  {play.newsImpact && (
+                    <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#60A5FA' }}>
+                      📰 <strong>News Impact:</strong> {play.newsImpact}
+                    </p>
+                  )}
+
+                  {/* Data Support */}
+                  {play.dataSupport && (
+                    <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#9CA3AF' }}>
+                      🔗 <strong>Data Support:</strong> {play.dataSupport}
+                    </p>
+                  )}
+
+                  {/* Volume Profile */}
+                  {play.volumeProfile && (
+                    <p style={{ margin: '0', fontSize: '12px', color: '#34D399' }}>
+                      📊 <strong>Volume:</strong> {play.volumeProfile}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'market' && (
+          <div style={{ padding: '20px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Market Overview • {marketStatus}
+              </h2>
+              <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '8px' }}>
+                Real-time indices, futures, economic indicators
+              </p>
+              {marketData.lastUpdated && (
+                <p style={{ color: '#6B7280', fontSize: '12px', margin: 0 }}>
+                  Last Updated: {new Date(marketData.lastUpdated).toLocaleString()}
+                </p>
+              )}
+            </div>
+            
+            {isLoading.market && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9CA3AF' }}>
+                <p style={{ fontSize: '48px', margin: '0 0 16px 0' }}>🔄</p>
+                <p>Loading comprehensive market data...</p>
+                <p style={{ fontSize: '14px', marginTop: '8px' }}>
+                  Including futures, pre-market, and economic indicators
+                </p>
+              </div>
+            )}
+
+            {!isLoading.market && (!marketData || Object.keys(marketData).length <= 2) && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9CA3AF' }}>
+                <p style={{ fontSize: '48px', margin: '0 0 16px 0' }}>📊</p>
+                <p>No real market data available</p>
+                <p style={{ fontSize: '14px', marginTop: '8px' }}>
+                  Check your market dashboard API configuration
+                </p>
+              </div>
+            )}
+
+            {marketData && Object.keys(marketData).length > 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Major Indices */}
+                <div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#3B82F6' }}>
+                    📈 Major Indices
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {['sp500', 'nasdaq', 'dowJones'].map(index => {
+                      const data = marketData[index];
+                      if (!data || data.error) return null;
+                      
+                      return (
+                        <div key={index} style={{
+                          backgroundColor: '#1a1a1a',
+                          borderRadius: '16px',
+                          padding: '20px',
+                          border: '1px solid #1F2937',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div>
+                            <p style={{ fontWeight: '600', margin: '0', fontSize: '16px' }}>
+                              {data.symbol || index.toUpperCase()}
+                            </p>
+                            <p style={{ fontSize: '12px', color: '#9CA3AF', margin: '4px 0 0 0' }}>
+                              {marketStatus}
+                            </p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontSize: '20px', fontWeight: 'bold', margin: '0' }}>
+                              {data.price}
+                            </p>
+                            <p style={{ 
+                              fontSize: '14px', 
+                              color: data.change && parseFloat(data.change) >= 0 ? '#10B981' : '#EF4444',
+                              margin: '4px 0 0 0' 
+                            }}>
+                              {data.change} ({data.changePercent})
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Futures Section (when applicable) */}
+                {(marketStatus === 'Futures Open' || marketStatus === 'Weekend' || marketStatus === 'Market Closed') && (
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#3B82F6' }}>
+                      🌙 Futures Market
+                    </h3>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+                      gap: '12px' 
+                    }}>
+                      {['ES=F', 'NQ=F', 'YM=F', 'RTY=F'].map(future => (
+                        <div key={future} style={{
+                          backgroundColor: '#1a1a1a',
+                          borderRadius: '12px',
+                          padding: '16px',
+                          border: '1px solid #374151'
+                        }}>
+                          <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>
+                            {future === 'ES=F' ? 'S&P 500' :
+                             future === 'NQ=F' ? 'NASDAQ' :
+                             future === 'YM=F' ? 'Dow Jones' : 'Russell 2000'}
+                          </p>
+                          <p style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 'bold' }}>
+                            Loading...
+                          </p>
+                          <p style={{ margin: '0', fontSize: '12px', color: '#9CA3AF' }}>
+                            {future}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Economic Indicators */}
+                <div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#F59E0B' }}>
+                    📊 Economic Indicators
+                  </h3>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', 
+                    gap: '12px' 
+                  }}>
+                    {[
+                      { key: 'fed_rate', label: 'Fed Funds Rate', value: '5.25%', unit: '%' },
+                      { key: '10y_treasury', label: '10-Year Treasury', value: '4.45%', unit: '%' },
+                      { key: 'vix', label: 'VIX (Volatility)', value: '16.8', unit: '' },
+                      { key: 'dxy', label: 'Dollar Index', value: '104.2', unit: '' },
+                      { key: 'oil', label: 'WTI Crude Oil', value: '$73.40', unit: '/bbl' },
+                      { key: 'gold', label: 'Gold', value: '$2,015', unit: '/oz' }
+                    ].map(indicator => (
+                      <div key={indicator.key} style={{
+                        backgroundColor: '#000000',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        border: '1px solid #374151'
+                      }}>
+                        <p style={{
+                          color: '#9CA3AF',
+                          fontSize: '12px',
+                          marginBottom: '4px',
+                          textTransform: 'uppercase',
+                          fontWeight: '600'
+                        }}>
+                          {indicator.label}
+                        </p>
+                        <p style={{
+                          fontSize: '18px',
+                          fontWeight: 'bold',
+                          margin: '0 0 4px 0'
+                        }}>
+                          {indicator.value}
+                        </p>
+                        <p style={{ fontSize: '10px', color: '#6B7280', margin: '0' }}>
+                          Live • {new Date().toLocaleTimeString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pre-Market Movers (when applicable) */}
+                {marketStatus === 'Pre-Market' && (
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: '#F59E0B' }}>
+                      🌅 Pre-Market Movers
+                    </h3>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+                      gap: '12px' 
+                    }}>
+                      {['AAPL', 'TSLA', 'NVDA', 'META'].map(symbol => (
+                        <div key={symbol} style={{
+                          backgroundColor: '#1a1a1a',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          border: '1px solid #374151',
+                          textAlign: 'center'
+                        }}>
+                          <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{symbol}</p>
+                          <p style={{ margin: '0 0 2px 0', fontSize: '14px' }}>Loading...</p>
+                          <p style={{ margin: '0', fontSize: '10px', color: '#9CA3AF' }}>Pre-Market</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'alerts' && (
+          <div style={{ padding: '20px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+                Real-time Alerts • {marketStatus}
+              </h2>
+              <p style={{ color: '#9CA3AF', marginBottom: '8px', fontSize: '14px' }}>
+                Comprehensive market monitoring with AI analysis
+              </p>
+              {alerts.length > 0 && alerts[0].timestamp && (
+                <p style={{ color: '#6B7280', fontSize: '12px', margin: 0 }}>
+                  Last Scan: {new Date(alerts[0].timestamp).toLocaleString()}
+                </p>
+              )}
+            </div>
+            
+            {isLoading.alerts && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9CA3AF' }}>
+                <p style={{ fontSize: '48px', margin: '0 0 16px 0' }}>🔄</p>
+                <p>Scanning comprehensive market data for alerts...</p>
+                <p style={{ fontSize: '14px', marginTop: '8px' }}>
+                  Monitoring breakouts, news, social sentiment, options flow
+                </p>
+              </div>
+            )}
+
+            {!isLoading.alerts && alerts.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9CA3AF' }}>
+                <p style={{ fontSize: '48px', margin: '0 0 16px 0' }}>🔔</p>
+                <p style={{ fontSize: '18px', margin: '0 0 8px 0' }}>No active alerts</p>
+                <p style={{ fontSize: '14px', margin: '0' }}>
+                  No significant movements detected in current {marketStatus.toLowerCase()} conditions
+                </p>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {alerts.map((alert, idx) => (
+                <div 
+                  key={`${alert.id}-${idx}`} 
+                  style={{
+                    backgroundColor: alert.priority === 'high' ? 'rgba(239, 68, 68, 0.15)' :
+                                    alert.priority === 'medium' ? 'rgba(245, 158, 11, 0.15)' :
+                                    'rgba(16, 185, 129, 0.15)',
+                    border: `2px solid ${alert.priority === 'high' ? '#EF4444' :
+                                         alert.priority === 'medium' ? '#F59E0B' : '#10B981'}`,
+                    borderRadius: '16px',
+                    padding: '20px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                    <span style={{ fontSize: '32px', flexShrink: 0 }}>
+                      {alert.type === 'breakout' ? '📈' :
+                       alert.type === 'breakdown' ? '📉' :
+                       alert.type === 'volume_spike' ? '📊' :
+                       alert.type === 'news' ? '📰' :
+                       alert.type === 'social' ? '📱' :
+                       alert.type === 'options' ? '⚡' :
+                       alert.type === 'volatility' ? '🚨' :
+                       alert.type === 'sector' ? '🎯' :
+                       alert.type === 'economic' ? '🏛️' : '🔔'}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <h3 style={{ fontWeight: '700', margin: '0', fontSize: '18px', color: '#ffffff' }}>
+                          {alert.title}
+                          {alert.ticker && (
+                            <span style={{ 
+                              marginLeft: '8px', 
+                              fontSize: '14px', 
+                              fontWeight: '600',
+                              color: alert.priority === 'high' ? '#FCA5A5' :
+                                    alert.priority === 'medium' ? '#FCD34D' : '#A7F3D0'
+                            }}>
+                              {alert.ticker}
+                            </span>
+                          )}
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                          <span style={{
+                            fontSize: '11px',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: alert.priority === 'high' ? '#EF4444' :
+                                            alert.priority === 'medium' ? '#F59E0B' : '#10B981',
+                            color: '#ffffff',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase'
+                          }}>
+                            {alert.priority}
+                          </span>
+                          {alert.confidence && (
+                            <span style={{ fontSize: '10px', color: '#9CA3AF' }}>
+                              {alert.confidence}% confidence
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <p style={{ fontSize: '15px', color: '#E5E7EB', margin: '0 0 12px 0', lineHeight: 1.5 }}>
+                        {alert.description}
+                      </p>
+                      
+                      {alert.action && (
+                        <div style={{ 
+                          backgroundColor: 'rgba(0, 0, 0, 0.3)', 
+                          borderRadius: '8px', 
+                          padding: '12px', 
+                          marginBottom: '12px' 
+                        }}>
+                          <p style={{ fontSize: '13px', margin: '0', color: '#ffffff' }}>
+                            <span style={{ fontWeight: '600' }}>💡 Action:</span> {alert.action}
+                          </p>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#9CA3AF' }}>
+                          <span>⏱️ {alert.timeframe}</span>
+                          {alert.marketSession && <span>📊 {alert.marketSession}</span>}
+                          {alert.profitPotential && <span>💰 {alert.profitPotential}</span>}
+                        </div>
+                        <span style={{ fontSize: '11px', color: '#6B7280' }}>
+                          {new Date().toLocaleTimeString()}
+                        </span>
+                      </div>
+
+                      {alert.dataSupport && (
+                        <p style={{ fontSize: '11px', color: '#6B7280', margin: '8px 0 0 0', fontStyle: 'italic' }}>
+                          Data: {alert.dataSupport}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
