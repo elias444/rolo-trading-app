@@ -2,8 +2,7 @@
 // ADD THIS AS A NEW FILE - makes Rolo AI smarter and more conversational
 // Works alongside your existing claude-chat.js as an upgrade
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const fetch = require('node-fetch'); // Required for server-side fetch
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 exports.handler = async (event, context) => {
     const headers = {
@@ -28,38 +27,39 @@ exports.handler = async (event, context) => {
             };
         }
 
-        const API_KEY = process.env.GEMINI_API_KEY; // Use the environment variable
-
+        // Initialize Google Generative AI
+        const API_KEY = process.env.GEMINI_API_KEY; // Ensure this env variable is set in Netlify!
         if (!API_KEY) {
+            console.error("GEMINI_API_KEY environment variable is not set.");
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'Gemini API key not configured in Netlify environment variables.' })
+                body: JSON.stringify({ error: 'AI service configuration error. Please contact support.' })
             };
         }
-
         const genAI = new GoogleGenerativeAI(API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-        // Build the prompt for the AI
-        let prompt = `You are Rolo AI, a highly intelligent and helpful trading assistant. You are designed to provide accurate, concise, and professional responses related to stock markets, trading, and finance. You can analyze tickers, explain strategies, and provide market insights.
+        // *** THIS IS THE CRUCIAL LINE: Using the recommended gemini-1.5-flash model ***
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
         
-        Current market context (if available, otherwise state 'Current market context not available'):
-        ${userContext || 'No specific market context provided. I will use general knowledge.'}
-        
-        User's question: "${message}"
-        
-        Provide a detailed and helpful response. If the user asks about a specific stock, briefly mention its current status (e.g., 'AAPL is currently trading around $XXX'). Keep responses professional and do not give financial advice.`;
+        // Start a chat session
+        const chat = model.startChat({
+            history: [], // You might want to pass actual conversation history here
+            generationConfig: {
+                maxOutputTokens: 2000,
+            },
+        });
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        console.log("Sending prompt to Gemini API...");
+        const result = await chat.sendMessage(message);
+        const responseText = await result.response.text();
+        console.log("Received response from Gemini API.");
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
-                response: text,
+                response: responseText,
                 source: 'enhanced-rolo-ai',
                 timestamp: new Date().toISOString()
             })
@@ -67,20 +67,12 @@ exports.handler = async (event, context) => {
 
     } catch (error) {
         console.error('Enhanced Rolo chat error:', error);
-        // Provide a more user-friendly error message for the frontend
-        let userErrorMessage = 'Enhanced chat temporarily unavailable. Please try again in a moment.';
-        if (error.message.includes('API key not valid')) {
-            userErrorMessage = 'Error: Gemini API key is invalid or expired. Please check your Netlify environment variables.';
-        } else if (error.message.includes('quota')) {
-            userErrorMessage = 'Error: Gemini API quota exceeded. Please try again later or check your API usage.';
-        }
-        
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({ 
-                error: userErrorMessage,
-                details: error.message // For developer debugging
+                error: 'Enhanced chat temporarily unavailable',
+                details: error.message // Provide error details for debugging
             })
         };
     }
