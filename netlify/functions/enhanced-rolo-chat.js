@@ -1,79 +1,94 @@
 // netlify/functions/enhanced-rolo-chat.js
-// ADD THIS AS A NEW FILE - makes Rolo AI smarter and more conversational
-// Works alongside your existing claude-chat.js as an upgrade
+// Gemini-based chat function for conversational AI.
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+exports.handler = async (event) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
 
-exports.handler = async (event, context) => {
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Content-Type': 'application/json'
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
+  const body = JSON.parse(event.body);
+  const { message, context } = body;
+
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+  if (!GEMINI_API_KEY) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: "Gemini API key not configured" })
     };
+  }
 
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
+  try {
+    // Fetch real-time data for context (stock, market, analysis, plays, alerts)
+    const stockResponse = await fetch(`/.netlify/functions/enhanced-stock-data?symbol=${context.selectedStock}`);
+    const stockData = await stockResponse.json();
 
-    try {
-        const { message, context: userContext } = JSON.parse(event.body || '{}');
-        
-        if (!message) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'Message is required' })
-            };
-        }
+    const analysisResponse = await fetch('/.netlify/functions/comprehensive-ai-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: context.selectedStock, type: 'analysis' }),
+    });
+    const analysisData = await analysisResponse.json();
 
-        // Initialize Google Generative AI
-        const API_KEY = process.env.GEMINI_API_KEY; // Ensure this env variable is set in Netlify!
-        if (!API_KEY) {
-            console.error("GEMINI_API_KEY environment variable is not set.");
-            return {
-                statusCode: 500,
-                headers,
-                body: JSON.stringify({ error: 'AI service configuration error. Please contact support.' })
-            };
-        }
-        const genAI = new GoogleGenerativeAI(API_KEY);
+    const playsResponse = await fetch('/.netlify/functions/comprehensive-ai-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'smartplays' }),
+    });
+    const playsData = await playsResponse.json();
 
-        // *** THIS IS THE CRUCIAL LINE: Using the recommended gemini-1.5-flash model ***
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
-        
-        // Start a chat session
-        const chat = model.startChat({
-            history: [], // You might want to pass actual conversation history here
-            generationConfig: {
-                maxOutputTokens: 2000,
-            },
-        });
+    const alertsResponse = await fetch('/.netlify/functions/comprehensive-ai-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'alerts' }),
+    });
+    const alertsData = await alertsResponse.json();
 
-        console.log("Sending prompt to Gemini API...");
-        const result = await chat.sendMessage(message);
-        const responseText = await result.response.text();
-        console.log("Received response from Gemini API.");
+    const marketResponse = await fetch('/.netlify/functions/market-dashboard');
+    const marketData2 = await marketResponse.json();
 
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ 
-                response: responseText,
-                source: 'enhanced-rolo-ai',
-                timestamp: new Date().toISOString()
-            })
-        };
+    const newsResponse = await fetch('/.netlify/functions/news-data');
+    const newsData = await newsResponse.json();
 
-    } catch (error) {
-        console.error('Enhanced Rolo chat error:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ 
-                error: 'Enhanced chat temporarily unavailable',
-                details: error.message // Provide error details for debugging
-            })
-        };
-    }
+    const technicalResponse = await fetch('/.netlify/functions/technical-indicators?symbol=${context.selectedStock}');
+    const technicalData = await technicalResponse.json();
+
+    const optionsResponse = await fetch('/.netlify/functions/options-data?symbol=${context.selectedStock}');
+    const optionsData = await optionsResponse.json();
+
+    // Construct detailed prompt with all real data
+    const prompt = `You are Rolo AI with full access to real-time data. Respond to: "${message}". Use this data: stock: ${JSON.stringify(stockData)}, analysis: ${JSON.stringify(analysisData)}, plays: ${JSON.stringify(playsData)}, alerts: ${JSON.stringify(alertsData)}, market: ${JSON.stringify(marketData2)}, news: ${JSON.stringify(newsData)}, technical: ${JSON.stringify(technicalData)}, options: ${JSON.stringify(optionsData)}. Market status: ${context.marketStatus}. Active tab: ${context.activeTab}. Provide accurate, current info without disclaimers about no access.`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const geminiResponse = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+    const geminiData = await geminiResponse.json();
+    const generatedResponse = geminiData.candidates[0].content.parts[0].text;
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ response: generatedResponse })
+    };
+  } catch (error) {
+    console.error('Error in enhanced-rolo-chat:', error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Chat error' })
+    };
+  }
 };
