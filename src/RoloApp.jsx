@@ -24,13 +24,6 @@ const RoloApp = () => {
   const [popularStocks, setPopularStocks] = useState(['AAPL', 'TSLA', 'NVDA', 'SPY', 'QQQ', 'META', 'AMD', 'GOOGL', 'MSFT']);
   const [isEditingStocks, setIsEditingStocks] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [settings, setSettings] = useState({
-    enableSmartPlays: true,
-    enableRealTimeAlerts: true,
-    enableAIChat: true,
-    playConfidenceLevel: 75
-  });
-  const [customAnalysisPrompt, setCustomAnalysisPrompt] = useState('');
 
   // Enhanced market status detection
   const checkMarketStatus = useCallback(() => {
@@ -90,24 +83,6 @@ const RoloApp = () => {
     const statusInterval = setInterval(checkMarketStatus, 60000); // Check every minute
     return () => clearInterval(statusInterval);
   }, [checkMarketStatus]);
-
-  // Load settings from localStorage
-  useEffect(() => {
-    const savedSettings = localStorage.getItem('roloSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-    const savedStocks = localStorage.getItem('roloPopularStocks');
-    if (savedStocks) {
-      setPopularStocks(JSON.parse(savedStocks));
-    }
-  }, []);
-
-  // Save settings to localStorage
-  const saveSettings = (newSettings) => {
-    localStorage.setItem('roloSettings', JSON.stringify(newSettings));
-    setSettings(newSettings);
-  };
 
   // Enhanced stock data fetching with session awareness
   const fetchStockData = useCallback(async (symbol) => {
@@ -170,35 +145,19 @@ const RoloApp = () => {
     }
   }, []);
 
-  // Custom AI suggestion for analysis
-  const handleCustomAnalysis = useCallback(async () => {
-    if (!customAnalysisPrompt.trim()) return;
-    
-    // Append to chat or display in analysis
-    // For simplicity, send to chat AI with context
-    setChatInput(customAnalysisPrompt);
-    setCustomAnalysisPrompt('');
-    handleSendMessage(); // Reuse chat logic for suggestions
-  }, [customAnalysisPrompt, handleSendMessage]);
-
   // Smart plays with real-time market opportunities
   const fetchSmartPlays = useCallback(async () => {
     setIsLoading(prev => ({ ...prev, plays: true }));
     setSmartPlays([]);
     
     try {
-      const response = await fetch('/.netlify/functions/comprehensive-ai-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'smartplays' }),
-      });
-      
+      const response = await fetch('/.netlify/functions/smart-plays-generator');
       if (response.ok) {
         const data = await response.json();
-        if (data.analysis && data.analysis.plays && data.analysis.plays.length > 0) {
-          setSmartPlays(data.analysis.plays.map(play => ({
+        if (data.plays && data.plays.length > 0) {
+          setSmartPlays(data.plays.map(play => ({
             ...play,
-            marketSession: data.marketData.session,
+            marketSession: data.marketSession,
             dataQuality: data.dataQuality,
             lastUpdated: data.timestamp
           })));
@@ -239,18 +198,13 @@ const RoloApp = () => {
     setAlerts([]);
     
     try {
-      const response = await fetch('/.netlify/functions/comprehensive-ai-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'alerts' }),
-      });
-      
+      const response = await fetch('/.netlify/functions/realtime-alerts');
       if (response.ok) {
         const data = await response.json();
-        if (data.analysis && data.analysis.alerts && data.analysis.alerts.length > 0) {
-          setAlerts(data.analysis.alerts.map(alert => ({
+        if (data.alerts && data.alerts.length > 0) {
+          setAlerts(data.alerts.map(alert => ({
             ...alert,
-            marketSession: data.marketData.session,
+            marketSession: data.marketSession,
             dataQuality: data.dataQuality,
             timestamp: data.timestamp
           })));
