@@ -288,6 +288,7 @@ const RoloApp = () => {
         setChatMessages(prev => [...prev, { role: 'ai', content: data.response || 'Sorry, I encountered an error accessing real-time data.' }]);
       }
     } catch (error) {
+      console.error('Error fetching chat response:', error);
       setChatMessages(prev => [...prev, { role: 'ai', content: 'Sorry, I encountered an error. Please try again.' }]);
     }
   }, [chatInput, selectedStock, marketStatus, activeTab]);
