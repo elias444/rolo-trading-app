@@ -115,6 +115,7 @@ exports.handler = async (event, context) => {
     const allMovers = [...topMoversData.top_gainers, ...topMoversData.top_losers];
         
     for (const stock of allMovers.slice(0, 10)) { // Top 10 movers
+      if (!stock.change_percent) continue; // Skip if undefined
       const changePercent = parseFloat(stock.change_percent.replace('%', ''));
       const price = parseFloat(stock.price);
       const volume = parseInt(stock.volume);
