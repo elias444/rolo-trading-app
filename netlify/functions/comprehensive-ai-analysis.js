@@ -1,4 +1,6 @@
-// netlify/functions/comprehensive-ai-analysis.js (updated for Grok API)
+// netlify/functions/comprehensive-ai-analysis.js
+// Integrates multiple sources for analysis/smartplays/alerts
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -15,9 +17,9 @@ exports.handler = async (event) => {
   const { symbol, type } = body; // type: 'analysis', 'smartplays', 'alerts'
 
   const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
-  const GROK_API_KEY = process.env.GROK_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-  if (!ALPHA_VANTAGE_API_KEY || !GROK_API_KEY) {
+  if (!ALPHA_VANTAGE_API_KEY || !GEMINI_API_KEY) {
     return {
       statusCode: 500,
       headers,
@@ -33,8 +35,8 @@ exports.handler = async (event) => {
 
     // Fetch news sentiment
     const newsUrl = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol || 'SPY'}&apikey=${ALPHA_VANTAGE_API_KEY}`;
-    const newsResponse = await fetch(newsUrl);
-    const newsData = await newsResponse.json();
+    const newsSentimentResponse = await fetch(newsUrl);
+    const newsData = await newsSentimentResponse.json();
 
     // Fetch top movers
     const moversUrl = `https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey=${ALPHA_VANTAGE_API_KEY}`;
@@ -48,7 +50,7 @@ exports.handler = async (event) => {
 
     // Fetch RSI
     const rsiUrl = `https://www.alphavantage.co/query?function=RSI&symbol=${symbol || 'SPY'}&interval=daily&time_period=14&series_type=close&apikey=${ALPHA_VANTAGE_API_KEY}`;
-    const rsiResponse = await fetch(rsiUrl);
+    const rsiResponse = await rsiUrl(fetch);
     const rsiData = await rsiResponse.json();
 
     // Yahoo Finance for chart and meta
@@ -67,22 +69,22 @@ exports.handler = async (event) => {
     const redditData = await redditResponse.json();
 
     // Fetch options data
-    const optionsResponse = await fetch(`/.netlify/functions/options-data?symbol=${symbol}`);
+    const optionsResponse = await fetch(`${process.env.URL}/.netlify/functions/options-data?symbol=${symbol}`);
     const optionsData = await optionsResponse.json();
 
     // Fetch technical indicators
-    const technicalResponse = await fetch(`/.netlify/functions/technical-indicators?symbol=${symbol}`);
+    const technicalResponse = await fetch(`${process.env.URL}/.netlify/functions/technical-indicators?symbol=${symbol}`);
     const technicalData = await technicalResponse.json();
 
     // Fetch news data
-    const newsResponse = await fetch('/.netlify/functions/news-data');
+    const newsResponse = await fetch(`${process.env.URL}/.netlify/functions/news-data`);
     const newsData2 = await newsResponse.json();
 
     // Market dashboard for broader context
-    const marketResponse = await fetch('/.netlify/functions/market-dashboard');
+    const marketResponse = await fetch(`${process.env.URL}/.netlify/functions/market-dashboard`);
     const marketData2 = await marketResponse.json();
 
-    // Construct Grok prompt based on type
+    // Construct Gemini prompt based on type
     let prompt = '';
     if (type === 'analysis') {
       prompt = `Provide detailed analysis for ${symbol}, including executive summary, market environment (session, volatility, sentiment from StockTwits/Reddit/news), technicals (RSI, MACD, Bollinger from technicalData, support/resistance), fundamentals (from yahooData), options flow (calls/puts volume from optionsData), trading plan (entries/stop/targets with confidence), recommendation (buy/sell/hold with catalysts/risks). Use all data: quote: ${JSON.stringify(quoteData)}, news: ${JSON.stringify(newsData)}, movers: ${JSON.stringify(moversData)}, vix: ${JSON.stringify(vixData)}, rsi: ${JSON.stringify(rsiData)}, yahoo: ${JSON.stringify(yahooData)}, stocktwits: ${JSON.stringify(stockTwitsData)}, reddit: ${JSON.stringify(redditData)}, options: ${JSON.stringify(optionsData)}, technical: ${JSON.stringify(technicalData)}, news2: ${JSON.stringify(newsData2)}, market: ${JSON.stringify(marketData2)}. Format as structured JSON.`;
@@ -92,22 +94,18 @@ exports.handler = async (event) => {
       prompt = `Fetch top 10 news stories for potential price increases/decreases (from newsData), analyze for live/before-impact signals. For each: title, ticker, priority, description, action, timeframe. Use data: news: ${JSON.stringify(newsData)}, news2: ${JSON.stringify(newsData2)}, movers: ${JSON.stringify(moversData)}. Format as JSON array.`;
     }
 
-    // Call Grok with prompt
-    const grokUrl = `https://api.grok.xai/v1/chat/completions`;
-    const grokResponse = await fetch(grokUrl, {
+    // Call Gemini with prompt
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const geminiResponse = await fetch(geminiUrl, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROK_API_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: "grok-beta",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" }
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: 'application/json' }
       })
     });
-    const grokData = await grokResponse.json();
-    const generatedContent = grokData.choices[0].message.content;
+    const geminiData = await geminiResponse.json();
+    const generatedContent = geminiData.candidates[0].content.parts[0].text;
     const parsedContent = JSON.parse(generatedContent);
 
     return {
